@@ -1,4 +1,4 @@
-// forum.js — Foro Aletheia. API multi-hilo determinística con sincronización
+// forum.js — Foro Alethia. API multi-hilo determinística con sincronización
 // entre pestañas vía BroadcastChannel + storage events.
 //
 // Cada país tiene varios hilos:
@@ -18,25 +18,9 @@
 //   window.ForumAPI.subscribe(id|"*", cb)
 
 (function() {
-  const STORAGE_THREAD = (id) => `aletheia.forum.thread.${id}`;
-  const STORAGE_USER_THREADS = "aletheia.forum.user_threads";
-  const CHANNEL = "aletheia.forum.v2";
-  const SEED_VERSION = "3-nested"; // bump to force re-seed with nested replies
-  const SEED_VER_KEY = "aletheia.forum.seedv";
-
-  // Force re-seed if seed version changed
-  (function migrate() {
-    if (localStorage.getItem(SEED_VER_KEY) !== SEED_VERSION) {
-      const drop = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const k = localStorage.key(i);
-        if (k && k.startsWith("aletheia.forum.thread.")) drop.push(k);
-      }
-      drop.forEach(k => localStorage.removeItem(k));
-      localStorage.setItem(SEED_VER_KEY, SEED_VERSION);
-    }
-  })();
-
+  const STORAGE_THREAD = (id) => `alethia.forum.thread.${id}`;
+  const STORAGE_USER_THREADS = "alethia.forum.user_threads";
+  const CHANNEL = "alethia.forum.v2";
   let bc = null;
   try { bc = ("BroadcastChannel" in window) ? new BroadcastChannel(CHANNEL) : null; } catch (_) {}
 
@@ -180,22 +164,6 @@
     "¿Alguien tiene un timeline completo de este caso?",
   ];
 
-  const POSTS_REPLY = [
-    "Totalmente de acuerdo. Llevamos años viendo lo mismo sin que nadie rinda cuentas.",
-    "Eso es exactamente lo que ocurre: hay captura del aparato judicial.",
-    "La clave está en quién nombra a los fiscales. Hasta que eso no cambie, nada cambia.",
-    "Añadiría que la presión ciudadana es lo único que ha funcionado históricamente.",
-    "Exacto. Y los medios internacionales ayudan cuando los locales están amordazados.",
-    "El problema es estructural. No hay reforma cosmética que lo resuelva.",
-    "Comparto el análisis, aunque creo que el contexto regional importa más de lo que pensamos.",
-    "Sí, pero ¿qué mecanismo concreto propones? El diagnóstico ya lo tenemos claro.",
-    "Este tipo de conversaciones son las que faltan en los espacios institucionales.",
-    "Justo lo que señalaba el informe de transparencia del año pasado. Nadie lo leyó.",
-    "Gracias por sacar este punto. Muchos lo piensan pero no lo dicen públicamente.",
-    "No estoy del todo de acuerdo: hay matices importantes que no estamos considerando.",
-    "El ciclo se repite: denuncia, escándalo, olvido. Necesitamos memoria institucional.",
-  ];
-
   // ── Selección de pool por scope + score ─────────────────────────────
   function poolForThread(r, thread, score) {
     const high = score >= 65, mid = score >= 45;
@@ -210,9 +178,8 @@
       return r() < 0.15 ? POSTS_GOB_HIGH : (r() < 0.4 ? POSTS_GOB_MID : POSTS_GOB_LOW);
     }
     // scope === "tema"
-    if (thread.subtype === "peak")  return POSTS_PEAK;
-    if (thread.subtype === "dip")   return POSTS_DIP;
-    if (thread.subtype === "reply") return POSTS_REPLY;
+    if (thread.subtype === "peak") return POSTS_PEAK;
+    if (thread.subtype === "dip")  return POSTS_DIP;
     return POSTS_EVENT;
   }
 
@@ -237,75 +204,23 @@
     if (!country) return [];
     const score = thread.year != null ? country.scores[thread.year] : country.scores[2024];
     const r = mulberry32(hash(thread.id + ":count"));
-    const count = 4 + Math.floor(r() * 7); // 4–10 posts raíz
+    const count = 4 + Math.floor(r() * 7); // 4–10 posts iniciales
     const baseSeed = hash(thread.id + ":seed");
+    // Distribuir timestamps: del más antiguo (semanas) al más reciente (minutos)
     const now = Date.now();
     const offsets = [];
-    let acc = 5 * 60 * 1000;
-    for (let i = 0; i < count + 6; i++) {
+    let acc = 5 * 60 * 1000; // empieza ~5 min atrás
+    for (let i = 0; i < count; i++) {
       offsets.push(acc);
-      acc += (1.5 + r() * 4) * 60 * 60 * 1000;
+      acc += (1.5 + r() * 4) * 60 * 60 * 1000; // 1.5–5.5 h adicionales por post
     }
-    // Posts raíz
+    // Más antiguo primero
     const posts = [];
     for (let i = 0; i < count; i++) {
       const ts = now - offsets[count - 1 - i];
       posts.push(generatePost(baseSeed + i * 257, thread, score, ts));
     }
-    // Replies anidadas en los primeros 3 posts (para mostrar el formato)
-    const replyPool = [
-      "Totalmente de acuerdo. Llevamos años viendo lo mismo.",
-      "La clave está en quién nombra a los fiscales. Hasta que eso no cambie, nada cambia.",
-      "Añadiría que la presión ciudadana es lo único que ha funcionado históricamente.",
-      "Exacto. Y los medios internacionales ayudan cuando los locales están amordazados.",
-      "El problema es estructural. No hay reforma cosmética que lo resuelva.",
-      "Comparto el análisis, aunque creo que el contexto regional importa más.",
-      "Sí, pero ¿qué mecanismo concreto propones? El diagnóstico ya lo tenemos.",
-      "Gracias por sacar este punto. Muchos lo piensan pero no lo dicen públicamente.",
-      "No estoy del todo de acuerdo: hay matices que no estamos considerando.",
-      "El ciclo se repite: denuncia, escándalo, olvido. Necesitamos memoria institucional.",
-    ];
-    if (posts.length >= 2) {
-      const rng = mulberry32(baseSeed + 9999);
-      // 2 replies al primer post
-      [0, 1].forEach((ri, ii) => {
-        const bot = pick(rng, BOT_USERS);
-        posts.push({
-          id: `bot-r-${baseSeed}-${ii}`,
-          parentId: posts[0].id,
-          user: bot.name, handle: bot.handle, accent: bot.accent,
-          kind: "bot",
-          text: replyPool[Math.floor(rng() * replyPool.length)],
-          ts: posts[0].ts + (20 + ii * 35) * 60 * 1000,
-          likes: Math.floor(rng() * 12),
-        });
-      });
-      // 1 reply al segundo post
-      const bot2 = pick(rng, BOT_USERS);
-      posts.push({
-        id: `bot-r-${baseSeed}-2`,
-        parentId: posts[1].id,
-        user: bot2.name, handle: bot2.handle, accent: bot2.accent,
-        kind: "bot",
-        text: replyPool[Math.floor(rng() * replyPool.length)],
-        ts: posts[1].ts + 45 * 60 * 1000,
-        likes: Math.floor(rng() * 8),
-      });
-      // 1 reply anidada al primer reply (profundidad 2)
-      if (posts.length > count) {
-        const bot3 = pick(rng, BOT_USERS);
-        posts.push({
-          id: `bot-r-${baseSeed}-3`,
-          parentId: posts[count].id, // primer reply
-          user: bot3.name, handle: bot3.handle, accent: bot3.accent,
-          kind: "bot",
-          text: replyPool[Math.floor(rng() * replyPool.length)],
-          ts: posts[count].ts + 18 * 60 * 1000,
-          likes: Math.floor(rng() * 6),
-        });
-      }
-    }
-    return posts.sort((a, b) => a.ts - b.ts);
+    return posts;
   }
 
   function loadPosts(thread) {
@@ -416,11 +331,6 @@
       }
     });
 
-    // ── Replies anidados de ejemplo (seed) ─────────────────────────────
-    // Genera 2-3 respuestas anidadas en los primeros posts de cada hilo
-    // para mostrar cómo se ve el formato Reddit desde el primer uso.
-    // Se guardan en localStorage junto al resto de posts del hilo.
-
     return list;
   }
 
@@ -444,26 +354,12 @@
   }
 
   function summarize(thread) {
-    // Read only if already stored — never trigger seeding here.
-    // Seeding happens lazily in getThread() when a thread is actually opened.
-    const raw = localStorage.getItem(STORAGE_THREAD(thread.id));
-    if (raw) {
-      try {
-        const posts = JSON.parse(raw);
-        return {
-          ...thread,
-          replyCount: posts.length,
-          lastTs: posts.length ? posts[posts.length - 1].ts : Date.now() - 7 * 86400000,
-        };
-      } catch (_) {}
-    }
-    // Estimate count deterministically without writing to storage.
-    const r = mulberry32(hash(thread.id + ":count"));
-    const rootCount = 4 + Math.floor(r() * 7);
-    const replyCount = rootCount + 4; // matches seedPosts reply count
-    const r2 = mulberry32(hash(thread.id + ":ts"));
-    const lastTs = Date.now() - Math.floor((1 + r2() * 20) * 86400000);
-    return { ...thread, replyCount, lastTs };
+    const posts = loadPosts(thread);
+    return {
+      ...thread,
+      replyCount: posts.length,
+      lastTs: posts.length ? posts[posts.length - 1].ts : Date.now() - 7 * 86400000,
+    };
   }
 
   // ── API pública ────────────────────────────────────────────────────
@@ -503,13 +399,12 @@
       if (!thread) return null;
       return { thread, posts: loadPosts(thread) };
     },
-    addPost(threadId, user, text, parentId = null) {
+    addPost(threadId, user, text) {
       const thread = getIndex().find(t => t.id === threadId);
       if (!thread) return null;
       const list = loadPosts(thread);
       const post = {
         id: `u-${Date.now()}-${Math.floor(Math.random() * 9999)}`,
-        parentId: parentId || null,
         user: user?.name || "Anónimo",
         handle: user?.email
           ? `@${user.email.split("@")[0]}`
@@ -570,7 +465,7 @@
       };
       const onStorage = (e) => {
         if (!e.key) return;
-        const prefix = "aletheia.forum.thread.";
+        const prefix = "alethia.forum.thread.";
         if (e.key.startsWith(prefix)) {
           const id = e.key.slice(prefix.length);
           if (threadId === "*" || id === threadId) callback({ type: "reload", threadId: id });

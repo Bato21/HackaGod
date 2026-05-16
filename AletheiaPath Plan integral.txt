@@ -1,0 +1,147 @@
+AletheiaPath — Plan integral
+Parte 1: Plan de Idea
+Diagnóstico crítico de la propuesta actual
+Tu concepto es sólido en visión pero tiene tres riesgos que pueden hundirlo en el jurado o, peor, en producción real:
+Riesgo 1 — El "índice vivo" puede ser ruido disfrazado de señal.
+Los índices de corrupción serios (CPI de Transparency International, WGI del Banco Mundial, V-Dem) se actualizan anualmente porque la corrupción estructural no se mueve día a día. Si tu índice fluctúa con cada noticia, vas a confundir cobertura mediática con incidencia real — un país con prensa libre parecerá más corrupto que una dictadura silenciosa.
+Solución: Separa dos capas:
+
+Índice Estructural Aletheia (IEA): ponderación anual de fuentes auditadas.
+Señal de Riesgo Dinámica (SRD): overlay en tiempo real que detecta patrones emergentes. Se comunica como alerta, no como modificación del score.
+
+Riesgo 2 — Generar "policy briefs" desde cero con un LLM es frágil técnica y jurídicamente.
+Alucinaciones, recomendaciones genéricas tipo ChatGPT, sesgo político, y potencial difamación si nombra funcionarios. Ningún legislador serio firma un PDF generado sin trazabilidad.
+Solución: Reposiciona el módulo como Motor de Casos Comparados. En lugar de "generar políticas", recupera y sintetiza casos reales documentados ("Estonia digitalizó X así, resultado Y, evidencia Z"). La IA adapta, no inventa. Cada recomendación cita fuente, jurisdicción y resultado medido.
+Riesgo 3 — "Global" en MVP es suicidio de scope.
+Cubrir 195 países con calidad real es trabajo de un equipo de 50 personas durante años. Para un proyecto académico/competencia, es muerte segura.
+Solución: Empieza con Latinoamérica (8–12 países). Tienes ventaja de datos abiertos crecientes, contexto cultural, idioma único, y un ecosistema cívico muy activo (Poder Ciudadano, Ojo Público, IDL-Reporteros, Chequeado, Ciudadanía Inteligente). Demostrable, defendible, escalable después.
+Respuesta a tu pregunta sobre el usuario principal
+Usuario primario: periodista investigativo + analista de ONG cívica.
+Razones: (1) capacidad de amplificación masiva, (2) saben citar fuentes y exigirán rigor — eso eleva la calidad del producto, (3) generan los casos virales que después usan ciudadanos y legisladores, (4) son influenciadores naturales en gremios y redes.
+Secundarios: asesores legislativos (no legisladores directos — los asesores son quienes leen), académicos de políticas públicas, ciudadanía informada.
+Esto define el tono: denso pero legible, citable, exportable a PDF/Markdown, con metodología transparente. Nada de gamificación pop, nada de engagement tipo redes sociales.
+Adiciones que recomiendo incorporar
+
+Trazabilidad radical. Cada número del índice y cada afirmación del reporte con link a su fuente. Sin caja negra.
+Comparador entre países. "Chile vs. Uruguay en transparencia fiscal" en un click. El feature más viral para periodistas.
+Generador de press kit. Un periodista pide "infografía + 3 párrafos + 5 fuentes sobre lobby en sector salud Chile" y exporta listo para publicar.
+API pública con rate limit. Para que otros medios y ONGs construyan encima. Multiplica tu impacto 10x sin código adicional.
+Consejo asesor académico desde el día 1, incluso con 2–3 nombres. Credibilidad inmediata.
+Política de no-personalización. El sistema habla de patrones institucionales y casos públicamente documentados, nunca acusa individuos. Te protege legalmente y aumenta credibilidad.
+Metodología open source. Que cualquiera pueda replicar el cálculo del índice. Es lo que diferencia una herramienta seria de un dashboard bonito.
+
+Reporte final integrado — visión revisada
+
+AletheiaPath es una plataforma de inteligencia cívica para Latinoamérica que combina un Índice Estructural de Opacidad Institucional (anual, auditable, basado en fuentes internacionales) con una Señal de Riesgo Dinámica (detección en tiempo real de patrones emergentes vía monitoreo de prensa y datos abiertos). Cuando un usuario detecta un patrón relevante, el Motor de Casos Comparados sintetiza un briefing accionable con políticas implementadas en jurisdicciones análogas, incluyendo evidencia de resultados y pasos de implementación. Todo trazable, citable y exportable.
+No reemplaza al periodismo, lo potencia. No reemplaza al legislador, le ahorra dos semanas de research. No diagnostica corrupción: hace legible el poder.
+
+
+Parte 2: Plan Técnico
+Pilares del Índice Estructural Aletheia (IEA)
+Alineados con literatura estándar de gobernanza:
+
+Transparencia presupuestaria — Open Budget Index (IBP)
+Integridad del sistema judicial — V-Dem, WJP Rule of Law Index
+Apertura de contratación pública — Open Contracting Data Standard
+Libertad de prensa y acceso a información — RSF, índices FOIA
+Rendición de cuentas electoral y de lobby — V-Dem, IDEA Internacional
+
+Peso inicial 0.2 por pilar, ajustable empíricamente con PCA o método Delphi.
+Stack técnico recomendado
+Frontend
+├── Next.js 14 (App Router)
+├── TypeScript
+├── TailwindCSS + shadcn/ui
+├── Mapbox GL JS (mapa coroplético + capas)
+├── visx o Recharts (gráficos)
+└── TanStack Query (cache, sincronización)
+
+Backend
+├── FastAPI (Python 3.12)
+├── PostgreSQL 16 + PostGIS + pgvector
+├── Redis (cache + colas)
+├── Celery + Celery Beat (jobs programados)
+└── MinIO o S3 (storage de PDFs, exports)
+
+Pipeline de datos e IA
+├── Scrapy / Playwright (portales oficiales)
+├── GDELT 2.0 API (eventos globales)
+├── NewsAPI / MediaCloud (cobertura mediática)
+├── spaCy + transformers (NER en español)
+├── BERTopic (detección de patrones temáticos)
+├── Anthropic API (Claude Sonnet 4.6 para síntesis)
+└── LangGraph o Ruflo (orquestación multi-agente)
+
+Infraestructura
+├── Docker + docker-compose (dev)
+├── Railway / Fly.io o VPS (MVP)
+├── Cloudflare (CDN, DDoS, WAF)
+└── GitHub Actions (CI/CD)
+Arquitectura multi-agente (capitalizando tu experiencia con Ruflo)
+                    ┌──────────────────┐
+                    │  Scout Agent     │  ← GDELT, RSS, portales
+                    │  (cada 6h)       │
+                    └────────┬─────────┘
+                             ▼
+                    ┌──────────────────┐
+                    │  Analyst Agent   │  ← NER, clasificación, dedup
+                    │                  │     → Postgres
+                    └────────┬─────────┘
+                             ▼
+                    ┌──────────────────┐
+                    │  Pattern Agent   │  ← BERTopic + reglas
+                    │                  │     → Señal de Riesgo
+                    └────────┬─────────┘
+                             ▼
+            ┌────────────────┴────────────────┐
+            ▼                                 ▼
+   ┌────────────────┐               ┌────────────────┐
+   │ Researcher     │               │ Validator      │
+   │ (RAG sobre     │ ← on-demand   │ (fact-check,   │
+   │  casos)        │   por usuario │  citaciones)   │
+   └────────┬───────┘               └────────┬───────┘
+            └────────────────┬───────────────┘
+                             ▼
+                    ┌──────────────────┐
+                    │  Writer Agent    │  ← Briefing
+                    │  (Claude API)    │     MD + PDF
+                    └──────────────────┘
+Esquema de base de datos (núcleo)
+sqlcountries        (id, iso3, name, region, ...)
+indicators       (id, country_id, year, pillar, value, source_id)
+sources          (id, name, url, license, last_updated)
+news_events      (id, country_id, date, title, url, summary,
+                  entities[], topics[], embedding vector(1536))
+risk_signals     (id, country_id, pattern_type, severity,
+                  evidence_ids[], detected_at)
+policy_cases     (id, country_id, title, problem_tag, intervention,
+                  outcome_metric, source_url, embedding vector(1536))
+briefings        (id, user_id, country_id, signal_id, content_md,
+                  cases_cited[], generated_at)
+Roadmap por fases
+Fase 0 — Fundación (semanas 1–3)
+Definir metodología de los 5 pilares con literatura citada. Recolectar dataset histórico de 10 países LATAM (CPI, WGI, V-Dem). Setup repo, Docker, CI básico. Wireframes en Figma.
+Entregable: documento metodológico + demo estática del mapa.
+Fase 1 — MVP descriptivo (semanas 4–9)
+Backend FastAPI con endpoints de países, indicadores, histórico. Frontend con mapa + perfil de país + comparador. Ingesta scripted de noticias (sin agentes).
+Entregable: plataforma navegable con datos reales de 10 países.
+Fase 2 — Capa dinámica (semanas 10–15)
+Scout + Analyst Agent operando con GDELT. Detección básica de patrones (top-k temas emergentes). Señal de Riesgo visible en UI.
+Entregable: dashboard con alertas vivas.
+Fase 3 — Motor de casos comparados (semanas 16–22)
+Curaduría manual de 200–300 casos documentados (UNODC, OCDE, OCP). Embeddings + RAG con pgvector. Writer + Validator Agent. Export a PDF y Markdown.
+Entregable: briefings generables on-demand.
+Fase 4 — Apertura (semanas 23–28)
+API pública con docs y rate limit. Cuentas + alertas por correo. Press kit generator. Consejo asesor formalizado.
+Entregable: v1.0 pública.
+Costos estimados (MVP, mensuales)
+Hosting (Railway/Fly + Postgres)      ~25–40 USD
+Mapbox (free tier MVP)                0 USD
+Anthropic API (uso moderado)          ~30–80 USD
+NewsAPI / MediaCloud                  0–50 USD
+Dominio + email                       ~15 USD
+                                      ───────────
+Total                                 ~70–185 USD/mes
+Costeable para un proyecto universitario, sobre todo si aplicas a créditos de Anthropic, AWS Activate o Google for Startups vía UDD.
+Riesgos técnicos y mitigaciones
+RiesgoMitigaciónSesgo en fuentes de noticiasPonderar por diversidad de fuentes; exponer diversidad en UIAlucinaciones del LLMValidator Agent + citación obligatoria + curación humana de casosCostos LLM se disparanCache agresivo de briefings; Haiku para tareas simplesDemanda legal por contenidoNo-personalización + términos de uso + takedown policyDatos desactualizadosRe-ingesta programada + badge de "última actualización"

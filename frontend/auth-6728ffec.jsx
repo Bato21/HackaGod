@@ -2,8 +2,8 @@
 // Es un prototipo: las credenciales se guardan en localStorage en TEXTO PLANO.
 // Para producción, esto debe ir contra un backend real con hash + sesión.
 
-const STORAGE_USERS = "aletheia.users";
-const STORAGE_SESSION = "aletheia.session";
+const STORAGE_USERS = "alethia.users";
+const STORAGE_SESSION = "alethia.session";
 
 window.AuthAPI = {
   current() {
@@ -11,46 +11,15 @@ window.AuthAPI = {
     catch (_) { return null; }
   },
   setSession(user) {
-    if (user) {
-      try {
-        localStorage.setItem(STORAGE_SESSION, JSON.stringify(user));
-      } catch (e) {
-        if (e.name === "QuotaExceededError") {
-          // Storage full — purge all forum thread caches (largest consumer) and retry.
-          const drop = [];
-          for (let i = 0; i < localStorage.length; i++) {
-            const k = localStorage.key(i);
-            if (k && k.startsWith("aletheia.forum.thread.")) drop.push(k);
-          }
-          drop.forEach(k => localStorage.removeItem(k));
-          // Also reset seed version so threads re-seed lazily on next open.
-          localStorage.removeItem("aletheia.forum.seedv");
-          try { localStorage.setItem(STORAGE_SESSION, JSON.stringify(user)); } catch (_) {}
-        }
-      }
-    } else {
-      localStorage.removeItem(STORAGE_SESSION);
-    }
+    if (user) localStorage.setItem(STORAGE_SESSION, JSON.stringify(user));
+    else localStorage.removeItem(STORAGE_SESSION);
   },
   users() {
     try { return JSON.parse(localStorage.getItem(STORAGE_USERS)) || []; }
     catch (_) { return []; }
   },
   saveUsers(list) {
-    try {
-      localStorage.setItem(STORAGE_USERS, JSON.stringify(list));
-    } catch (e) {
-      if (e.name === "QuotaExceededError") {
-        const drop = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const k = localStorage.key(i);
-          if (k && k.startsWith("aletheia.forum.thread.")) drop.push(k);
-        }
-        drop.forEach(k => localStorage.removeItem(k));
-        localStorage.removeItem("aletheia.forum.seedv");
-        try { localStorage.setItem(STORAGE_USERS, JSON.stringify(list)); } catch (_) {}
-      }
-    }
+    localStorage.setItem(STORAGE_USERS, JSON.stringify(list));
   },
   login(email, password) {
     const u = this.users().find(x => x.email.toLowerCase() === email.toLowerCase());
@@ -107,35 +76,20 @@ function AuthScreen({ onAuth }) {
     onAuth(user);
   };
 
-  const AnimSplitText = window.AnimSplitText;
-
   return (
     <div className="auth-stage">
-      {window.WorldMapBg && <window.WorldMapBg />}
       <div className="auth-hero">
         <div className="ah-brand">
-          {AnimSplitText
-            ? <AnimSplitText text="Aletheia" tag="div" className="ah-logo" splitType="chars" stagger={55} duration={0.8} animDelay={0.1} textAlign="left" from={{ opacity: 0, y: 18 }} to={{ opacity: 1, y: 0 }} />
-            : <div className="ah-logo">Aletheia</div>
-          }
-          {AnimSplitText
-            ? <AnimSplitText text="Índice ilustrativo · Periodismo de datos" tag="div" className="ah-tagline" splitType="words" stagger={60} duration={0.7} animDelay={0.55} textAlign="left" from={{ opacity: 0 }} to={{ opacity: 1 }} />
-            : <div className="ah-tagline">Índice ilustrativo · Periodismo de datos</div>
-          }
+          <div className="ah-logo">Alethia</div>
+          <div className="ah-tagline">Índice ilustrativo · Periodismo de datos</div>
         </div>
         <div className="ah-headline">
-          {AnimSplitText ? (
-            <>
-              <AnimSplitText text="La corrupción no es una cifra." tag="h2" splitType="words" stagger={65} duration={1} animDelay={0.9} textAlign="left" from={{ opacity: 0, y: 22 }} to={{ opacity: 1, y: 0 }} />
-              <AnimSplitText text="Es una conversación que empieza aquí." tag="h2" className="ah-h2-sub" splitType="words" stagger={65} duration={1} animDelay={1.3} textAlign="left" from={{ opacity: 0, y: 22 }} to={{ opacity: 1, y: 0 }} />
-              <AnimSplitText text="Explora el mapa interactivo de América con datos ilustrativos: rankings, comparativas, evolución temporal, fichas de país con presidente, gabinete y titulares de prensa. Pensado para investigar, contrastar y entender." tag="p" splitType="words" stagger={18} duration={0.8} animDelay={1.7} textAlign="left" from={{ opacity: 0, y: 10 }} to={{ opacity: 1, y: 0 }} />
-            </>
-          ) : (
-            <>
-              <h2>La corrupción no es una cifra. <span style={{ color: "var(--text-3)" }}>Es una conversación que empieza aquí.</span></h2>
-              <p>Explora el mapa interactivo de América con datos ilustrativos: rankings, comparativas, evolución temporal, fichas de país con presidente, gabinete y titulares de prensa. Pensado para investigar, contrastar y entender.</p>
-            </>
-          )}
+          <h2>La corrupción no es una cifra. <span style={{ color: "var(--text-3)" }}>Es una conversación que empieza aquí.</span></h2>
+          <p>
+            Explora el mapa interactivo de América con datos ilustrativos: rankings,
+            comparativas, evolución temporal, fichas de país con presidente, gabinete y
+            titulares de prensa. Pensado para investigar, contrastar y entender.
+          </p>
         </div>
         <div className="ah-stats">
           <div className="ah-stat">
@@ -151,19 +105,15 @@ function AuthScreen({ onAuth }) {
             <div className="vl">4</div>
           </div>
         </div>
-        <div className="ah-foot">© Aletheia · Datos ficticios con fines demostrativos</div>
+        <div className="ah-foot">© Alethia · Datos ficticios con fines demostrativos</div>
       </div>
 
       <div className="auth-form">
         <div className="af-wrap">
-          {AnimSplitText
-            ? <AnimSplitText text="Acceso" tag="div" className="af-kicker" splitType="chars" stagger={45} duration={0.6} animDelay={0.2} textAlign="left" from={{ opacity: 0, y: 8 }} to={{ opacity: 1, y: 0 }} />
-            : <div className="af-kicker">Acceso</div>
-          }
-          {AnimSplitText
-            ? <AnimSplitText key={tab} text={tab === "login" ? "Bienvenido de vuelta." : "Crea tu cuenta."} tag="h1" className="af-title" splitType="words" stagger={75} duration={0.85} animDelay={0.05} textAlign="left" from={{ opacity: 0, y: 16 }} to={{ opacity: 1, y: 0 }} />
-            : <h1 className="af-title">{tab === "login" ? "Bienvenido de vuelta." : "Crea tu cuenta."}</h1>
-          }
+          <div className="af-kicker">Acceso</div>
+          <h1 className="af-title">
+            {tab === "login" ? "Bienvenido de vuelta." : "Crea tu cuenta."}
+          </h1>
 
           <div className="auth-tabs" role="tablist">
             <button className={tab === "login" ? "active" : ""} onClick={() => { setTab("login"); setError(""); }}>
