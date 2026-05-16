@@ -6,6 +6,16 @@ const { useState, useEffect, useRef, useMemo, useCallback } = React;
 // ───────────────────────────────────────────────────────────
 // Paletas disponibles para el mapa
 const PALETTES = {
+  navy: {
+    name: "Índigo (defecto)",
+    stops: [
+      [0,   [228, 238, 250]],  // near-white pale blue — limpio
+      [25,  [148, 186, 222]],  // light steel blue
+      [50,  [72,  126, 180]],  // medium blue
+      [75,  [26,  66,  128]],  // deep navy
+      [100, [6,   16,  52 ]],  // near-black navy — corrupto
+    ],
+  },
   editorial: {
     name: "Editorial",
     stops: [
@@ -19,21 +29,11 @@ const PALETTES = {
   riesgo: {
     name: "Riesgo",
     stops: [
-      [0,  [22, 163, 74]],   // dark green — bajo riesgo
-      [25, [132, 204, 22]],  // lime
-      [50, [250, 204, 21]],  // yellow
-      [75, [249, 115, 22]],  // orange
-      [100,[185, 28, 28]],   // dark red — alto riesgo
-    ],
-  },
-  vivid: {
-    name: "Vibrante",
-    stops: [
-      [0,  [22, 220, 150]],
+      [0,  [22, 163, 74]],
       [25, [132, 204, 22]],
-      [50, [253, 224, 71]],
-      [75, [251, 113, 36]],
-      [100,[239, 68, 68]],
+      [50, [250, 204, 21]],
+      [75, [249, 115, 22]],
+      [100,[185, 28, 28]],
     ],
   },
   diverging: {
@@ -58,7 +58,7 @@ const PALETTES = {
   },
 };
 const PALETTE_KEYS = Object.keys(PALETTES);
-let ACTIVE_PALETTE = "editorial";
+let ACTIVE_PALETTE = "navy";
 
 function colorFor(score, paletteKey) {
   const key = paletteKey || ACTIVE_PALETTE;
@@ -89,7 +89,7 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "viewMode": "choropleth",
   "showLabels": false,
   "theme": "corporate",
-  "palette": "riesgo"
+  "palette": "navy"
 }/*EDITMODE-END*/;
 
 const COUNTRIES_BY_ID = {};
@@ -760,14 +760,29 @@ function App({ user: authUser, onLogout }) {
             <div className="tagline">Índice ilustrativo · América · 2015–2024</div>
           </div>
           <div className="meta">
-            <span className="mono">DATOS·FICTICIOS</span>
-            <span className="pill" onClick={() => setForumOpen({})}>Foro</span>
-            <span className="pill" onClick={() => setShowNotes(true)}>Metodología</span>
-            <span className="pill" onClick={() => {
+            <span className="pill pill--tag">DATOS ILUSTRATIVOS</span>
+            <span className="pill" onClick={() => setForumOpen({})}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+                <path d="M1 2h10v7H7l-3 2V9H1z"/>
+              </svg>
+              Foro
+            </span>
+            <span className="pill" onClick={() => setShowNotes(true)}>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+                <path d="M2 1h8v10H2z M4 4h4 M4 6.5h4 M4 9h2"/>
+              </svg>
+              Metodología
+            </span>
+            <span className="pill pill--theme" onClick={() => {
                 const next = tweaks.theme === "dark" ? "light" : tweaks.theme === "light" ? "corporate" : "dark";
                 setTweak("theme", next);
               }}>
-              {tweaks.theme === "dark" ? "Modo claro" : tweaks.theme === "light" ? "Corporativo" : "Modo oscuro"}
+              {tweaks.theme === "dark"
+                ? <><span className="pill-icon">◐</span> Claro</>
+                : tweaks.theme === "light"
+                  ? <><span className="pill-icon">◑</span> Corporativo</>
+                  : <><span className="pill-icon">●</span> Oscuro</>
+              }
             </span>
             {authUser.kind !== "guest" && (
               <div className="notif-bell-wrap">
@@ -1130,11 +1145,15 @@ function App({ user: authUser, onLogout }) {
                   </div>
                 )}
                 <div className="map-overlay map-title">
-                  <div className="kicker">El mapa</div>
-                  <div className="h">¿Dónde se siente la corrupción en {year}?</div>
-                  <div className="sub editorial">
-                    Una representación de la percepción pública —no de cifras oficiales— sobre el grado de
-                    corrupción en {window.COUNTRIES.length} países del continente americano.
+                  <div className="kicker">Índice IEA · {window.COUNTRIES.length} países · América</div>
+                  <div className="h">
+                    ¿Dónde se siente<br/>
+                    la corrupción<br/>
+                    <span className="h-year">en {year}?</span>
+                  </div>
+                  <div className="sub">
+                    Percepción estructural de corrupción basada en indicadores fiscales,
+                    institucionales y de transparencia. Datos ilustrativos.
                   </div>
                 </div>
                 <div className="map-overlay map-stats">

@@ -88,6 +88,12 @@ function AuthScreen({ onAuth }) {
   const [name, setName] = React.useState("");
   const [error, setError] = React.useState("");
   const [remember, setRemember] = React.useState(true);
+  const [exiting, setExiting] = React.useState(false);
+
+  function triggerExit(user) {
+    setExiting(true);
+    setTimeout(() => onAuth(user), 920);
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -99,18 +105,18 @@ function AuthScreen({ onAuth }) {
       result = window.AuthAPI.register(name, email, password);
     }
     if (!result.ok) { setError(result.error); return; }
-    onAuth(result.user);
+    triggerExit(result.user);
   };
 
   const handleGuest = () => {
     const user = window.AuthAPI.asGuest();
-    onAuth(user);
+    triggerExit(user);
   };
 
   const AnimSplitText = window.AnimSplitText;
 
   return (
-    <div className="auth-stage">
+    <div className={`auth-stage${exiting ? " exiting" : ""}`}>
       {window.WorldMapBg && <window.WorldMapBg />}
       <div className="auth-hero">
         <div className="ah-brand">

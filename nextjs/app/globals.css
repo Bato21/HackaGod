@@ -1,0 +1,59 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+:root {
+  /* Design proposal inicial — navy/blue intelligence palette */
+  --bg:      #060c18;
+  --bg-2:    #0b1526;
+  --bg-3:    #101e34;
+  --bg-4:    #172540;
+  --bg-5:    #1e3050;
+
+  --text:    #e2eeff;
+  --text-2:  #8fadc8;
+  --text-3:  #4d6d90;
+  --text-4:  #2a4260;
+
+  --line:    #152033;
+  --line-2:  #1e3050;
+
+  --accent:  #38bdf8;   /* sky blue — primary */
+  --accent-2:#22d3a0;   /* teal — secondary */
+  --gold:    #facc15;   /* gold — score display */
+  --good:    #22d3a0;
+  --bad:     #f43f5e;
+  --warn:    #fb923c;
+
+  --mono:   var(--font-mono,   'DM Mono',  'Courier New', monospace);
+  --sans:   var(--font-sans,   'DM Sans',  -apple-system, sans-serif);
+  --serif:  var(--font-serif,  'Fraunces', Georgia,       serif);
+
+  --ease:  cubic-bezier(.22,1,.36,1);
+  --ease2: cubic-bezier(.4,0,.2,1);
+}
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 13px; }
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 2px; }
+
+/* Leaflet */
+.leaflet-container { background: var(--bg) !important; }
+.leaflet-control-attribution { background: rgba(9,9,12,.85) !important; color: var(--text-3) !important; font-size: 9px !important; }
+.leaflet-control-attribution a { color: var(--text-3) !important; }
+.leaflet-tile-pane { opacity: 0.45 !important; }
+.aletheia-tooltip .leaflet-tooltip { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
+
+/* Keyframes */
+@keyframes fadeUp    { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeIn    { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn   { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes pulse     { 0%,100% { transform: scale(1); opacity: .7; } 50% { transform: scale(1.4); opacity: 1; } }
+@keyframes critPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(244,63,94,.4); } 70% { box-shadow: 0 0 0 7px rgba(244,63,94,0); } }
+@keyframes drawPath  { to { stroke-dashoffset: 0; } }
+@keyframes expand    { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes shimmer   { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+@keyframes countUp   { from { opacity: 0; transform: scale(.88); } to { opacity: 1; transform: scale(1); } }
+@keyframes spin      { to { transform: rotate(360deg); } }

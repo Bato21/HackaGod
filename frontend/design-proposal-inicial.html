@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aletheia · Propuesta de Diseño</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,400&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* ─── TOKENS ─────────────────────────────────────────────────── */
+:root{
+  --bg:      #060c18;
+  --bg-2:    #0b1526;
+  --bg-3:    #101e34;
+  --bg-4:    #172540;
+  --bg-5:    #1e3050;
+
+  --ink:     #e2eeff;
+  --ink-2:   #8fadc8;
+  --ink-3:   #4d6d90;
+  --ink-4:   #2a4260;
+
+  --line:    #152033;
+  --line-2:  #1e3050;
+
+  --blue:    #38bdf8;
+  --blue-d:  #0ea5e9;
+  --blue-dd: #0369a1;
+  --blue-glow: rgba(56,189,248,.12);
+  --blue-glow2:rgba(56,189,248,.22);
+
+  --gold:    #facc15;
+  --gold-d:  #ca9a0d;
+  --red:     #f43f5e;
+  --red-d:   #be123c;
+  --green:   #22d3a0;
+  --amber:   #fb923c;
+
+  --fd: 'Fraunces',Georgia,serif;
+  --fm: 'DM Mono','Courier New',monospace;
+  --fs: 'DM Sans',-apple-system,sans-serif;
+
+  --ease: cubic-bezier(.22,1,.36,1);
+}
+
+html{background:var(--bg);color:var(--ink);font-family:var(--fs);scroll-behavior:smooth}
+body{min-height:100vh;overflow-x:hidden}
+
+/* ─── KEYFRAMES ──────────────────────────────────────────────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideRight{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideLeft{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:translateX(0)}}
+@keyframes drawPath{to{stroke-dashoffset:0}}
+@keyframes glow{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes scanLine{from{top:-2px}to{top:100%}}
+@keyframes gridDrift{from{background-position:0 0}to{background-position:40px 40px}}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.25);opacity:1}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes shimmer{from{background-position:-200% 0}to{background-position:200% 0}}
+@keyframes expandBar{from{width:0}to{width:var(--w,100%)}}
+@keyframes countReveal{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+@keyframes borderFlow{
+  0%{border-image:linear-gradient(90deg,var(--blue),transparent,transparent,transparent) 1}
+  25%{border-image:linear-gradient(90deg,transparent,var(--blue),transparent,transparent) 1}
+  50%{border-image:linear-gradient(90deg,transparent,transparent,var(--blue),transparent) 1}
+  75%{border-image:linear-gradient(90deg,transparent,transparent,transparent,var(--blue)) 1}
+  100%{border-image:linear-gradient(90deg,var(--blue),transparent,transparent,transparent) 1}
+}
+
+/* ─── MOCKUP NAV ─────────────────────────────────────────────── */
+.mnav{
+  position:fixed;top:0;left:0;right:0;z-index:9999;
+  height:36px;background:rgba(6,12,24,.95);
+  backdrop-filter:blur(8px);
+  display:flex;align-items:center;padding:0 18px;gap:0;
+  border-bottom:1px solid var(--line-2);
+  font-family:var(--fm);font-size:10px;letter-spacing:.1em;
+}
+.mnav::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--blue),var(--blue),transparent);
+  opacity:.4;
+}
+.mnav-brand{color:var(--blue);font-weight:500;letter-spacing:.18em;text-transform:uppercase;margin-right:20px;flex-shrink:0}
+.mnav button{
+  background:none;border:none;border-bottom:2px solid transparent;
+  color:var(--ink-3);font:inherit;letter-spacing:inherit;
+  padding:0 14px;height:36px;cursor:pointer;text-transform:uppercase;
+  transition:color .2s,border-color .2s;
+}
+.mnav button:hover{color:var(--ink-2)}
+.mnav button.on{color:var(--blue);border-bottom-color:var(--blue)}
+.mnav-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.mnav-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
+.mnav-live{font-family:var(--fm);font-size:8px;letter-spacing:.15em;text-transform:uppercase;color:var(--green)}
+
+/* ─── SCREEN SHELL ───────────────────────────────────────────── */
+.sc{display:none;padding-top:36px;min-height:100vh}
+.sc.on{display:flex;flex-direction:column}
+
+/* ═══════════════════════════════════════════════════════════════
+   S1 — AUTH
+═══════════════════════════════════════════════════════════════ */
+.auth-root{
+  min-height:calc(100vh - 36px);
+  display:grid;grid-template-columns:1fr 460px;
+  position:relative;overflow:hidden;
+}
+
+/* animated grid background */
+.auth-root::before{
+  content:'';position:absolute;inset:0;z-index:0;
+  background-image:
+    linear-gradient(rgba(56,189,248,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(56,189,248,.04) 1px,transparent 1px);
+  background-size:40px 40px;
+  animation:gridDrift 12s linear infinite;
+}
+/* radial vignette */
+.auth-root::after{
+  content:'';position:absolute;inset:0;z-index:1;
+  background:radial-gradient(ellipse 80% 80% at 30% 50%,transparent 20%,rgba(6,12,24,.7) 80%);
+}
+
+/* scan line */
+.scan{
+  position:absolute;left:0;right:0;height:1px;z-index:2;
+  background:linear-gradient(90deg,transparent 5%,rgba(56,189,248,.35) 30%,rgba(56,189,248,.6) 50%,rgba(56,189,248,.35) 70%,transparent 95%);
+  animation:scanLine 6s linear infinite;
+}
+
+/* Hero */
+.ah{
+  padding:60px 64px 60px 72px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;z-index:3;
+  border-right:1px solid var(--line-2);
+}
+
+.ah-kicker{
+  font-family:var(--fm);font-size:9px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--blue);display:flex;align-items:center;gap:10px;
+  animation:fadeUp .6s var(--ease) both;
+}
+.ah-kicker::after{content:'';width:44px;height:1px;background:var(--blue);opacity:.5}
+
+.ah-logo{
+  font-family:var(--fd);font-weight:900;
+  font-size:clamp(72px,8.5vw,128px);
+  line-height:.88;letter-spacing:-.03em;
+  color:var(--ink);
+  animation:fadeUp .7s var(--ease) .15s both;
+}
+.ah-logo span{
+  display:block;font-weight:300;font-style:italic;
+  font-size:.52em;color:var(--blue);letter-spacing:.02em;margin-top:10px;
+  opacity:.85;
+}
+
+/* glowing horizontal rule under logo */
+.ah-rule{
+  height:1px;margin:28px 0;
+  background:linear-gradient(90deg,var(--blue),rgba(56,189,248,0));
+  animation:fadeUp .7s var(--ease) .25s both;
+}
+
+.ah-deck{
+  font-size:16px;line-height:1.75;color:var(--ink-2);font-weight:300;max-width:460px;
+  animation:fadeUp .7s var(--ease) .35s both;
+}
+.ah-deck strong{color:var(--ink);font-weight:500}
+
+.ah-stats{
+  display:flex;gap:32px;
+  animation:fadeUp .7s var(--ease) .45s both;
+}
+.ah-stat-n{
+  font-family:var(--fm);font-size:24px;font-weight:500;display:block;
+  color:var(--blue);
+}
+.ah-stat-l{font-family:var(--fm);font-size:8.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+
+.ah-foot{
+  font-family:var(--fm);font-size:8.5px;color:var(--ink-4);letter-spacing:.08em;
+  animation:fadeUp .7s var(--ease) .55s both;
+}
+
+/* Form */
+.af{
+  background:rgba(11,21,38,.7);
+  backdrop-filter:blur(20px);
+  border-left:1px solid var(--line-2);
+  padding:60px 44px;
+  display:flex;flex-direction:column;justify-content:center;
+  position:relative;z-index:3;
+  animation:slideLeft .8s var(--ease) .1s both;
+}
+/* corner accent */
+.af::before{
+  content:'';position:absolute;top:0;right:0;
+  width:48px;height:48px;
+  border-top:2px solid var(--blue);
+  border-right:2px solid var(--blue);
+  opacity:.4;
+}
+.af::after{
+  content:'';position:absolute;bottom:0;left:0;
+  width:48px;height:48px;
+  border-bottom:2px solid var(--blue);
+  border-left:2px solid var(--blue);
+  opacity:.4;
+}
+
+.af-kicker{
+  font-family:var(--fm);font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--blue);margin-bottom:18px;display:flex;align-items:center;gap:10px;
+}
+.af-kicker::before{content:'';width:22px;height:1px;background:var(--blue)}
+
+.af-title{
+  font-family:var(--fd);font-size:34px;font-weight:700;
+  color:var(--ink);line-height:1.1;margin-bottom:30px;
+}
+
+.af-tabs{display:flex;border-bottom:1px solid var(--line-2);margin-bottom:22px}
+.af-tab{
+  font-family:var(--fm);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);background:none;border:none;border-bottom:2px solid transparent;
+  padding:8px 0;margin-right:22px;cursor:pointer;transition:all .18s;
+}
+.af-tab:hover{color:var(--ink-2)}
+.af-tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+
+.fg{margin-bottom:16px}
+.fl{
+  font-family:var(--fm);font-size:8px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);display:block;margin-bottom:7px;
+}
+.fi{
+  width:100%;background:rgba(56,189,248,.04);
+  border:1px solid var(--line-2);
+  color:var(--ink);font-family:var(--fm);font-size:13px;
+  padding:11px 13px;outline:none;transition:border-color .18s,background .18s,box-shadow .18s;
+}
+.fi:focus{border-color:var(--blue);background:rgba(56,189,248,.08);box-shadow:0 0 0 3px rgba(56,189,248,.1)}
+.fi::placeholder{color:var(--ink-4)}
+
+.fs-btn{
+  width:100%;background:var(--blue);color:#020c18;border:none;
+  font-family:var(--fm);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  padding:13px;cursor:pointer;margin-top:6px;
+  position:relative;overflow:hidden;transition:background .18s;
+}
+.fs-btn::after{
+  content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);
+  transition:none;
+}
+.fs-btn:hover{background:var(--blue-d)}
+.fs-btn:hover::after{animation:shimmer .6s ease forwards}
+
+.af-div{text-align:center;position:relative;margin:20px 0}
+.af-div::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--line-2)}
+.af-div span{
+  background:rgba(11,21,38,.9);position:relative;padding:0 10px;
+  font-family:var(--fm);font-size:8.5px;letter-spacing:.1em;color:var(--ink-4);text-transform:uppercase;
+}
+
+.fg-btn{
+  width:100%;background:transparent;border:1px solid var(--line-2);
+  color:var(--ink-3);font-family:var(--fm);font-size:9px;letter-spacing:.12em;
+  text-transform:uppercase;padding:11px;cursor:pointer;transition:all .18s;
+}
+.fg-btn:hover{border-color:var(--ink-3);color:var(--ink-2)}
+
+/* ═══════════════════════════════════════════════════════════════
+   S2 — MAIN APP
+═══════════════════════════════════════════════════════════════ */
+.app-wrap{height:calc(100vh - 36px);display:flex;flex-direction:column;overflow:hidden}
+
+.appbar{
+  height:46px;background:var(--bg-2);
+  border-bottom:1px solid var(--line-2);
+  display:flex;align-items:center;padding:0 18px 0 20px;flex-shrink:0;gap:0;
+  position:relative;
+}
+.appbar::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,var(--blue),transparent 60%);
+  opacity:.5;
+}
+.appbar-logo{
+  font-family:var(--fd);font-size:18px;font-weight:900;
+  letter-spacing:-.02em;margin-right:18px;flex-shrink:0;
+  color:var(--ink);
+}
+.appbar-logo em{font-weight:300;font-style:italic;font-size:.72em;color:var(--blue)}
+.appbar-sub{
+  font-family:var(--fm);font-size:8px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--ink-3);border-left:1px solid var(--line-2);padding-left:14px;
+}
+.appbar-r{margin-left:auto;display:flex;align-items:center;gap:12px}
+.ab-btn{
+  font-family:var(--fm);font-size:8.5px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);background:none;border:none;cursor:pointer;padding:5px 0;
+  border-bottom:2px solid transparent;transition:all .15s;
+}
+.ab-btn:hover{color:var(--ink-2)}
+.ab-btn.on{color:var(--blue);border-bottom-color:var(--blue)}
+.ab-year{
+  font-family:var(--fm);font-size:11px;color:var(--blue);
+  background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.2);
+  padding:3px 10px;
+}
+
+.app-body{flex:1;display:grid;grid-template-columns:264px 1fr;overflow:hidden}
+
+/* Country list */
+.cl-panel{
+  background:var(--bg-2);border-right:1px solid var(--line-2);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.cl-head{padding:14px 16px 10px;border-bottom:1px solid var(--line);flex-shrink:0}
+.cl-head-label{
+  font-family:var(--fm);font-size:8px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--blue);display:flex;align-items:center;gap:8px;
+}
+.cl-head-label::before,.cl-head-label::after{content:'';flex:1;height:1px;background:var(--blue);opacity:.25}
+.cl-head-sub{font-family:var(--fm);font-size:8px;color:var(--ink-4);text-align:center;margin-top:5px;letter-spacing:.07em}
+
+.cl-list{overflow-y:auto;flex:1}
+.cl-list::-webkit-scrollbar{width:2px}
+.cl-list::-webkit-scrollbar-thumb{background:var(--line-2)}
+
+.cr{
+  display:grid;grid-template-columns:24px 22px 1fr 50px 10px;
+  align-items:center;gap:6px;
+  padding:8px 14px 8px 16px;border-bottom:1px solid var(--line);
+  cursor:pointer;transition:background .12s,border-left .12s;
+  border-left:2px solid transparent;
+  animation:slideRight .4s var(--ease) both;
+}
+.cr:hover{background:var(--bg-3);border-left-color:var(--blue-dd)}
+.cr.on{
+  background:var(--bg-4);border-left-color:var(--blue);
+  box-shadow:inset 0 0 20px rgba(56,189,248,.04);
+}
+
+.cr-rk{font-family:var(--fm);font-size:8.5px;color:var(--ink-4);text-align:right}
+.cr-fl{font-size:12px;text-align:center}
+.cr-n{font-size:12.5px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2)}
+.cr.on .cr-n{color:var(--ink)}
+.cr-sc{font-family:var(--fm);font-size:11px;font-weight:500;text-align:right;color:var(--ink-2)}
+.cr.on .cr-sc{color:var(--blue)}
+.cr-dot{width:7px;height:7px;border-radius:50%}
+.cr-dot.b{background:var(--green)}
+.cr-dot.m{background:var(--gold)}
+.cr-dot.a{background:var(--amber)}
+.cr-dot.c{background:var(--red);animation:pulse 1.8s ease-in-out infinite}
+
+/* Map */
+.mp{background:var(--bg);position:relative;overflow:hidden}
+.mp-hint{
+  position:absolute;top:14px;right:14px;
+  background:rgba(11,21,38,.8);border:1px solid var(--line-2);
+  padding:7px 12px;font-family:var(--fm);font-size:8px;
+  letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase;
+  backdrop-filter:blur(4px);
+}
+.mp-legend{
+  position:absolute;bottom:14px;left:14px;
+  background:rgba(11,21,38,.85);border:1px solid var(--line-2);
+  padding:10px 14px;backdrop-filter:blur(4px);
+}
+.mp-leg-title{font-family:var(--fm);font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px}
+.mp-leg-bar{width:132px;height:4px;background:linear-gradient(to right,var(--green),var(--gold),var(--amber),var(--red));margin-bottom:4px}
+.mp-leg-lbs{display:flex;justify-content:space-between;font-family:var(--fm);font-size:7.5px;color:var(--ink-4)}
+
+/* ═══════════════════════════════════════════════════════════════
+   S3 — COUNTRY FOCUS
+═══════════════════════════════════════════════════════════════ */
+.focus-wrap{display:grid;grid-template-columns:264px 1fr 372px;height:calc(100vh - 36px);overflow:hidden}
+
+.fp{
+  background:var(--bg-2);border-left:1px solid var(--line-2);
+  display:flex;flex-direction:column;overflow:hidden;
+  animation:slideLeft .5s var(--ease) both;
+}
+
+/* glowing top edge on panel */
+.fp::before{
+  content:'';height:1px;background:linear-gradient(90deg,var(--blue),rgba(56,189,248,.2));flex-shrink:0;
+}
+
+.fp-head{padding:22px 26px 16px;border-bottom:1px solid var(--line-2);flex-shrink:0}
+.fp-bc{font-family:var(--fm);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:10px;cursor:pointer;transition:opacity .15s}
+.fp-bc:hover{opacity:.7}
+.fp-cn{
+  font-family:var(--fd);font-size:34px;font-weight:900;line-height:1;
+  letter-spacing:-.02em;color:var(--ink);margin-bottom:4px;
+  animation:countReveal .4s var(--ease) .1s both;
+}
+.fp-cm{font-family:var(--fm);font-size:8.5px;color:var(--ink-3);letter-spacing:.09em;text-transform:uppercase}
+
+/* Score block */
+.fp-score{
+  padding:18px 26px;border-bottom:1px solid var(--line);
+  display:flex;align-items:flex-start;gap:18px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--bg-3),var(--bg-2));
+}
+.fp-sn{
+  font-family:var(--fm);font-size:62px;font-weight:500;line-height:1;
+  letter-spacing:-.04em;color:var(--gold);
+  text-shadow:0 0 30px rgba(250,204,21,.2);
+  animation:countReveal .5s var(--ease) .2s both;
+}
+.fp-su{font-size:12px;font-weight:400;color:var(--ink-3)}
+.fp-sl{
+  display:inline-block;font-family:var(--fm);font-size:8px;letter-spacing:.15em;
+  text-transform:uppercase;padding:3px 8px;margin-top:6px;
+  background:rgba(251,146,60,.15);color:var(--amber);border:1px solid rgba(251,146,60,.3);
+}
+.fp-sl.c{background:rgba(244,63,94,.12);color:var(--red);border-color:rgba(244,63,94,.3)}
+.fp-sl.b{background:rgba(34,211,160,.12);color:var(--green);border-color:rgba(34,211,160,.3)}
+.fp-sl.m{background:rgba(250,204,21,.1);color:var(--gold);border-color:rgba(250,204,21,.25)}
+
+.fp-ss{flex:1;padding-top:4px}
+.fp-sy{font-family:var(--fm);font-size:7.5px;color:var(--ink-4);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+.fp-delta{font-family:var(--fm);font-size:10px;margin-top:8px;color:var(--red);display:flex;align-items:center;gap:5px}
+.fp-delta::before{content:'▼'}
+.fp-delta.up{color:var(--green)}
+.fp-delta.up::before{content:'▲'}
+
+/* sparkline with draw-on */
+.spark-area{display:block}
+.spark-path{
+  stroke-dasharray:220;stroke-dashoffset:220;
+  animation:drawPath 1.4s var(--ease) .4s forwards;
+}
+.spark-dot{animation:fadeUp .3s var(--ease) 1.6s both}
+
+.fp-body{flex:1;overflow-y:auto}
+.fp-body::-webkit-scrollbar{width:2px}
+.fp-body::-webkit-scrollbar-thumb{background:var(--line-2)}
+
+.fp-sec{padding:14px 26px;border-bottom:1px solid var(--line)}
+.fp-sec-t{
+  font-family:var(--fm);font-size:7.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--blue);margin-bottom:10px;display:flex;align-items:center;gap:8px;opacity:.85;
+}
+.fp-sec-t::after{content:'';flex:1;height:1px;background:var(--blue);opacity:.2}
+
+/* pillar bars */
+.pil-item{margin-bottom:10px}
+.pil-top{display:flex;justify-content:space-between;margin-bottom:4px}
+.pil-label{font-family:var(--fm);font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.pil-val{font-family:var(--fm);font-size:9px;font-weight:500;color:var(--ink-2)}
+.pil-track{height:3px;background:var(--line-2);position:relative;overflow:hidden}
+.pil-fill{
+  height:100%;background:var(--blue);
+  animation:expandBar .8s var(--ease) .3s both;
+}
+.pil-fill.lo{background:var(--amber)}
+.pil-fill.vlo{background:var(--red)}
+
+/* President */
+.pres{display:flex;gap:12px;align-items:flex-start}
+.pres-init{
+  width:36px;height:36px;background:var(--bg-4);
+  border:1px solid var(--line-2);
+  color:var(--blue);font-family:var(--fd);font-size:15px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  box-shadow:0 0 12px rgba(56,189,248,.1);
+}
+.pres-name{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px}
+.pres-det{font-family:var(--fm);font-size:8.5px;color:var(--ink-3);letter-spacing:.04em;margin-bottom:4px}
+.pres-st{
+  display:inline-block;font-family:var(--fm);font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;
+  padding:2px 6px;border:1px solid var(--line-2);color:var(--ink-3);
+}
+
+/* Timeline */
+.tl{padding-left:14px;border-left:1px solid var(--line-2)}
+.tl-i{margin-bottom:14px;position:relative;animation:fadeUp .4s var(--ease) both}
+.tl-i::before{
+  content:'';position:absolute;left:-18px;top:5px;
+  width:5px;height:5px;border-radius:50%;
+  background:var(--blue);box-shadow:0 0 6px var(--blue);
+  opacity:.6;
+}
+.tl-d{font-family:var(--fm);font-size:8px;color:var(--blue);letter-spacing:.09em;text-transform:uppercase;display:block;margin-bottom:2px}
+.tl-s{font-family:var(--fm);font-size:7.5px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.07em}
+.tl-t{font-size:12px;line-height:1.55;color:var(--ink-2)}
+
+/* Headlines */
+.hl{list-style:none}
+.hl-i{padding:7px 0;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}
+.hl-src{font-family:var(--fm);font-size:7.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--blue);flex-shrink:0;width:48px;padding-top:2px;opacity:.8}
+.hl-tx{font-size:11.5px;line-height:1.45;color:var(--ink-2)}
+
+/* ═══════════════════════════════════════════════════════════════
+   S4 — FORUM
+═══════════════════════════════════════════════════════════════ */
+.forum-wrap{display:flex;flex-direction:column;height:calc(100vh - 36px);overflow:hidden}
+
+.fbar{
+  height:46px;background:var(--bg-2);border-bottom:1px solid var(--line-2);
+  display:flex;align-items:center;padding:0 18px 0 20px;flex-shrink:0;gap:16px;
+  position:relative;
+}
+.fbar::after{
+  content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,var(--blue),transparent 60%);opacity:.5;
+}
+.fbar-title{
+  font-family:var(--fd);font-size:22px;font-weight:900;
+  letter-spacing:-.02em;flex-shrink:0;color:var(--ink);
+}
+.fbar-sub{
+  font-family:var(--fm);font-size:8px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);border-left:1px solid var(--line-2);padding-left:14px;
+}
+.fbar-r{margin-left:auto}
+.fbar-new{
+  font-family:var(--fm);font-size:9px;letter-spacing:.15em;text-transform:uppercase;
+  background:transparent;color:var(--blue);
+  border:1px solid rgba(56,189,248,.4);
+  padding:7px 16px;cursor:pointer;
+  transition:all .18s;position:relative;overflow:hidden;
+}
+.fbar-new:hover{background:rgba(56,189,248,.08);border-color:var(--blue)}
+
+.fbody{flex:1;display:grid;grid-template-columns:368px 1fr;overflow:hidden}
+
+/* Thread list */
+.tlist{border-right:1px solid var(--line-2);overflow-y:auto;background:var(--bg-2)}
+.tlist::-webkit-scrollbar{width:2px}
+.tlist::-webkit-scrollbar-thumb{background:var(--line-2)}
+
+.tlist-h{
+  padding:12px 18px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:8px;
+  position:sticky;top:0;background:var(--bg-2);z-index:1;
+}
+.tlist-cnt{font-family:var(--fm);font-size:9.5px;color:var(--ink-3)}
+.tlist-sort{margin-left:auto;font-family:var(--fm);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4);background:none;border:none;cursor:pointer;transition:color .15s}
+.tlist-sort:hover{color:var(--blue)}
+
+.ti{
+  padding:13px 16px;border-bottom:1px solid var(--line);
+  cursor:pointer;transition:all .12s;
+  border-left:2px solid transparent;
+  animation:fadeUp .4s var(--ease) both;
+}
+.ti:hover{background:var(--bg-3);border-left-color:var(--blue-dd)}
+.ti.on{
+  background:var(--bg-4);border-left-color:var(--blue);
+  box-shadow:inset 0 0 24px rgba(56,189,248,.05);
+}
+.ti.on .ti-title{color:var(--ink)}
+.ti.on .ti-meta{color:var(--ink-4)}
+
+.ti-h{display:flex;gap:6px;align-items:center;margin-bottom:5px;flex-wrap:wrap}
+.ti-co{font-family:var(--fm);font-size:7.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--blue);opacity:.9}
+.ti-sc{font-family:var(--fm);font-size:7px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-4);padding:1px 5px;border:1px solid var(--line-2)}
+.ti-al{font-family:var(--fm);font-size:7px;letter-spacing:.09em;text-transform:uppercase;padding:1px 5px}
+.ti-al.w{background:rgba(250,204,21,.1);color:var(--gold);border:1px solid rgba(250,204,21,.25)}
+.ti-al.a{background:rgba(251,146,60,.1);color:var(--amber);border:1px solid rgba(251,146,60,.25)}
+.ti-al.u{
+  background:rgba(244,63,94,.15);color:var(--red);border:1px solid rgba(244,63,94,.3);
+  animation:glow 1.5s ease-in-out infinite;
+}
+.ti-title{font-size:12.5px;font-weight:500;color:var(--ink-2);line-height:1.35;margin-bottom:5px}
+.ti-meta{font-family:var(--fm);font-size:8px;color:var(--ink-4);display:flex;gap:10px}
+
+/* Thread detail */
+.tdet{display:flex;flex-direction:column;overflow:hidden}
+.tdet-h{padding:24px 30px 18px;border-bottom:1px solid var(--line-2);flex-shrink:0;position:relative}
+/* glowing top edge */
+.tdet-h::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,var(--blue),rgba(56,189,248,.1));
+}
+.tdet-bc{font-family:var(--fm);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:11px;opacity:.8}
+.tdet-title{
+  font-family:var(--fd);font-size:24px;font-weight:700;
+  color:var(--ink);line-height:1.25;margin-bottom:12px;
+}
+.tdet-meta{font-family:var(--fm);font-size:8.5px;color:var(--ink-4);display:flex;gap:14px}
+
+.posts{flex:1;overflow-y:auto;padding:0 30px}
+.posts::-webkit-scrollbar{width:2px}
+.posts::-webkit-scrollbar-thumb{background:var(--line-2)}
+
+.post{
+  padding:18px 0;border-bottom:1px solid var(--line);
+  display:grid;grid-template-columns:36px 1fr;gap:12px;
+  animation:fadeUp .4s var(--ease) both;
+}
+.pav{
+  width:36px;height:36px;display:flex;align-items:center;justify-content:center;
+  font-family:var(--fd);font-size:14px;font-weight:700;flex-shrink:0;margin-top:2px;
+}
+.pav.u{background:var(--bg-4);color:var(--ink-2);border:1px solid var(--line-2)}
+.pav.b{background:var(--bg-4);color:var(--blue);border:1px solid rgba(56,189,248,.2);box-shadow:0 0 8px rgba(56,189,248,.1)}
+.pav.ai{
+  background:rgba(56,189,248,.1);color:var(--blue);
+  border:1px solid rgba(56,189,248,.3);
+  box-shadow:0 0 12px rgba(56,189,248,.15);
+  animation:glow 2s ease-in-out infinite;
+}
+.phd{display:flex;align-items:baseline;gap:7px;margin-bottom:6px}
+.pauth{font-size:13px;font-weight:500;color:var(--ink)}
+.phndl{font-family:var(--fm);font-size:9px;color:var(--ink-4)}
+.pts{font-family:var(--fm);font-size:8.5px;color:var(--ink-4);margin-left:auto}
+.ptxt{font-size:13.5px;line-height:1.65;color:var(--ink-2)}
+.ptxt code{
+  font-family:var(--fm);font-size:11px;
+  background:rgba(56,189,248,.08);color:var(--blue);
+  padding:1px 5px;border:1px solid rgba(56,189,248,.15);
+}
+.pact{margin-top:8px;display:flex;gap:12px}
+.pact-b{
+  font-family:var(--fm);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ink-4);background:none;border:none;cursor:pointer;padding:0;transition:color .15s;
+}
+.pact-b:hover{color:var(--blue)}
+
+/* AI analyst post */
+.post-ai{
+  border-left:2px solid rgba(56,189,248,.3);
+  padding-left:12px;margin-left:-12px;
+  background:rgba(56,189,248,.03);
+}
+.ai-tag{
+  font-family:var(--fm);font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;
+  background:rgba(56,189,248,.1);color:var(--blue);padding:1px 6px;
+  border:1px solid rgba(56,189,248,.2);
+}
+
+.reply-area{
+  flex-shrink:0;padding:14px 30px;border-top:1px solid var(--line-2);
+  background:var(--bg-2);display:flex;gap:10px;align-items:flex-end;
+}
+.reply-ta{
+  flex:1;background:var(--bg-3);border:1px solid var(--line-2);
+  font-family:var(--fs);font-size:13px;padding:9px 13px;
+  resize:none;height:54px;color:var(--ink);outline:none;transition:border-color .18s,box-shadow .18s;
+}
+.reply-ta:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(56,189,248,.08)}
+.reply-ta::placeholder{color:var(--ink-4)}
+.reply-send{
+  font-family:var(--fm);font-size:9px;letter-spacing:.15em;text-transform:uppercase;
+  background:var(--blue);color:#020c18;border:none;padding:0 18px;height:54px;
+  cursor:pointer;flex-shrink:0;transition:background .15s;font-weight:500;
+}
+.reply-send:hover{background:var(--blue-d)}
+</style>
+</head>
+<body>
+
+<nav class="mnav">
+  <span class="mnav-brand">Aletheia · Propuesta</span>
+  <button class="on" onclick="show('auth')">01 · Acceso</button>
+  <button onclick="show('app')">02 · Mapa</button>
+  <button onclick="show('focus')">03 · País</button>
+  <button onclick="show('forum')">04 · Tribuna</button>
+  <div class="mnav-right">
+    <span class="mnav-dot"></span>
+    <span class="mnav-live">Live beta</span>
+  </div>
+</nav>
+
+<!-- ═══ S1 AUTH ═══════════════════════════════════════════════ -->
+<section class="sc on" id="sc-auth">
+  <div class="auth-root">
+    <div class="scan"></div>
+
+    <div class="ah">
+      <div class="ah-kicker">Inteligencia Investigativa · América Latina</div>
+
+      <div>
+        <div class="ah-logo">Aletheia
+          <span>índice de integridad institucional</span>
+        </div>
+        <div class="ah-rule"></div>
+        <p class="ah-deck">La <strong>corrupción no es una cifra.</strong><br>
+          Es un patrón de decisiones. Un desvío de recursos.<br>
+          Una historia que se repite. <strong>Empieza aquí.</strong>
+        </p>
+      </div>
+
+      <div class="ah-stats">
+        <div><span class="ah-stat-n" data-target="22">0</span><span class="ah-stat-l">Países</span></div>
+        <div><span class="ah-stat-n" data-target="640" data-suffix="k">0</span><span class="ah-stat-l">Filas de gasto</span></div>
+        <div><span class="ah-stat-n">2017–25</span><span class="ah-stat-l">Cobertura</span></div>
+        <div><span class="ah-stat-n" data-target="4">0</span><span class="ah-stat-l">Pilares IEA</span></div>
+      </div>
+
+      <p class="ah-foot">© 2025 AletheiaPath V2 · Beta pública · Datos con fines de investigación</p>
+    </div>
+
+    <div class="af">
+      <div class="af-kicker">Acceso al sistema</div>
+      <h2 class="af-title">Bienvenido<br>de vuelta.</h2>
+      <div class="af-tabs">
+        <button class="af-tab on" onclick="afTab(this)">Iniciar sesión</button>
+        <button class="af-tab" onclick="afTab(this)">Registrarse</button>
+      </div>
+      <form onsubmit="return false">
+        <div class="fg"><label class="fl">Correo electrónico</label><input type="email" class="fi" placeholder="editor@medio.com"></div>
+        <div class="fg"><label class="fl">Contraseña</label><input type="password" class="fi" placeholder="••••••••••"></div>
+        <button class="fs-btn">Ingresar →</button>
+      </form>
+      <div class="af-div"><span>o continuar como</span></div>
+      <button class="fg-btn">Acceso de invitado</button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ S2 MAIN APP ═══════════════════════════════════════════ -->
+<section class="sc" id="sc-app">
+  <div class="app-wrap">
+    <div class="appbar">
+      <span class="appbar-logo">Aletheia <em>IEA</em></span>
+      <span class="appbar-sub">Mapa de Integridad Institucional · América Latina</span>
+      <div class="appbar-r">
+        <button class="ab-btn on">Coroplético</button>
+        <button class="ab-btn">Burbujas</button>
+        <div class="ab-year">2023</div>
+        <button class="ab-btn">Foro</button>
+        <button class="ab-btn">Ajustes</button>
+      </div>
+    </div>
+    <div class="app-body">
+      <div class="cl-panel">
+        <div class="cl-head">
+          <div class="cl-head-label">Ranking IEA</div>
+          <div class="cl-head-sub">22 países · Año 2023</div>
+        </div>
+        <div class="cl-list" id="cl-app">
+          <div class="cr on" style="animation-delay:0ms">  <span class="cr-rk">01</span><span class="cr-fl">🇺🇾</span><span class="cr-n">Uruguay</span>    <span class="cr-sc">27.4</span><span class="cr-dot b"></span></div>
+          <div class="cr" style="animation-delay:40ms">    <span class="cr-rk">02</span><span class="cr-fl">🇨🇷</span><span class="cr-n">Costa Rica</span><span class="cr-sc">34.1</span><span class="cr-dot b"></span></div>
+          <div class="cr" style="animation-delay:80ms">    <span class="cr-rk">03</span><span class="cr-fl">🇨🇱</span><span class="cr-n">Chile</span>       <span class="cr-sc">41.2</span><span class="cr-dot m"></span></div>
+          <div class="cr" style="animation-delay:120ms">   <span class="cr-rk">04</span><span class="cr-fl">🇵🇦</span><span class="cr-n">Panamá</span>     <span class="cr-sc">48.8</span><span class="cr-dot m"></span></div>
+          <div class="cr" style="animation-delay:160ms">   <span class="cr-rk">05</span><span class="cr-fl">🇧🇷</span><span class="cr-n">Brasil</span>      <span class="cr-sc">54.3</span><span class="cr-dot a"></span></div>
+          <div class="cr" style="animation-delay:200ms">   <span class="cr-rk">06</span><span class="cr-fl">🇵🇾</span><span class="cr-n">Paraguay</span>   <span class="cr-sc">57.9</span><span class="cr-dot a"></span></div>
+          <div class="cr" style="animation-delay:240ms">   <span class="cr-rk">07</span><span class="cr-fl">🇦🇷</span><span class="cr-n">Argentina</span>  <span class="cr-sc">62.1</span><span class="cr-dot a"></span></div>
+          <div class="cr" style="animation-delay:280ms">   <span class="cr-rk">08</span><span class="cr-fl">🇵🇪</span><span class="cr-n">Perú</span>        <span class="cr-sc">66.4</span><span class="cr-dot a"></span></div>
+          <div class="cr" style="animation-delay:320ms">   <span class="cr-rk">09</span><span class="cr-fl">🇲🇽</span><span class="cr-n">México</span>      <span class="cr-sc">69.2</span><span class="cr-dot c"></span></div>
+          <div class="cr" style="animation-delay:360ms">   <span class="cr-rk">10</span><span class="cr-fl">🇧🇴</span><span class="cr-n">Bolivia</span>     <span class="cr-sc">71.0</span><span class="cr-dot c"></span></div>
+          <div class="cr" style="animation-delay:400ms">   <span class="cr-rk">11</span><span class="cr-fl">🇬🇹</span><span class="cr-n">Guatemala</span>  <span class="cr-sc">75.3</span><span class="cr-dot c"></span></div>
+          <div class="cr" style="animation-delay:440ms">   <span class="cr-rk">12</span><span class="cr-fl">🇭🇳</span><span class="cr-n">Honduras</span>   <span class="cr-sc">77.8</span><span class="cr-dot c"></span></div>
+          <div class="cr" style="animation-delay:480ms">   <span class="cr-rk">13</span><span class="cr-fl">🇻🇪</span><span class="cr-n">Venezuela</span>  <span class="cr-sc">84.6</span><span class="cr-dot c"></span></div>
+        </div>
+      </div>
+      <div class="mp">
+        <svg viewBox="0 0 900 540" width="100%" height="100%" style="position:absolute;inset:0">
+          <defs>
+            <radialGradient id="mg" cx="35%" cy="55%" r="50%">
+              <stop offset="0%" stop-color="rgba(56,189,248,0.06)"/>
+              <stop offset="100%" stop-color="rgba(6,12,24,0)"/>
+            </radialGradient>
+            <filter id="gf"><feGaussianBlur stdDeviation="3"/></filter>
+          </defs>
+          <rect width="900" height="540" fill="url(#mg)"/>
+          <!-- continent outlines -->
+          <path d="M120,55 L205,48 L268,82 L288,148 L265,196 L212,228 L182,268 L148,285 L105,244 L88,180 L98,118Z" fill="none" stroke="rgba(56,189,248,.12)" stroke-width="1"/>
+          <path d="M182,268 L202,284 L198,316 L176,304Z" fill="none" stroke="rgba(56,189,248,.12)" stroke-width="1"/>
+          <path d="M202,316 L264,305 L326,338 L356,388 L344,458 L304,496 L252,484 L212,444 L192,394 L202,344Z" fill="none" stroke="rgba(56,189,248,.12)" stroke-width="1"/>
+          <path d="M436,58 L506,52 L534,92 L514,132 L472,122 L442,102Z" fill="none" stroke="rgba(56,189,248,.08)" stroke-width="1"/>
+          <path d="M452,162 L514,152 L556,194 L564,284 L534,364 L494,392 L452,372 L432,302 L432,222Z" fill="none" stroke="rgba(56,189,248,.08)" stroke-width="1"/>
+          <!-- glow under dots -->
+          <circle cx="275" cy="450" r="16" fill="rgba(34,211,160,.15)" filter="url(#gf)"/>
+          <circle cx="188" cy="298" r="12" fill="rgba(34,211,160,.15)" filter="url(#gf)"/>
+          <circle cx="244" cy="424" r="16" fill="rgba(250,204,21,.12)" filter="url(#gf)"/>
+          <circle cx="296" cy="386" r="30" fill="rgba(251,146,60,.1)"  filter="url(#gf)"/>
+          <circle cx="162" cy="228" r="22" fill="rgba(244,63,94,.12)"  filter="url(#gf)"/>
+          <circle cx="250" cy="320" r="18" fill="rgba(244,63,94,.12)"  filter="url(#gf)"/>
+          <!-- country dots -->
+          <circle cx="275" cy="450" r="6"  fill="#22d3a0" opacity=".85" style="animation:pulse 3s ease-in-out infinite"/>
+          <circle cx="188" cy="298" r="5"  fill="#22d3a0" opacity=".85"/>
+          <circle cx="244" cy="424" r="8"  fill="#facc15" opacity=".75" style="animation:pulse 3.2s ease-in-out .4s infinite"/>
+          <circle cx="296" cy="386" r="17" fill="#fb923c" opacity=".6"/>
+          <circle cx="162" cy="228" r="12" fill="#f43f5e" opacity=".7"  style="animation:pulse 2s ease-in-out .8s infinite"/>
+          <circle cx="250" cy="320" r="7"  fill="#f43f5e" opacity=".8"  style="animation:pulse 2.5s ease-in-out .2s infinite"/>
+          <circle cx="256" cy="458" r="11" fill="#fb923c" opacity=".65"/>
+        </svg>
+        <div class="mp-hint">Haz clic en un país</div>
+        <div class="mp-legend">
+          <div class="mp-leg-title">Índice IEA 2023 · Corrupción estimada</div>
+          <div class="mp-leg-bar"></div>
+          <div class="mp-leg-lbs"><span>Bajo</span><span>Moderado</span><span>Alto</span><span>Crítico</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ S3 FOCUS ═══════════════════════════════════════════════ -->
+<section class="sc" id="sc-focus">
+  <div class="focus-wrap">
+    <div class="cl-panel">
+      <div class="cl-head">
+        <div class="cl-head-label">Ranking IEA</div>
+        <div class="cl-head-sub">22 países · 2023</div>
+      </div>
+      <div class="cl-list">
+        <div class="cr" style="animation-delay:0ms">   <span class="cr-rk">01</span><span class="cr-fl">🇺🇾</span><span class="cr-n">Uruguay</span>    <span class="cr-sc">27.4</span><span class="cr-dot b"></span></div>
+        <div class="cr" style="animation-delay:40ms">  <span class="cr-rk">02</span><span class="cr-fl">🇨🇷</span><span class="cr-n">Costa Rica</span><span class="cr-sc">34.1</span><span class="cr-dot b"></span></div>
+        <div class="cr on" style="animation-delay:80ms"><span class="cr-rk">03</span><span class="cr-fl">🇨🇱</span><span class="cr-n">Chile</span>       <span class="cr-sc">41.2</span><span class="cr-dot m"></span></div>
+        <div class="cr" style="animation-delay:120ms"> <span class="cr-rk">04</span><span class="cr-fl">🇵🇦</span><span class="cr-n">Panamá</span>     <span class="cr-sc">48.8</span><span class="cr-dot m"></span></div>
+        <div class="cr" style="animation-delay:160ms"> <span class="cr-rk">05</span><span class="cr-fl">🇧🇷</span><span class="cr-n">Brasil</span>      <span class="cr-sc">54.3</span><span class="cr-dot a"></span></div>
+        <div class="cr" style="animation-delay:200ms"> <span class="cr-rk">06</span><span class="cr-fl">🇵🇾</span><span class="cr-n">Paraguay</span>   <span class="cr-sc">57.9</span><span class="cr-dot a"></span></div>
+        <div class="cr" style="animation-delay:240ms"> <span class="cr-rk">07</span><span class="cr-fl">🇦🇷</span><span class="cr-n">Argentina</span>  <span class="cr-sc">62.1</span><span class="cr-dot a"></span></div>
+      </div>
+    </div>
+    <div class="mp">
+      <svg viewBox="0 0 400 500" width="100%" height="100%" style="opacity:.5">
+        <defs><radialGradient id="mg2" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="rgba(250,204,21,0.08)"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs>
+        <path d="M80,28 L182,20 L262,82 L312,206 L292,346 L252,436 L200,456 L140,424 L98,362 L78,242 L60,138Z" fill="url(#mg2)" stroke="rgba(56,189,248,.18)" stroke-width="1.5"/>
+        <circle cx="180" cy="344" r="26" fill="rgba(250,204,21,.08)" style="animation:pulse 2.5s ease-in-out infinite"/>
+        <circle cx="180" cy="344" r="10" fill="rgba(250,204,21,.35)" stroke="rgba(250,204,21,.5)" stroke-width="1"/>
+        <text x="180" y="349" text-anchor="middle" font-family="DM Mono,monospace" font-size="10" fill="rgba(250,204,21,.9)" font-weight="500">CHL</text>
+      </svg>
+    </div>
+    <div class="fp">
+      <div class="fp-head">
+        <div class="fp-bc">← Sudamérica · Ranking #03</div>
+        <div class="fp-cn">Chile</div>
+        <div class="fp-cm">CHL · 19.5M hab. · República Presidencial</div>
+      </div>
+      <div class="fp-score">
+        <div>
+          <div class="fp-sn"><span id="score-num">41</span><span class="fp-su">.2</span></div>
+          <div class="fp-sl m">Moderado</div>
+        </div>
+        <div class="fp-ss">
+          <div class="fp-sy">2017 ─────────── 2023</div>
+          <svg class="spark-area" width="196" height="46" viewBox="0 0 196 46">
+            <defs>
+              <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="rgba(250,204,21,.18)"/>
+                <stop offset="100%" stop-color="rgba(250,204,21,0)"/>
+              </linearGradient>
+            </defs>
+            <path d="M4,37 L33,31 L62,27 L91,34 L120,23 L149,29 L177,21 L194,21 L194,44 L4,44Z" fill="url(#sg)"/>
+            <polyline class="spark-path" points="4,37 33,31 62,27 91,34 120,23 149,29 177,21" fill="none" stroke="rgba(250,204,21,.8)" stroke-width="1.5" stroke-linejoin="round"/>
+            <circle class="spark-dot" cx="177" cy="21" r="3" fill="#facc15"/>
+          </svg>
+          <div class="fp-delta">2.1 pts vs 2022</div>
+        </div>
+      </div>
+      <div class="fp-body">
+        <div class="fp-sec">
+          <div class="fp-sec-t">Pilares IEA 2023</div>
+          <div class="pil-item"><div class="pil-top"><span class="pil-label">Disciplina Fiscal</span><span class="pil-val">68/100</span></div><div class="pil-track"><div class="pil-fill" style="--w:68%"></div></div></div>
+          <div class="pil-item"><div class="pil-top"><span class="pil-label">Inversión Social</span><span class="pil-val">71/100</span></div><div class="pil-track"><div class="pil-fill" style="--w:71%"></div></div></div>
+          <div class="pil-item"><div class="pil-top"><span class="pil-label">Transparencia</span><span class="pil-val">55/100</span></div><div class="pil-track"><div class="pil-fill lo" style="--w:55%"></div></div></div>
+          <div class="pil-item"><div class="pil-top"><span class="pil-label">Estabilidad Sect.</span><span class="pil-val">63/100</span></div><div class="pil-track"><div class="pil-fill" style="--w:63%"></div></div></div>
+        </div>
+        <div class="fp-sec">
+          <div class="fp-sec-t">Gobierno Actual</div>
+          <div class="pres">
+            <div class="pres-init">GB</div>
+            <div>
+              <div class="pres-name">Gabriel Boric Font</div>
+              <div class="pres-det">Presidente desde marzo 2022 · Partido: Frente Amplio</div>
+              <div class="pres-st">Centro-Izquierda</div>
+            </div>
+          </div>
+        </div>
+        <div class="fp-sec">
+          <div class="fp-sec-t">Cronología 2023</div>
+          <div class="tl">
+            <div class="tl-i" style="animation-delay:0ms"><span class="tl-d">Mar 2023</span><span class="tl-s">Minería</span><p class="tl-t">Nuevo marco regulatorio para grandes contratos mineros entra en discusión legislativa.</p></div>
+            <div class="tl-i" style="animation-delay:80ms"><span class="tl-d">Jun 2023</span><span class="tl-s">Salud Pública</span><p class="tl-t">Auditoría revela sobreprecios en contratos de insumos hospitalarios durante pandemia.</p></div>
+            <div class="tl-i" style="animation-delay:160ms"><span class="tl-d">Sep 2023</span><span class="tl-s">Judicial</span><p class="tl-t">Caso Convenios llega a la Fiscalía Nacional. Cuatro alcaldes imputados.</p></div>
+          </div>
+        </div>
+        <div class="fp-sec">
+          <div class="fp-sec-t">Prensa · 2023</div>
+          <ul class="hl">
+            <li class="hl-i"><span class="hl-src">El País</span><span class="hl-tx">Chile ante la encrucijada: la reforma constitucional fracasa y abre incógnitas sobre gobernabilidad</span></li>
+            <li class="hl-i"><span class="hl-src">Reuters</span><span class="hl-tx">Chile's anti-corruption agency reports 18% increase in public sector complaints in 2023</span></li>
+            <li class="hl-i"><span class="hl-src">CIPER</span><span class="hl-tx">Caso Convenios: la red de transferencias irregulares que involucra a 12 organizaciones</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ S4 FORUM ═══════════════════════════════════════════════ -->
+<section class="sc" id="sc-forum">
+  <div class="forum-wrap">
+    <div class="fbar">
+      <span class="fbar-title">Tribuna</span>
+      <span class="fbar-sub">Investigación colaborativa · 174 hilos activos</span>
+      <div class="fbar-r"><button class="fbar-new">+ Nuevo hilo</button></div>
+    </div>
+    <div class="fbody">
+      <div class="tlist">
+        <div class="tlist-h">
+          <span class="tlist-cnt">174 conversaciones</span>
+          <button class="tlist-sort">Recientes ▾</button>
+        </div>
+        <div class="ti" style="animation-delay:0ms">
+          <div class="ti-h"><span class="ti-co">Venezuela</span><span class="ti-sc">Gobierno</span><span class="ti-al u">Urgente</span></div>
+          <div class="ti-title">El presupuesto 2023 muestra caída del 34% en gasto social. ¿Qué explica este desplome?</div>
+          <div class="ti-meta"><span>23 respuestas</span><span>hace 2 h</span></div>
+        </div>
+        <div class="ti on" style="animation-delay:50ms">
+          <div class="ti-h"><span class="ti-co">Chile</span><span class="ti-sc">Judicial</span><span class="ti-al a">Alerta</span></div>
+          <div class="ti-title">Caso Convenios: seguimiento de imputados y avance del proceso en Fiscalía</div>
+          <div class="ti-meta"><span>41 respuestas</span><span>hace 5 h</span></div>
+        </div>
+        <div class="ti" style="animation-delay:100ms">
+          <div class="ti-h"><span class="ti-co">México</span><span class="ti-sc">Tema</span><span class="ti-al w">Seguimiento</span></div>
+          <div class="ti-title">Gasto en seguridad supera 25% del presupuesto — patrones históricos de desviación</div>
+          <div class="ti-meta"><span>18 respuestas</span><span>hace 1 d</span></div>
+        </div>
+        <div class="ti" style="animation-delay:150ms">
+          <div class="ti-h"><span class="ti-co">Argentina</span><span class="ti-sc">País</span><span class="ti-al w">Seguimiento</span></div>
+          <div class="ti-title">IEA 2015–2023: ciclo kirchnerista vs. macrismo en disciplina fiscal</div>
+          <div class="ti-meta"><span>67 respuestas</span><span>hace 2 d</span></div>
+        </div>
+        <div class="ti" style="animation-delay:200ms">
+          <div class="ti-h"><span class="ti-co">Brasil</span><span class="ti-sc">Gobierno</span><span class="ti-al w">Seguimiento</span></div>
+          <div class="ti-title">Lula 2023: ¿recuperación real o efecto estadístico de la base baja?</div>
+          <div class="ti-meta"><span>29 respuestas</span><span>hace 3 d</span></div>
+        </div>
+        <div class="ti" style="animation-delay:250ms">
+          <div class="ti-h"><span class="ti-co">Perú</span><span class="ti-sc">Judicial</span><span class="ti-al a">Alerta</span></div>
+          <div class="ti-title">Cinco gobiernos, cinco investigados. ¿Es el sistema judicial capaz de actuar?</div>
+          <div class="ti-meta"><span>52 respuestas</span><span>hace 4 d</span></div>
+        </div>
+      </div>
+      <div class="tdet">
+        <div class="tdet-h">
+          <div class="tdet-bc">Chile · Judicial · Alerta</div>
+          <h2 class="tdet-title">Caso Convenios: seguimiento de imputados y avance del proceso en Fiscalía</h2>
+          <div class="tdet-meta"><span>Abierto por Ana Veedor</span><span>41 respuestas</span><span>hace 5 horas</span></div>
+        </div>
+        <div class="posts">
+          <div class="post" style="animation-delay:0ms">
+            <div class="pav b">AV</div>
+            <div>
+              <div class="phd"><span class="pauth">Ana Veedor</span><span class="phndl">@ana_veedor</span><span class="pts">hace 5 h</span></div>
+              <p class="ptxt">El Ministerio Público formalizó a cuatro alcaldes por el caso Convenios. Según los datos del IEA, Chile ya mostraba anomalías en el pilar de Transparencia desde 2021. ¿Alguien tiene acceso a los contratos originales? Necesitamos cruzar montos con el indicador de contratación pública.</p>
+              <div class="pact"><button class="pact-b">▲ 14</button><button class="pact-b">Responder</button><button class="pact-b">Citar</button></div>
+            </div>
+          </div>
+          <div class="post" style="animation-delay:80ms">
+            <div class="pav b">PL</div>
+            <div>
+              <div class="phd"><span class="pauth">Pancho Linares</span><span class="phndl">@pancho.l</span><span class="pts">hace 4 h</span></div>
+              <p class="ptxt">Los contratos están en el portal de Contraloría. El problema es que los montos no cuadran con las rendiciones. CIPER publicó el desglose — hay una discrepancia de 340M CLP en una sola ONG. El IEA baja 2.1 puntos en 2023 y este caso explica parte significativa.</p>
+              <div class="pact"><button class="pact-b">▲ 9</button><button class="pact-b">Responder</button><button class="pact-b">Citar</button></div>
+            </div>
+          </div>
+          <div class="post post-ai" style="animation-delay:160ms">
+            <div class="pav ai">IA</div>
+            <div>
+              <div class="phd"><span class="pauth">Insight Engine</span><span class="ai-tag">análisis automatizado</span><span class="pts">hace 3 h</span></div>
+              <p class="ptxt">Correlación detectada: pilar de Transparencia con caída consistente desde Q4 2021 (55.3 → 48.1 en 3 períodos). El Caso Convenios involucra 14 organizaciones, contratos acumulados &gt;2.400M CLP. Patrón: adjudicación directa con entidades vinculadas a funcionarios activos. Recomiendo cruzar con <code>v_president_expenditure</code> filtrando sector=administración, 2021–2023.</p>
+              <div class="pact"><button class="pact-b">Ver fuentes</button><button class="pact-b">Explorar datos</button></div>
+            </div>
+          </div>
+          <div class="post" style="animation-delay:240ms">
+            <div class="pav u">JR</div>
+            <div>
+              <div class="phd"><span class="pauth">Julieta Ramírez</span><span class="phndl">@julieta.r</span><span class="pts">hace 2 h</span></div>
+              <p class="ptxt">El caso tiene un patrón muy similar a lo documentado en Paraguay en 2019. Misma estructura: ONG pantalla, funcionario intermediario, contrato sin licitación. La diferencia es que en Chile sí hay fiscalía independiente. El juicio podría ser un test para el sistema institucional.</p>
+              <div class="pact"><button class="pact-b">▲ 22</button><button class="pact-b">Responder</button><button class="pact-b">Citar</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="reply-area">
+          <textarea class="reply-ta" placeholder="Añade tu análisis o hallazgo…"></textarea>
+          <button class="reply-send">Publicar →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+/* ── Screen nav ───────────────────────────────────────────── */
+function show(id) {
+  document.querySelectorAll('.sc').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.mnav button').forEach(b => b.classList.remove('on'));
+  document.getElementById('sc-' + id).classList.add('on');
+  const i = {auth:0,app:1,focus:2,forum:3}[id];
+  document.querySelectorAll('.mnav button')[i].classList.add('on');
+  if (id === 'auth')  initAuth();
+  if (id === 'focus') initFocus();
+  if (id === 'forum') initForum();
+}
+
+/* ── Tab toggle ───────────────────────────────────────────── */
+function afTab(el) {
+  document.querySelectorAll('.af-tab').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+
+/* ── Counter animation ────────────────────────────────────── */
+function counter(el, target, suffix, duration) {
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  const start = performance.now();
+  function tick(now) {
+    const t = Math.min(1, (now - start) / duration);
+    el.textContent = Math.round(target * ease(t)) + (suffix || '');
+    if (t < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* ── Auth init ────────────────────────────────────────────── */
+function initAuth() {
+  setTimeout(() => {
+    document.querySelectorAll('.ah-stat-n[data-target]').forEach(el => {
+      counter(el, +el.dataset.target, el.dataset.suffix || '', 1200);
+    });
+  }, 500);
+}
+
+/* ── Focus score count-up ─────────────────────────────────── */
+function initFocus() {
+  const el = document.getElementById('score-num');
+  if (el) { el.textContent = '0'; counter(el, 41, '', 900); }
+}
+
+/* ── Forum stagger ────────────────────────────────────────── */
+function initForum() {
+  document.querySelectorAll('.ti').forEach((ti, i) => {
+    ti.style.animationDelay = (i * 55) + 'ms';
+  });
+  document.querySelectorAll('.post').forEach((p, i) => {
+    p.style.animationDelay = (i * 80) + 'ms';
+  });
+}
+
+/* ── Init auth on load ────────────────────────────────────── */
+window.addEventListener('load', () => {
+  initAuth();
+});
+</script>
+</body>
+</html>

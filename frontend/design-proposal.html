@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aletheia · Propuesta de Diseño v3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,500&family=DM+Mono:wght@400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  /* Backgrounds — rich navy gradient family */
+  --bg:       #060d1c;
+  --bg-2:     #0a1628;
+  --bg-3:     #0e1f38;
+  --bg-4:     #142848;
+  --bg-5:     #1a3358;
+
+  /* Text */
+  --ink:      #ddeeff;
+  --ink-2:    #8ab0d4;
+  --ink-3:    #4a6d94;
+  --ink-4:    #284060;
+
+  /* Borders */
+  --line:     #0e1f38;
+  --line-2:   #1a3050;
+  --line-3:   #274468;
+
+  /* Primary blue — lighter, more vivid */
+  --blue:     #4fc3f7;
+  --blue-2:   #29b6f6;
+  --blue-3:   #0284c7;
+  --blue-glow:rgba(79,195,247,.18);
+  --blue-glow2:rgba(79,195,247,.35);
+
+  /* Gold — logo + score only */
+  --gold:     #fbbf24;
+  --gold-2:   #f59e0b;
+  --gold-glow:rgba(251,191,36,.22);
+
+  /* Severity */
+  --sev-lo:   #34d399;
+  --sev-md:   #fbbf24;
+  --sev-hi:   #fb923c;
+  --sev-cr:   #f87171;
+
+  /* Typography */
+  --fd:'Fraunces',Georgia,serif;
+  --fm:'DM Mono','Courier New',monospace;
+  --fs:'DM Sans',-apple-system,sans-serif;
+
+  --ease:cubic-bezier(.22,1,.36,1);
+  --ease2:cubic-bezier(.4,0,.2,1);
+}
+
+html{background:var(--bg);color:var(--ink);font-family:var(--fs)}
+body{min-height:100vh;overflow-x:hidden}
+
+/* ── KEYFRAMES ───────────────────────────────────────────── */
+@keyframes fadeUp  {from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn  {from{opacity:0}to{opacity:1}}
+@keyframes slideLeft{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideRight{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
+@keyframes drawPath{to{stroke-dashoffset:0}}
+@keyframes expandBar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes countReveal{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:.75}50%{transform:scale(1.3);opacity:1}}
+@keyframes critPulse{0%,100%{box-shadow:0 0 0 0 rgba(248,113,113,.4)}70%{box-shadow:0 0 0 6px rgba(248,113,113,0)}}
+@keyframes gridDrift{from{background-position:0 0}to{background-position:48px 48px}}
+@keyframes scanLine{from{top:-2px}to{top:100%}}
+@keyframes eyeOpen{from{transform:scaleY(0.05)}to{transform:scaleY(1)}}
+@keyframes glow{0%,100%{opacity:.7}50%{opacity:1}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes lineExpand{from{width:0}to{width:100%}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes rotateSlow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+/* ── MOCKUP NAV ──────────────────────────────────────────── */
+.mnav{
+  position:fixed;top:0;left:0;right:0;z-index:9999;
+  height:38px;
+  background:linear-gradient(90deg,rgba(6,13,28,.98) 0%,rgba(10,22,40,.98) 100%);
+  backdrop-filter:blur(12px);
+  display:flex;align-items:center;padding:0 20px;gap:0;
+  border-bottom:1px solid var(--line-2);
+}
+.mnav::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,var(--blue),rgba(79,195,247,.3) 50%,transparent);
+  opacity:.6;
+}
+.mnav-brand{
+  display:flex;align-items:center;gap:8px;
+  margin-right:24px;flex-shrink:0;
+}
+.mnav-label{font-family:var(--fm);font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--blue);font-weight:500}
+.mnav button{
+  background:none;border:none;border-bottom:2px solid transparent;
+  color:var(--ink-3);font-family:var(--fm);font-size:9.5px;letter-spacing:.1em;
+  padding:0 14px;height:38px;cursor:pointer;text-transform:uppercase;
+  transition:color .18s,border-color .18s;
+}
+.mnav button:hover{color:var(--ink-2)}
+.mnav button.on{color:var(--blue);border-bottom-color:var(--blue)}
+.mnav-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.mnav-dot{width:6px;height:6px;border-radius:50%;background:var(--sev-lo);animation:pulse 2.4s ease-in-out infinite}
+.mnav-live{font-family:var(--fm);font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--sev-lo)}
+
+/* ── SCREEN SHELL ────────────────────────────────────────── */
+.sc{display:none;padding-top:38px;min-height:100vh}
+.sc.on{display:flex;flex-direction:column}
+
+/* ══════════════════════════════════════════════════════════
+   LOGO SVG HELPERS
+══════════════════════════════════════════════════════════ */
+/* Eye/Globe — Direction A */
+/* Alpha A — Direction B: two legs + near-horizontal crossbar that extends beyond */
+
+/* ══════════════════════════════════════════════════════════
+   S1 — AUTH / LOGIN
+   Keep the original dark dramatic feel, elevate the details
+══════════════════════════════════════════════════════════ */
+.auth-root{
+  min-height:calc(100vh - 38px);
+  display:grid;grid-template-columns:1fr 420px;
+  position:relative;overflow:hidden;
+}
+
+/* Rich animated grid background */
+.auth-root::before{
+  content:'';position:absolute;inset:0;z-index:0;
+  background-image:
+    linear-gradient(rgba(79,195,247,.05) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(79,195,247,.05) 1px,transparent 1px);
+  background-size:48px 48px;
+  animation:gridDrift 16s linear infinite;
+}
+/* Deep radial gradient — warm blue center left */
+.auth-root::after{
+  content:'';position:absolute;inset:0;z-index:1;
+  background:
+    radial-gradient(ellipse 70% 90% at 25% 55%,rgba(14,40,80,.4) 0%,transparent 70%),
+    radial-gradient(ellipse 40% 60% at 75% 50%,rgba(6,13,28,.8) 0%,transparent 100%);
+}
+
+/* Moving scan line */
+.scan{
+  position:absolute;left:0;right:0;height:1px;z-index:2;
+  background:linear-gradient(90deg,transparent 5%,rgba(79,195,247,.2) 25%,rgba(79,195,247,.55) 50%,rgba(79,195,247,.2) 75%,transparent 95%);
+  animation:scanLine 8s linear infinite;
+}
+
+/* ── Auth Hero (left) ─────────────────────────────────── */
+.ah{
+  padding:56px 60px 52px 68px;
+  display:flex;flex-direction:column;justify-content:space-between;
+  position:relative;z-index:3;
+  border-right:1px solid var(--line-2);
+}
+
+/* Top accent line */
+.ah::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--blue),var(--blue-2) 40%,transparent);
+  opacity:.6;
+}
+
+/* Floating eye animation wrapper */
+.ah-eye-row{
+  display:flex;align-items:center;gap:16px;margin-bottom:4px;
+  animation:fadeUp .5s var(--ease) .05s both;
+}
+.ah-kicker{
+  font-family:var(--fm);font-size:8.5px;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--blue);opacity:.85;
+}
+
+.ah-logo{
+  font-family:var(--fd);font-weight:900;
+  font-size:clamp(64px,8vw,120px);
+  line-height:.86;letter-spacing:-.03em;color:var(--ink);
+  animation:fadeUp .7s var(--ease) .15s both;
+}
+.ah-logo-sub{
+  font-family:var(--fm);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--blue);opacity:.7;margin-top:14px;
+  animation:fadeUp .7s var(--ease) .22s both;
+}
+
+/* Centered horizontal divider element */
+.ah-divider{
+  display:flex;align-items:center;gap:0;margin:24px 0;
+  animation:fadeUp .6s var(--ease) .28s both;
+}
+.ah-div-line{
+  flex:1;height:1px;
+  background:linear-gradient(90deg,transparent,var(--blue-3),var(--blue));
+  opacity:.35;
+}
+.ah-div-line.r{background:linear-gradient(90deg,var(--blue),var(--blue-3),transparent)}
+.ah-div-center{
+  padding:0 16px;display:flex;align-items:center;gap:8px;flex-shrink:0;
+}
+.ah-div-dot{
+  width:5px;height:5px;border-radius:50%;
+  background:var(--blue);box-shadow:0 0 8px var(--blue);
+}
+
+.ah-deck{
+  font-size:15.5px;line-height:1.8;color:var(--ink-2);font-weight:300;max-width:450px;
+  animation:fadeUp .7s var(--ease) .35s both;
+}
+.ah-deck strong{color:var(--ink);font-weight:500}
+
+.ah-stats{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--line-2);border:1px solid var(--line-2);
+  animation:fadeUp .7s var(--ease) .45s both;
+}
+.ah-stat{background:var(--bg-3);padding:12px 14px;transition:background .2s}
+.ah-stat:hover{background:var(--bg-4)}
+.ah-stat-n{
+  font-family:var(--fm);font-size:22px;font-weight:500;display:block;
+  color:var(--blue);line-height:1.1;
+}
+.ah-stat-l{font-family:var(--fm);font-size:7.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);display:block;margin-top:3px}
+
+.ah-foot{
+  font-family:var(--fm);font-size:8.5px;color:var(--ink-4);letter-spacing:.07em;
+  animation:fadeUp .6s var(--ease) .55s both;
+}
+
+/* ── Auth Form (right) ───────────────────────────────── */
+.af{
+  background:linear-gradient(160deg,#060f20 0%,#091525 40%,#0c1c35 100%);
+  border-left:1px solid var(--line-2);
+  padding:56px 44px;
+  display:flex;flex-direction:column;justify-content:center;
+  position:relative;z-index:3;overflow:hidden;
+  animation:slideLeft .7s var(--ease) .1s both;
+}
+
+/* Corner brackets */
+.af::before,.af::after{content:'';position:absolute;width:40px;height:40px;opacity:.5}
+.af::before{top:0;right:0;border-top:1px solid var(--blue);border-right:1px solid var(--blue)}
+.af::after {bottom:0;left:0;border-bottom:1px solid var(--blue);border-left:1px solid var(--blue)}
+
+/* Glow orb behind form */
+.af-glow{
+  position:absolute;bottom:-80px;right:-80px;
+  width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,rgba(79,195,247,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+.af-logo-area{
+  display:flex;flex-direction:column;align-items:center;margin-bottom:32px;
+  animation:fadeUp .5s var(--ease) .2s both;
+}
+.af-logo-eye{animation:float 4s ease-in-out infinite}
+
+/* Centered form divider */
+.af-divider{
+  display:flex;align-items:center;gap:0;margin:20px 0;
+}
+.af-div-line{flex:1;height:1px;background:var(--line-2)}
+.af-div-center{padding:0 10px;display:flex;align-items:center;justify-content:center}
+
+.af-kicker{
+  font-family:var(--fm);font-size:8.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--blue);margin-bottom:10px;opacity:.85;
+  animation:fadeUp .5s var(--ease) .3s both;
+}
+.af-title{
+  font-family:var(--fd);font-size:32px;font-weight:700;
+  color:var(--ink);line-height:1.1;margin-bottom:24px;
+  animation:fadeUp .5s var(--ease) .36s both;
+}
+
+.af-tabs{display:flex;border-bottom:1px solid var(--line-2);margin-bottom:20px;animation:fadeUp .5s var(--ease) .42s both}
+.af-tab{
+  font-family:var(--fm);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--ink-3);background:none;border:none;border-bottom:2px solid transparent;
+  padding:8px 0;margin-right:20px;cursor:pointer;transition:all .18s;
+}
+.af-tab:hover{color:var(--ink-2)}
+.af-tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+
+.fg{margin-bottom:14px;animation:fadeUp .5s var(--ease) .48s both}
+.fl{font-family:var(--fm);font-size:7.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:6px}
+.fi{
+  width:100%;background:rgba(79,195,247,.04);
+  border:1px solid var(--line-2);
+  color:var(--ink);font-family:var(--fm);font-size:13px;
+  padding:11px 13px;outline:none;
+  transition:border-color .18s,background .18s,box-shadow .18s;
+}
+.fi:focus{border-color:var(--blue);background:rgba(79,195,247,.07);box-shadow:0 0 0 3px rgba(79,195,247,.1)}
+.fi::placeholder{color:var(--ink-4)}
+
+.fs-btn{
+  width:100%;
+  background:linear-gradient(135deg,var(--blue) 0%,var(--blue-2) 100%);
+  color:#020c18;border:none;
+  font-family:var(--fm);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  padding:13px;cursor:pointer;margin-top:4px;font-weight:500;
+  position:relative;overflow:hidden;transition:opacity .18s;
+  animation:fadeUp .5s var(--ease) .54s both;
+}
+.fs-btn::before{
+  content:'';position:absolute;top:0;left:-100%;width:60%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);
+}
+.fs-btn:hover{opacity:.9}
+.fs-btn:hover::before{animation:shimmer .55s ease forwards}
+
+.fg-btn{
+  width:100%;background:transparent;border:1px solid var(--line-2);
+  color:var(--ink-3);font-family:var(--fm);font-size:9px;letter-spacing:.12em;
+  text-transform:uppercase;padding:11px;cursor:pointer;transition:all .18s;
+  animation:fadeUp .5s var(--ease) .62s both;
+}
+.fg-btn:hover{border-color:var(--line-3);color:var(--ink-2)}
+
+/* ══════════════════════════════════════════════════════════
+   SHARED APP CHROME — top bar used across S2/S3/S4
+══════════════════════════════════════════════════════════ */
+.appbar{
+  height:50px;
+  background:linear-gradient(90deg,var(--bg-4) 0%,var(--bg-3) 40%,var(--bg-2) 100%);
+  border-bottom:1px solid var(--line-2);
+  display:flex;align-items:center;padding:0 18px 0 20px;flex-shrink:0;gap:0;
+  position:relative;
+}
+/* Bottom blue accent line */
+.appbar::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,var(--blue) 0%,rgba(79,195,247,.4) 50%,transparent 100%);
+  opacity:.7;
+}
+
+/* Alpha A mark — correct Direction B proportions */
+.logo-a{display:flex;align-items:center;flex-shrink:0;margin-right:10px}
+
+.appbar-name{
+  font-family:var(--fd);font-size:19px;font-weight:900;
+  letter-spacing:-.02em;color:var(--ink);flex-shrink:0;
+}
+.appbar-name em{font-weight:300;font-style:italic;font-size:.72em;color:var(--blue)}
+.appbar-sub{
+  font-family:var(--fm);font-size:8px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-3);border-left:1px solid var(--line-2);padding-left:14px;margin-left:14px;
+}
+.appbar-r{margin-left:auto;display:flex;align-items:center;gap:12px}
+.ab-btn{
+  font-family:var(--fm);font-size:8.5px;letter-spacing:.11em;text-transform:uppercase;
+  color:var(--ink-3);background:none;border:none;cursor:pointer;padding:5px 0;
+  border-bottom:2px solid transparent;transition:all .15s;
+}
+.ab-btn:hover{color:var(--ink-2)}
+.ab-btn.on{color:var(--blue);border-bottom-color:var(--blue)}
+.ab-year{
+  font-family:var(--fm);font-size:11px;color:var(--blue);
+  background:rgba(79,195,247,.08);border:1px solid rgba(79,195,247,.22);
+  padding:3px 10px;letter-spacing:.04em;
+}
+
+/* ── Centered decorative section divider ─────────────── */
+/* Used inside panels to separate content blocks */
+.sec-div{
+  display:flex;align-items:center;gap:0;padding:0 0 4px;
+}
+.sec-div-line{flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--line-2))}
+.sec-div-line.rev{background:linear-gradient(90deg,var(--line-2),transparent)}
+.sec-div-center{
+  padding:0 12px;display:flex;align-items:center;gap:5px;flex-shrink:0;
+}
+.sec-div-label{
+  font-family:var(--fm);font-size:7.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--blue);opacity:.8;
+}
+.sec-div-dot{width:3px;height:3px;border-radius:50%;background:var(--blue);opacity:.6}
+
+/* ══════════════════════════════════════════════════════════
+   S2 — MAIN APP
+══════════════════════════════════════════════════════════ */
+.app-wrap{height:calc(100vh - 38px);display:flex;flex-direction:column;overflow:hidden}
+.app-body{flex:1;display:grid;grid-template-columns:272px 1fr;overflow:hidden}
+
+/* Country list panel */
+.cl-panel{
+  background:linear-gradient(180deg,var(--bg-3) 0%,var(--bg-2) 100%);
+  border-right:1px solid var(--line-2);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.cl-head{padding:14px 16px 10px;border-bottom:1px solid var(--line);flex-shrink:0}
+.cl-head-row{
+  display:flex;align-items:center;gap:0;
+}
+.cl-head-label{
+  font-family:var(--fm);font-size:7.5px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--blue);display:flex;align-items:center;gap:6px;flex:1;opacity:.85;
+}
+.cl-head-label::before,.cl-head-label::after{content:'';flex:1;height:1px;background:var(--blue);opacity:.2}
+.cl-head-sub{font-family:var(--fm);font-size:8px;color:var(--ink-4);text-align:center;margin-top:5px;letter-spacing:.07em}
+
+.cl-list{overflow-y:auto;flex:1}
+.cl-list::-webkit-scrollbar{width:2px}
+.cl-list::-webkit-scrollbar-thumb{background:var(--line-2)}
+
+.cr{
+  display:grid;grid-template-columns:26px 22px 1fr 52px 16px;
+  align-items:center;gap:6px;
+  padding:9px 14px 9px 16px;
+  border-bottom:1px solid rgba(14,31,56,.6);
+  cursor:pointer;transition:background .12s,border-left .12s;
+  border-left:2px solid transparent;
+  animation:slideRight .45s var(--ease) both;
+  position:relative;
+}
+.cr::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,var(--blue-glow),transparent);
+  opacity:0;transition:opacity .18s;
+}
+.cr:hover::before{opacity:1}
+.cr:hover{border-left-color:rgba(79,195,247,.4)}
+.cr.on{
+  background:linear-gradient(90deg,rgba(79,195,247,.1) 0%,rgba(79,195,247,.03) 100%);
+  border-left-color:var(--blue);
+}
+.cr-rk{font-family:var(--fm);font-size:8.5px;color:var(--ink-4);text-align:right;position:relative;z-index:1}
+.cr-fl{font-size:13px;text-align:center;position:relative;z-index:1}
+.cr-n{font-size:12.5px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2);position:relative;z-index:1;transition:color .15s}
+.cr:hover .cr-n,.cr.on .cr-n{color:var(--ink)}
+.cr-sc{font-family:var(--fm);font-size:11px;font-weight:500;text-align:right;color:var(--ink-3);position:relative;z-index:1;transition:color .15s}
+.cr.on .cr-sc{color:var(--blue)}
+.cr-dot{width:7px;height:7px;border-radius:50%;position:relative;z-index:1}
+.cr-dot.b{background:var(--sev-lo)}
+.cr-dot.m{background:var(--sev-md)}
+.cr-dot.h{background:var(--sev-hi)}
+.cr-dot.c{background:var(--sev-cr);animation:critPulse 2s ease-in-out infinite}
+
+/* Map panel */
+.mp{
+  background:linear-gradient(135deg,var(--bg) 0%,#081020 100%);
+  position:relative;overflow:hidden;
+}
+.mp-hint{
+  position:absolute;top:14px;right:14px;
+  background:rgba(10,22,40,.85);border:1px solid var(--line-2);
+  padding:7px 12px;font-family:var(--fm);font-size:8px;
+  letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase;
+  backdrop-filter:blur(4px);
+}
+.mp-legend{
+  position:absolute;bottom:14px;left:14px;
+  background:rgba(10,22,40,.9);border:1px solid var(--line-2);
+  padding:10px 14px;backdrop-filter:blur(4px);
+}
+.mp-leg-title{font-family:var(--fm);font-size:7.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3);margin-bottom:7px}
+.mp-leg-bar{
+  width:132px;height:4px;margin-bottom:5px;
+  background:linear-gradient(to right,var(--sev-lo),var(--sev-md),var(--sev-hi),var(--sev-cr));
+}
+.mp-leg-lbs{display:flex;justify-content:space-between;font-family:var(--fm);font-size:7.5px;color:var(--ink-4)}
+
+/* ══════════════════════════════════════════════════════════
+   S3 — COUNTRY FOCUS
+══════════════════════════════════════════════════════════ */
+.focus-wrap{display:grid;grid-template-columns:272px 1fr 380px;height:calc(100vh - 38px);overflow:hidden}
+
+.fp{
+  background:linear-gradient(180deg,var(--bg-3) 0%,var(--bg-2) 60%,var(--bg) 100%);
+  border-left:1px solid var(--line-2);
+  display:flex;flex-direction:column;overflow:hidden;
+  animation:slideLeft .5s var(--ease) both;
+  position:relative;
+}
+.fp::before{content:'';height:1px;background:linear-gradient(90deg,var(--blue),rgba(79,195,247,.2));flex-shrink:0}
+
+.fp-head{
+  padding:22px 26px 16px;border-bottom:1px solid var(--line-2);flex-shrink:0;
+  background:linear-gradient(180deg,rgba(20,40,72,.6) 0%,transparent);
+}
+.fp-bc{font-family:var(--fm);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:10px;opacity:.8;cursor:pointer;transition:opacity .15s}
+.fp-bc:hover{opacity:1}
+.fp-cn-row{display:flex;align-items:center;gap:12px;margin-bottom:4px}
+.fp-cn{font-family:var(--fd);font-size:34px;font-weight:900;line-height:1;letter-spacing:-.02em;color:var(--ink);animation:countReveal .4s var(--ease) .1s both}
+.fp-cm{font-family:var(--fm);font-size:8px;color:var(--ink-3);letter-spacing:.09em;text-transform:uppercase}
+
+.fp-score{
+  padding:18px 26px;border-bottom:1px solid var(--line-2);
+  display:flex;align-items:flex-start;gap:18px;flex-shrink:0;
+  background:linear-gradient(135deg,rgba(20,40,72,.5) 0%,transparent);
+}
+.fp-snum{
+  font-family:var(--fm);font-size:60px;font-weight:500;line-height:1;
+  letter-spacing:-.04em;color:var(--gold);
+  text-shadow:0 0 28px rgba(251,191,36,.25);
+  animation:countReveal .5s var(--ease) .2s both;
+}
+.fp-sunit{font-size:11px;font-weight:400;color:var(--ink-3)}
+.fp-badge{
+  display:inline-block;font-family:var(--fm);font-size:7.5px;letter-spacing:.15em;
+  text-transform:uppercase;padding:3px 8px;margin-top:6px;border:1px solid;
+}
+.fp-badge.m{color:var(--sev-md);border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.08)}
+.fp-badge.c{color:var(--sev-cr);border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.1)}
+.fp-badge.b{color:var(--sev-lo);border-color:rgba(52,211,153,.3);background:rgba(52,211,153,.08)}
+.fp-badge.h{color:var(--sev-hi);border-color:rgba(251,146,60,.3);background:rgba(251,146,60,.08)}
+
+.fp-ss{flex:1;padding-top:4px}
+.fp-sy{font-family:var(--fm);font-size:7.5px;color:var(--ink-4);letter-spacing:.09em;text-transform:uppercase;margin-bottom:8px}
+.fp-delta{font-family:var(--fm);font-size:9.5px;margin-top:8px;color:var(--sev-hi);display:flex;align-items:center;gap:4px}
+.spark-path{stroke-dasharray:220;stroke-dashoffset:220;animation:drawPath 1.4s var(--ease) .4s forwards}
+.spark-dot{animation:fadeIn .3s ease 1.7s both}
+
+.fp-body{flex:1;overflow-y:auto}
+.fp-body::-webkit-scrollbar{width:2px}
+.fp-body::-webkit-scrollbar-thumb{background:var(--line-2)}
+
+.fp-sec{padding:14px 26px;border-bottom:1px solid var(--line)}
+
+/* Pillar bars */
+.pil{margin-bottom:10px}
+.pil-top{display:flex;justify-content:space-between;margin-bottom:5px}
+.pil-lbl{font-family:var(--fm);font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.pil-val{font-family:var(--fm);font-size:9px;font-weight:500;color:var(--blue)}
+.pil-track{height:2px;background:var(--line-2)}
+.pil-fill{height:100%;transform-origin:left;background:linear-gradient(90deg,var(--blue-3),var(--blue));animation:expandBar .8s var(--ease) .3s both}
+.pil-fill.lo{background:linear-gradient(90deg,#b45309,var(--sev-md))}
+.pil-fill.vlo{background:linear-gradient(90deg,#9f1239,var(--sev-cr))}
+
+/* President */
+.pres{display:flex;gap:12px;align-items:flex-start}
+.pres-av{
+  width:36px;height:36px;background:linear-gradient(135deg,var(--bg-4),var(--bg-5));
+  border:1px solid var(--line-2);
+  color:var(--blue);font-family:var(--fd);font-size:14px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  box-shadow:0 0 12px rgba(79,195,247,.1);
+}
+.pres-name{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:2px}
+.pres-det{font-family:var(--fm);font-size:8px;color:var(--ink-3);letter-spacing:.04em;margin-bottom:4px}
+.pres-tag{display:inline-block;font-family:var(--fm);font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;padding:2px 6px;border:1px solid var(--line-2);color:var(--ink-3)}
+
+/* Timeline */
+.tl{padding-left:14px;border-left:1px solid var(--line-2)}
+.tl-i{margin-bottom:14px;position:relative;animation:fadeUp .4s var(--ease) both}
+.tl-i::before{content:'';position:absolute;left:-18px;top:5px;width:5px;height:5px;border-radius:50%;background:var(--blue);opacity:.55;box-shadow:0 0 5px var(--blue)}
+.tl-d{font-family:var(--fm);font-size:7.5px;color:var(--blue);letter-spacing:.09em;text-transform:uppercase;display:block;margin-bottom:2px;opacity:.8}
+.tl-s{font-family:var(--fm);font-size:7px;color:var(--ink-4);text-transform:uppercase;letter-spacing:.07em}
+.tl-t{font-size:12px;line-height:1.6;color:var(--ink-2)}
+
+/* Headlines */
+.hl{list-style:none}
+.hl-i{padding:7px 0;border-bottom:1px solid var(--line);display:flex;gap:9px;align-items:flex-start}
+.hl-src{font-family:var(--fm);font-size:7.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--blue);flex-shrink:0;width:48px;padding-top:2px;opacity:.75}
+.hl-tx{font-size:11.5px;line-height:1.45;color:var(--ink-2)}
+
+/* ══════════════════════════════════════════════════════════
+   S4 — FORUM
+══════════════════════════════════════════════════════════ */
+.forum-wrap{display:flex;flex-direction:column;height:calc(100vh - 38px);overflow:hidden}
+
+.fbar{
+  height:50px;
+  background:linear-gradient(90deg,var(--bg-4) 0%,var(--bg-3) 40%,var(--bg-2) 100%);
+  border-bottom:1px solid var(--line-2);
+  display:flex;align-items:center;padding:0 18px 0 20px;flex-shrink:0;gap:14px;
+  position:relative;
+}
+.fbar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--blue),rgba(79,195,247,.3) 50%,transparent);opacity:.6}
+.fbar-title{font-family:var(--fd);font-size:21px;font-weight:900;letter-spacing:-.02em;flex-shrink:0;color:var(--ink)}
+.fbar-sub{font-family:var(--fm);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);border-left:1px solid var(--line-2);padding-left:14px}
+.fbar-r{margin-left:auto}
+.fbar-new{
+  font-family:var(--fm);font-size:9px;letter-spacing:.14em;text-transform:uppercase;
+  background:transparent;color:var(--blue);
+  border:1px solid rgba(79,195,247,.35);
+  padding:7px 16px;cursor:pointer;transition:all .18s;
+}
+.fbar-new:hover{background:rgba(79,195,247,.1);border-color:var(--blue)}
+
+.fbody{flex:1;display:grid;grid-template-columns:372px 1fr;overflow:hidden}
+
+.tlist{border-right:1px solid var(--line-2);overflow-y:auto;background:linear-gradient(180deg,var(--bg-3),var(--bg-2))}
+.tlist::-webkit-scrollbar{width:2px}
+.tlist::-webkit-scrollbar-thumb{background:var(--line-2)}
+.tlist-h{
+  padding:12px 16px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:8px;
+  position:sticky;top:0;z-index:1;
+  background:linear-gradient(180deg,var(--bg-3),var(--bg-3));
+  backdrop-filter:blur(4px);
+}
+.tlist-cnt{font-family:var(--fm);font-size:9.5px;color:var(--ink-3)}
+.tlist-sort{margin-left:auto;font-family:var(--fm);font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4);background:none;border:none;cursor:pointer;transition:color .15s}
+.tlist-sort:hover{color:var(--blue)}
+
+.ti{
+  padding:13px 14px;border-bottom:1px solid rgba(14,31,56,.7);
+  cursor:pointer;transition:background .12s,border-left .12s;
+  border-left:2px solid transparent;
+  animation:fadeUp .4s var(--ease) both;
+  position:relative;overflow:hidden;
+}
+.ti::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,var(--blue-glow),transparent);
+  opacity:0;transition:opacity .18s;
+}
+.ti:hover::before{opacity:1}
+.ti:hover{border-left-color:rgba(79,195,247,.35)}
+.ti.on{
+  background:linear-gradient(90deg,rgba(79,195,247,.09) 0%,rgba(79,195,247,.02) 100%);
+  border-left-color:var(--blue);
+}
+.ti.on .ti-title{color:var(--ink)}
+.ti-h{display:flex;gap:6px;align-items:center;margin-bottom:5px;flex-wrap:wrap;position:relative;z-index:1}
+.ti-co{font-family:var(--fm);font-size:7.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--blue);opacity:.9}
+.ti-sc{font-family:var(--fm);font-size:7px;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-4);padding:1px 5px;border:1px solid var(--line-2)}
+.ti-al{font-family:var(--fm);font-size:7px;letter-spacing:.09em;text-transform:uppercase;padding:1px 5px;border:1px solid}
+.ti-al.w{color:var(--sev-md);border-color:rgba(251,191,36,.28);background:rgba(251,191,36,.07)}
+.ti-al.a{color:var(--sev-hi);border-color:rgba(251,146,60,.28);background:rgba(251,146,60,.07)}
+.ti-al.u{color:var(--sev-cr);border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.08);animation:glow 1.8s ease-in-out infinite}
+.ti-title{font-size:12.5px;font-weight:500;color:var(--ink-2);line-height:1.35;margin-bottom:5px;position:relative;z-index:1}
+.ti-meta{font-family:var(--fm);font-size:8px;color:var(--ink-4);display:flex;gap:10px;position:relative;z-index:1}
+
+.tdet{display:flex;flex-direction:column;overflow:hidden;background:linear-gradient(180deg,var(--bg-2) 0%,var(--bg) 100%)}
+.tdet-h{
+  padding:24px 28px 18px;border-bottom:1px solid var(--line-2);flex-shrink:0;
+  position:relative;background:linear-gradient(180deg,rgba(20,40,72,.5) 0%,transparent);
+}
+.tdet-h::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,var(--blue),rgba(79,195,247,.1))}
+.tdet-bc{font-family:var(--fm);font-size:8px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);margin-bottom:10px;opacity:.8}
+.tdet-title{font-family:var(--fd);font-size:24px;font-weight:700;color:var(--ink);line-height:1.2;margin-bottom:12px}
+.tdet-meta{font-family:var(--fm);font-size:8.5px;color:var(--ink-4);display:flex;gap:14px}
+
+.posts{flex:1;overflow-y:auto;padding:0 28px}
+.posts::-webkit-scrollbar{width:2px}
+.posts::-webkit-scrollbar-thumb{background:var(--line-2)}
+.post{padding:16px 0;border-bottom:1px solid var(--line);display:grid;grid-template-columns:36px 1fr;gap:12px;animation:fadeUp .4s var(--ease) both}
+.pav{width:36px;height:36px;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:13px;font-weight:700;flex-shrink:0;margin-top:2px}
+.pav.u{background:var(--bg-4);color:var(--ink-2);border:1px solid var(--line-2)}
+.pav.b{background:linear-gradient(135deg,var(--bg-4),var(--bg-5));color:var(--blue);border:1px solid rgba(79,195,247,.22);box-shadow:0 0 8px rgba(79,195,247,.1)}
+.pav.ai{background:rgba(79,195,247,.1);color:var(--blue);border:1px solid rgba(79,195,247,.3);box-shadow:0 0 12px rgba(79,195,247,.18);animation:glow 2.2s ease-in-out infinite}
+.phd{display:flex;align-items:baseline;gap:7px;margin-bottom:6px}
+.pauth{font-size:13px;font-weight:500;color:var(--ink)}
+.phndl{font-family:var(--fm);font-size:9px;color:var(--ink-4)}
+.pts{font-family:var(--fm);font-size:8.5px;color:var(--ink-4);margin-left:auto}
+.ptxt{font-size:13.5px;line-height:1.65;color:var(--ink-2)}
+.ptxt code{font-family:var(--fm);font-size:11px;background:rgba(79,195,247,.08);color:var(--blue);padding:1px 5px;border:1px solid rgba(79,195,247,.15)}
+.pact{margin-top:8px;display:flex;gap:12px}
+.pact-b{font-family:var(--fm);font-size:8.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-4);background:none;border:none;cursor:pointer;padding:0;transition:color .15s}
+.pact-b:hover{color:var(--blue)}
+.post-ai{border-left:2px solid rgba(79,195,247,.28);padding-left:10px;margin-left:-10px;background:rgba(79,195,247,.02)}
+.ai-tag{font-family:var(--fm);font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;background:rgba(79,195,247,.1);color:var(--blue);padding:1px 6px;border:1px solid rgba(79,195,247,.2)}
+
+.reply-area{flex-shrink:0;padding:14px 28px;border-top:1px solid var(--line-2);background:var(--bg-3);display:flex;gap:10px;align-items:flex-end}
+.reply-ta{flex:1;background:var(--bg-2);border:1px solid var(--line-2);font-family:var(--fs);font-size:13px;padding:9px 13px;resize:none;height:54px;color:var(--ink);outline:none;transition:border-color .18s,box-shadow .18s}
+.reply-ta:focus{border-color:var(--blue);box-shadow:0 0 0 2px rgba(79,195,247,.08)}
+.reply-ta::placeholder{color:var(--ink-4)}
+.reply-send{font-family:var(--fm);font-size:9px;letter-spacing:.14em;text-transform:uppercase;background:linear-gradient(135deg,var(--blue),var(--blue-2));color:#020c18;border:none;padding:0 18px;height:54px;cursor:pointer;flex-shrink:0;transition:opacity .15s;font-weight:500}
+.reply-send:hover{opacity:.88}
+</style>
+</head>
+<body>
+
+<!-- ── MOCKUP NAV ────────────────────────────────────────── -->
+<nav class="mnav">
+  <div class="mnav-brand">
+    <!-- Eye/Globe mark — small -->
+    <svg width="20" height="13" viewBox="0 0 60 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M3,18 Q14,3 30,3 Q46,3 57,18 Q46,33 30,33 Q14,33 3,18Z" stroke="#fbbf24" stroke-width="2.2"/>
+      <circle cx="30" cy="18" r="10.5" stroke="#fbbf24" stroke-width="1.6"/>
+      <ellipse cx="30" cy="18" rx="5" ry="10.5" stroke="#fbbf24" stroke-width="1" opacity=".6"/>
+      <line x1="19.5" y1="18" x2="40.5" y2="18" stroke="#fbbf24" stroke-width="1" opacity=".6"/>
+      <circle cx="30" cy="18" r="2.8" fill="#fbbf24"/>
+    </svg>
+    <span class="mnav-label">Aletheia · Propuesta</span>
+  </div>
+  <button class="on" onclick="show('auth')">01 · Acceso</button>
+  <button onclick="show('app')">02 · Mapa</button>
+  <button onclick="show('focus')">03 · País</button>
+  <button onclick="show('forum')">04 · Tribuna</button>
+  <div class="mnav-right">
+    <span class="mnav-dot"></span>
+    <span class="mnav-live">Live beta</span>
+  </div>
+</nav>
+
+<!-- ══ S1: AUTH ═══════════════════════════════════════════ -->
+<section class="sc on" id="sc-auth">
+  <div class="auth-root">
+    <div class="scan"></div>
+
+    <!-- HERO LEFT -->
+    <div class="ah">
+      <!-- Eye + kicker -->
+      <div class="ah-eye-row">
+        <svg width="52" height="32" viewBox="0 0 60 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3,18 Q14,3 30,3 Q46,3 57,18 Q46,33 30,33 Q14,33 3,18Z" stroke="#fbbf24" stroke-width="1.8"/>
+          <circle cx="30" cy="18" r="10.5" stroke="#fbbf24" stroke-width="1.4"/>
+          <ellipse cx="30" cy="18" rx="5" ry="10.5" stroke="#fbbf24" stroke-width=".9" opacity=".65"/>
+          <line x1="19.5" y1="18" x2="40.5" y2="18" stroke="#fbbf24" stroke-width=".9" opacity=".65"/>
+          <path d="M22,12 Q30,9.5 38,12" stroke="#fbbf24" stroke-width=".7" opacity=".45"/>
+          <path d="M22,24 Q30,26.5 38,24" stroke="#fbbf24" stroke-width=".7" opacity=".45"/>
+          <circle cx="30" cy="18" r="2.8" fill="#fbbf24"/>
+        </svg>
+        <span class="ah-kicker">Inteligencia Investigativa · América Latina</span>
+      </div>
+
+      <!-- Logo -->
+      <div>
+        <div class="ah-logo">Aletheia</div>
+        <div class="ah-logo-sub">Índice de Integridad Institucional</div>
+
+        <!-- Centered horizontal divider -->
+        <div class="ah-divider">
+          <div class="ah-div-line"></div>
+          <div class="ah-div-center">
+            <div class="ah-div-dot"></div>
+            <div class="ah-div-dot" style="width:3px;height:3px;background:var(--blue);border-radius:50%;opacity:.4"></div>
+            <div class="ah-div-dot" style="width:3px;height:3px;background:var(--blue);border-radius:50%;opacity:.2"></div>
+          </div>
+          <div class="ah-div-line r"></div>
+        </div>
+
+        <p class="ah-deck">La <strong>corrupción no es una cifra.</strong><br>
+          Es un patrón de decisiones. Un desvío de recursos.<br>
+          Una historia que se repite. <strong>Empieza aquí.</strong>
+        </p>
+      </div>
+
+      <!-- Stats grid -->
+      <div class="ah-stats">
+        <div class="ah-stat"><span class="ah-stat-n" data-target="22">0</span><span class="ah-stat-l">Países</span></div>
+        <div class="ah-stat"><span class="ah-stat-n" data-target="640" data-suffix="k">0</span><span class="ah-stat-l">Filas de gasto</span></div>
+        <div class="ah-stat"><span class="ah-stat-n">2017–25</span><span class="ah-stat-l">Cobertura</span></div>
+        <div class="ah-stat"><span class="ah-stat-n" data-target="4">0</span><span class="ah-stat-l">Pilares IEA</span></div>
+      </div>
+
+      <p class="ah-foot">© 2025 AletheiaPath V2 · Beta pública · Datos con fines de investigación</p>
+    </div>
+
+    <!-- FORM RIGHT -->
+    <div class="af">
+      <div class="af-glow"></div>
+
+      <!-- Eye mark prominently at top of form -->
+      <div class="af-logo-area">
+        <svg class="af-logo-eye" width="60" height="37" viewBox="0 0 60 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M3,18 Q14,3 30,3 Q46,3 57,18 Q46,33 30,33 Q14,33 3,18Z" stroke="#fbbf24" stroke-width="1.8"/>
+          <circle cx="30" cy="18" r="10.5" stroke="#fbbf24" stroke-width="1.4"/>
+          <ellipse cx="30" cy="18" rx="5" ry="10.5" stroke="#fbbf24" stroke-width=".9" opacity=".65"/>
+          <line x1="19.5" y1="18" x2="40.5" y2="18" stroke="#fbbf24" stroke-width=".9" opacity=".65"/>
+          <path d="M22,12 Q30,9.5 38,12" stroke="#fbbf24" stroke-width=".7" opacity=".45"/>
+          <path d="M22,24 Q30,26.5 38,24" stroke="#fbbf24" stroke-width=".7" opacity=".45"/>
+          <circle cx="30" cy="18" r="2.8" fill="#fbbf24"/>
+        </svg>
+      </div>
+
+      <!-- Centered divider with dots -->
+      <div class="af-divider" style="margin-bottom:20px">
+        <div class="af-div-line"></div>
+        <div class="af-div-center">
+          <span style="font-family:var(--fm);font-size:7.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-4)">aletheia</span>
+        </div>
+        <div class="af-div-line"></div>
+      </div>
+
+      <div class="af-kicker">Acceso al sistema</div>
+      <h2 class="af-title">Bienvenido<br>de vuelta.</h2>
+
+      <div class="af-tabs">
+        <button class="af-tab on" onclick="afTab(this)">Iniciar sesión</button>
+        <button class="af-tab" onclick="afTab(this)">Registrarse</button>
+      </div>
+
+      <form onsubmit="return false">
+        <div class="fg"><label class="fl">Correo electrónico</label><input type="email" class="fi" placeholder="editor@medio.com"></div>
+        <div class="fg"><label class="fl">Contraseña</label><input type="password" class="fi" placeholder="••••••••••"></div>
+        <button class="fs-btn">Ingresar →</button>
+      </form>
+
+      <div class="af-divider" style="margin:18px 0">
+        <div class="af-div-line"></div>
+        <div class="af-div-center"><span style="font-family:var(--fm);font-size:8px;color:var(--ink-4);letter-spacing:.1em;text-transform:uppercase">o</span></div>
+        <div class="af-div-line"></div>
+      </div>
+      <button class="fg-btn">Acceso de invitado</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══ S2: MAIN APP ════════════════════════════════════════ -->
+<section class="sc" id="sc-app">
+  <div class="app-wrap">
+    <div class="appbar">
+      <!-- Alpha A mark — Direction B: two legs + near-horizontal extending crossbar -->
+      <div class="logo-a">
+        <svg width="22" height="26" viewBox="0 0 44 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="22" y1="3" x2="4" y2="47" stroke="#fbbf24" stroke-width="3.8" stroke-linecap="round"/>
+          <line x1="22" y1="3" x2="40" y2="47" stroke="#fbbf24" stroke-width="3.8" stroke-linecap="round"/>
+          <line x1="0"  y1="34" x2="44" y2="27" stroke="#fbbf24" stroke-width="3" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="appbar-name">Aletheia <em>IEA</em></span>
+      <span class="appbar-sub">Mapa de Integridad · América Latina</span>
+      <div class="appbar-r">
+        <button class="ab-btn on">Coroplético</button>
+        <button class="ab-btn">Burbujas</button>
+        <div class="ab-year">2023</div>
+        <button class="ab-btn">Foro</button>
+        <button class="ab-btn">Ajustes</button>
+      </div>
+    </div>
+    <div class="app-body">
+      <div class="cl-panel">
+        <div class="cl-head">
+          <div class="cl-head-row">
+            <div class="sec-div" style="flex:1;padding:0">
+              <div class="sec-div-line"></div>
+              <div class="sec-div-center"><span class="sec-div-label">Ranking IEA</span></div>
+              <div class="sec-div-line rev"></div>
+            </div>
+          </div>
+          <div class="cl-head-sub">22 países · Año 2023</div>
+        </div>
+        <div class="cl-list">
+          <div class="cr on" style="animation-delay:0ms">  <span class="cr-rk">01</span><span class="cr-fl">🇺🇾</span><span class="cr-n">Uruguay</span>    <span class="cr-sc">27.4</span><span class="cr-dot b"></span></div>
+          <div class="cr" style="animation-delay:45ms">    <span class="cr-rk">02</span><span class="cr-fl">🇨🇷</span><span class="cr-n">Costa Rica</span><span class="cr-sc">34.1</span><span class="cr-dot b"></span></div>
+          <div class="cr" style="animation-delay:90ms">    <span class="cr-rk">03</span><span class="cr-fl">🇨🇱</span><span class="cr-n">Chile</span>       <span class="cr-sc">41.2</span><span class="cr-dot m"></span></div>
+          <div class="cr" style="animation-delay:135ms">   <span class="cr-rk">04</span><span class="cr-fl">🇵🇦</span><span class="cr-n">Panamá</span>     <span class="cr-sc">48.8</span><span class="cr-dot m"></span></div>
+          <div class="cr" style="animation-delay:180ms">   <span class="cr-rk">05</span><span class="cr-fl">🇧🇷</span><span class="cr-n">Brasil</span>      <span class="cr-sc">54.3</span><span class="cr-dot h"></span></div>
+          <div class="cr" style="animation-delay:225ms">   <span class="cr-rk">06</span><span class="cr-fl">🇵🇾</span><span class="cr-n">Paraguay</span>   <span class="cr-sc">57.9</span><span class="cr-dot h"></span></div>
+          <div class="cr" style="animation-delay:270ms">   <span class="cr-rk">07</span><span class="cr-fl">🇦🇷</span><span class="cr-n">Argentina</span>  <span class="cr-sc">62.1</span><span class="cr-dot h"></span></div>
+          <div class="cr" style="animation-delay:315ms">   <span class="cr-rk">08</span><span class="cr-fl">🇵🇪</span><span class="cr-n">Perú</span>        <span class="cr-sc">66.4</span><span class="cr-dot h"></span></div>
+          <div class="cr" style="animation-delay:360ms">   <span class="cr-rk">09</span><span class="cr-fl">🇲🇽</span><span class="cr-n">México</span>      <span class="cr-sc">69.2</span><span class="cr-dot c"></span></div>
+          <div class="cr" style="animation-delay:405ms">   <span class="cr-rk">10</span><span class="cr-fl">🇧🇴</span><span class="cr-n">Bolivia</span>     <span class="cr-sc">71.0</span><span class="cr-dot c"></span></div>
+          <div class="cr" style="animation-delay:450ms">   <span class="cr-rk">11</span><span class="cr-fl">🇬🇹</span><span class="cr-n">Guatemala</span>  <span class="cr-sc">75.3</span><span class="cr-dot c"></span></div>
+          <div class="cr" style="animation-delay:495ms">   <span class="cr-rk">12</span><span class="cr-fl">🇭🇳</span><span class="cr-n">Honduras</span>   <span class="cr-sc">77.8</span><span class="cr-dot c"></span></div>
+          <div class="cr" style="animation-delay:540ms">   <span class="cr-rk">13</span><span class="cr-fl">🇻🇪</span><span class="cr-n">Venezuela</span>  <span class="cr-sc">84.6</span><span class="cr-dot c"></span></div>
+        </div>
+      </div>
+      <div class="mp">
+        <svg viewBox="0 0 900 540" width="100%" height="100%" style="position:absolute;inset:0">
+          <defs>
+            <radialGradient id="mg" cx="35%" cy="58%" r="55%">
+              <stop offset="0%" stop-color="rgba(79,195,247,0.07)"/>
+              <stop offset="100%" stop-color="rgba(6,13,28,0)"/>
+            </radialGradient>
+            <filter id="gf"><feGaussianBlur stdDeviation="4"/></filter>
+          </defs>
+          <rect width="900" height="540" fill="url(#mg)"/>
+          <path d="M120,55 L205,48 L268,82 L288,148 L265,196 L212,228 L182,268 L148,285 L105,244 L88,180 L98,118Z" fill="none" stroke="rgba(79,195,247,.1)" stroke-width="1"/>
+          <path d="M182,268 L202,284 L198,316 L176,304Z" fill="none" stroke="rgba(79,195,247,.1)" stroke-width="1"/>
+          <path d="M202,316 L264,305 L326,338 L356,388 L344,458 L304,496 L252,484 L212,444 L192,394 L202,344Z" fill="none" stroke="rgba(79,195,247,.1)" stroke-width="1"/>
+          <!-- glow halos -->
+          <circle cx="275" cy="450" r="18" fill="rgba(52,211,153,.12)"  filter="url(#gf)"/>
+          <circle cx="188" cy="298" r="12" fill="rgba(52,211,153,.12)"  filter="url(#gf)"/>
+          <circle cx="244" cy="424" r="18" fill="rgba(251,191,36,.1)"   filter="url(#gf)"/>
+          <circle cx="296" cy="386" r="32" fill="rgba(251,146,60,.09)"  filter="url(#gf)"/>
+          <circle cx="162" cy="228" r="24" fill="rgba(248,113,113,.11)" filter="url(#gf)"/>
+          <circle cx="250" cy="320" r="18" fill="rgba(248,113,113,.11)" filter="url(#gf)"/>
+          <!-- dots -->
+          <circle cx="275" cy="450" r="6"  fill="#34d399" opacity=".85"/>
+          <circle cx="188" cy="298" r="5"  fill="#34d399" opacity=".85"/>
+          <circle cx="244" cy="424" r="8"  fill="#fbbf24" opacity=".75" style="animation:pulse 3s ease-in-out infinite"/>
+          <circle cx="296" cy="386" r="17" fill="#fb923c" opacity=".6"/>
+          <circle cx="162" cy="228" r="12" fill="#f87171" opacity=".72" style="animation:pulse 2.2s ease-in-out .5s infinite"/>
+          <circle cx="250" cy="320" r="7"  fill="#f87171" opacity=".82" style="animation:pulse 2.6s ease-in-out .2s infinite"/>
+          <circle cx="256" cy="458" r="11" fill="#fb923c" opacity=".65"/>
+        </svg>
+        <div class="mp-hint">Haz clic en un país</div>
+        <div class="mp-legend">
+          <div class="mp-leg-title">Índice IEA 2023 · Corrupción estimada</div>
+          <div class="mp-leg-bar"></div>
+          <div class="mp-leg-lbs"><span>Bajo</span><span>Moderado</span><span>Alto</span><span>Crítico</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ S3: FOCUS ══════════════════════════════════════════ -->
+<section class="sc" id="sc-focus">
+  <div class="focus-wrap">
+    <div class="cl-panel">
+      <div class="cl-head">
+        <div class="sec-div" style="padding:0">
+          <div class="sec-div-line"></div>
+          <div class="sec-div-center"><span class="sec-div-label">Ranking IEA</span></div>
+          <div class="sec-div-line rev"></div>
+        </div>
+        <div class="cl-head-sub">22 países · 2023</div>
+      </div>
+      <div class="cl-list">
+        <div class="cr" style="animation-delay:0ms">   <span class="cr-rk">01</span><span class="cr-fl">🇺🇾</span><span class="cr-n">Uruguay</span>    <span class="cr-sc">27.4</span><span class="cr-dot b"></span></div>
+        <div class="cr" style="animation-delay:45ms">  <span class="cr-rk">02</span><span class="cr-fl">🇨🇷</span><span class="cr-n">Costa Rica</span><span class="cr-sc">34.1</span><span class="cr-dot b"></span></div>
+        <div class="cr on" style="animation-delay:90ms"><span class="cr-rk">03</span><span class="cr-fl">🇨🇱</span><span class="cr-n">Chile</span>       <span class="cr-sc">41.2</span><span class="cr-dot m"></span></div>
+        <div class="cr" style="animation-delay:135ms"> <span class="cr-rk">04</span><span class="cr-fl">🇵🇦</span><span class="cr-n">Panamá</span>     <span class="cr-sc">48.8</span><span class="cr-dot m"></span></div>
+        <div class="cr" style="animation-delay:180ms"> <span class="cr-rk">05</span><span class="cr-fl">🇧🇷</span><span class="cr-n">Brasil</span>      <span class="cr-sc">54.3</span><span class="cr-dot h"></span></div>
+        <div class="cr" style="animation-delay:225ms"> <span class="cr-rk">06</span><span class="cr-fl">🇵🇾</span><span class="cr-n">Paraguay</span>   <span class="cr-sc">57.9</span><span class="cr-dot h"></span></div>
+        <div class="cr" style="animation-delay:270ms"> <span class="cr-rk">07</span><span class="cr-fl">🇦🇷</span><span class="cr-n">Argentina</span>  <span class="cr-sc">62.1</span><span class="cr-dot h"></span></div>
+      </div>
+    </div>
+    <div class="mp">
+      <svg viewBox="0 0 400 500" width="100%" height="100%" style="opacity:.55">
+        <defs><radialGradient id="mg2" cx="50%" cy="50%" r="60%"><stop offset="0%" stop-color="rgba(251,191,36,0.1)"/><stop offset="100%" stop-color="transparent"/></radialGradient></defs>
+        <path d="M80,28 L182,20 L262,82 L312,206 L292,346 L252,436 L200,456 L140,424 L98,362 L78,242 L60,138Z" fill="url(#mg2)" stroke="rgba(79,195,247,.18)" stroke-width="1.5"/>
+        <circle cx="180" cy="344" r="28" fill="rgba(251,191,36,.06)" style="animation:pulse 3s ease-in-out infinite"/>
+        <circle cx="180" cy="344" r="11" fill="rgba(251,191,36,.35)" stroke="rgba(251,191,36,.55)" stroke-width="1"/>
+        <text x="180" y="349" text-anchor="middle" font-family="DM Mono,monospace" font-size="10" fill="rgba(251,191,36,.9)" font-weight="500">CHL</text>
+      </svg>
+    </div>
+    <div class="fp">
+      <div class="fp-head">
+        <div class="fp-bc">← Sudamérica · Ranking #03</div>
+        <div class="fp-cn-row">
+          <div class="fp-cn">Chile</div>
+          <svg width="26" height="16" viewBox="0 0 60 36" fill="none" style="opacity:.3;flex-shrink:0;margin-top:4px">
+            <path d="M3,18 Q14,3 30,3 Q46,3 57,18 Q46,33 30,33 Q14,33 3,18Z" stroke="#fbbf24" stroke-width="2"/>
+            <circle cx="30" cy="18" r="10.5" stroke="#fbbf24" stroke-width="1.6"/>
+            <circle cx="30" cy="18" r="3" fill="#fbbf24"/>
+          </svg>
+        </div>
+        <div class="fp-cm">CHL · 19.5M hab. · República Presidencial</div>
+      </div>
+      <div class="fp-score">
+        <div>
+          <div class="fp-snum"><span id="score-num">0</span><span class="fp-sunit">.2</span></div>
+          <div class="fp-badge m">Moderado</div>
+        </div>
+        <div class="fp-ss">
+          <div class="fp-sy">2017 ─────────── 2023</div>
+          <svg width="196" height="46" viewBox="0 0 196 46" style="display:block">
+            <defs><linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(251,191,36,.2)"/><stop offset="100%" stop-color="rgba(251,191,36,0)"/></linearGradient></defs>
+            <path d="M4,37 L33,31 L62,27 L91,34 L120,23 L149,29 L177,21 L194,21 L194,44 L4,44Z" fill="url(#sg)"/>
+            <polyline class="spark-path" points="4,37 33,31 62,27 91,34 120,23 149,29 177,21" fill="none" stroke="rgba(251,191,36,.85)" stroke-width="1.6" stroke-linejoin="round"/>
+            <circle class="spark-dot" cx="177" cy="21" r="3" fill="#fbbf24"/>
+          </svg>
+          <div class="fp-delta">▼ 2.1 pts vs 2022</div>
+        </div>
+      </div>
+      <div class="fp-body">
+        <div class="fp-sec">
+          <div class="sec-div" style="margin-bottom:10px">
+            <div class="sec-div-line"></div>
+            <div class="sec-div-center"><span class="sec-div-label">Pilares IEA 2023</span></div>
+            <div class="sec-div-line rev"></div>
+          </div>
+          <div class="pil"><div class="pil-top"><span class="pil-lbl">Disciplina Fiscal</span><span class="pil-val">68</span></div><div class="pil-track"><div class="pil-fill" style="width:68%"></div></div></div>
+          <div class="pil"><div class="pil-top"><span class="pil-lbl">Inversión Social</span><span class="pil-val">71</span></div><div class="pil-track"><div class="pil-fill" style="width:71%"></div></div></div>
+          <div class="pil"><div class="pil-top"><span class="pil-lbl">Transparencia</span><span class="pil-val" style="color:var(--sev-md)">55</span></div><div class="pil-track"><div class="pil-fill lo" style="width:55%"></div></div></div>
+          <div class="pil"><div class="pil-top"><span class="pil-lbl">Estabilidad Sect.</span><span class="pil-val">63</span></div><div class="pil-track"><div class="pil-fill" style="width:63%"></div></div></div>
+        </div>
+        <div class="fp-sec">
+          <div class="sec-div" style="margin-bottom:10px">
+            <div class="sec-div-line"></div>
+            <div class="sec-div-center"><span class="sec-div-label">Gobierno Actual</span></div>
+            <div class="sec-div-line rev"></div>
+          </div>
+          <div class="pres">
+            <div class="pres-av">GB</div>
+            <div>
+              <div class="pres-name">Gabriel Boric Font</div>
+              <div class="pres-det">Presidente desde marzo 2022 · Frente Amplio</div>
+              <div class="pres-tag">Centro-Izquierda</div>
+            </div>
+          </div>
+        </div>
+        <div class="fp-sec">
+          <div class="sec-div" style="margin-bottom:10px">
+            <div class="sec-div-line"></div>
+            <div class="sec-div-center"><span class="sec-div-label">Cronología 2023</span></div>
+            <div class="sec-div-line rev"></div>
+          </div>
+          <div class="tl">
+            <div class="tl-i" style="animation-delay:0ms"><span class="tl-d">Mar 2023</span><span class="tl-s">Minería</span><p class="tl-t">Nuevo marco regulatorio para contratos mineros entra en discusión legislativa.</p></div>
+            <div class="tl-i" style="animation-delay:80ms"><span class="tl-d">Jun 2023</span><span class="tl-s">Salud Pública</span><p class="tl-t">Auditoría revela sobreprecios en contratos de insumos hospitalarios durante pandemia.</p></div>
+            <div class="tl-i" style="animation-delay:160ms"><span class="tl-d">Sep 2023</span><span class="tl-s">Judicial</span><p class="tl-t">Caso Convenios llega a la Fiscalía Nacional. Cuatro alcaldes imputados.</p></div>
+          </div>
+        </div>
+        <div class="fp-sec">
+          <div class="sec-div" style="margin-bottom:10px">
+            <div class="sec-div-line"></div>
+            <div class="sec-div-center"><span class="sec-div-label">Prensa · 2023</span></div>
+            <div class="sec-div-line rev"></div>
+          </div>
+          <ul class="hl">
+            <li class="hl-i"><span class="hl-src">El País</span><span class="hl-tx">Chile ante la encrucijada: la reforma constitucional fracasa y abre incógnitas sobre gobernabilidad</span></li>
+            <li class="hl-i"><span class="hl-src">Reuters</span><span class="hl-tx">Chile's anti-corruption agency reports 18% increase in public sector complaints in 2023</span></li>
+            <li class="hl-i"><span class="hl-src">CIPER</span><span class="hl-tx">Caso Convenios: la red de transferencias irregulares que involucra a 12 organizaciones</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ S4: FORUM ══════════════════════════════════════════ -->
+<section class="sc" id="sc-forum">
+  <div class="forum-wrap">
+    <div class="fbar">
+      <div class="logo-a" style="margin-right:8px">
+        <svg width="20" height="24" viewBox="0 0 44 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="22" y1="3" x2="4"  y2="47" stroke="#fbbf24" stroke-width="3.8" stroke-linecap="round"/>
+          <line x1="22" y1="3" x2="40" y2="47" stroke="#fbbf24" stroke-width="3.8" stroke-linecap="round"/>
+          <line x1="0"  y1="34" x2="44" y2="27" stroke="#fbbf24" stroke-width="3"   stroke-linecap="round"/>
+        </svg>
+      </div>
+      <span class="fbar-title">Tribuna</span>
+      <span class="fbar-sub">Investigación colaborativa · 174 hilos activos</span>
+      <div class="fbar-r"><button class="fbar-new">+ Nuevo hilo</button></div>
+    </div>
+    <div class="fbody">
+      <div class="tlist">
+        <div class="tlist-h">
+          <span class="tlist-cnt">174 conversaciones</span>
+          <button class="tlist-sort">Recientes ▾</button>
+        </div>
+        <div class="ti" style="animation-delay:0ms">
+          <div class="ti-h"><span class="ti-co">Venezuela</span><span class="ti-sc">Gobierno</span><span class="ti-al u">Urgente</span></div>
+          <div class="ti-title">El presupuesto 2023 muestra caída del 34% en gasto social. ¿Qué explica este desplome?</div>
+          <div class="ti-meta"><span>23 respuestas</span><span>hace 2 h</span></div>
+        </div>
+        <div class="ti on" style="animation-delay:55ms">
+          <div class="ti-h"><span class="ti-co">Chile</span><span class="ti-sc">Judicial</span><span class="ti-al a">Alerta</span></div>
+          <div class="ti-title">Caso Convenios: seguimiento de imputados y avance del proceso en Fiscalía</div>
+          <div class="ti-meta"><span>41 respuestas</span><span>hace 5 h</span></div>
+        </div>
+        <div class="ti" style="animation-delay:110ms">
+          <div class="ti-h"><span class="ti-co">México</span><span class="ti-sc">Tema</span><span class="ti-al w">Seguimiento</span></div>
+          <div class="ti-title">Gasto en seguridad supera 25% del presupuesto — patrones históricos de desviación</div>
+          <div class="ti-meta"><span>18 respuestas</span><span>hace 1 d</span></div>
+        </div>
+        <div class="ti" style="animation-delay:165ms">
+          <div class="ti-h"><span class="ti-co">Argentina</span><span class="ti-sc">País</span><span class="ti-al w">Seguimiento</span></div>
+          <div class="ti-title">IEA 2015–2023: ciclo kirchnerista vs. macrismo en disciplina fiscal</div>
+          <div class="ti-meta"><span>67 respuestas</span><span>hace 2 d</span></div>
+        </div>
+        <div class="ti" style="animation-delay:220ms">
+          <div class="ti-h"><span class="ti-co">Brasil</span><span class="ti-sc">Gobierno</span><span class="ti-al w">Seguimiento</span></div>
+          <div class="ti-title">Lula 2023: ¿recuperación real o efecto estadístico de la base baja?</div>
+          <div class="ti-meta"><span>29 respuestas</span><span>hace 3 d</span></div>
+        </div>
+        <div class="ti" style="animation-delay:275ms">
+          <div class="ti-h"><span class="ti-co">Perú</span><span class="ti-sc">Judicial</span><span class="ti-al a">Alerta</span></div>
+          <div class="ti-title">Cinco gobiernos, cinco investigados. ¿Es el sistema judicial capaz de actuar?</div>
+          <div class="ti-meta"><span>52 respuestas</span><span>hace 4 d</span></div>
+        </div>
+      </div>
+      <div class="tdet">
+        <div class="tdet-h">
+          <div class="tdet-bc">Chile · Judicial · Alerta</div>
+          <h2 class="tdet-title">Caso Convenios: seguimiento de imputados y avance del proceso en Fiscalía</h2>
+          <div class="tdet-meta"><span>Abierto por Ana Veedor</span><span>41 respuestas</span><span>hace 5 horas</span></div>
+        </div>
+        <div class="posts">
+          <div class="post" style="animation-delay:0ms">
+            <div class="pav b">AV</div>
+            <div><div class="phd"><span class="pauth">Ana Veedor</span><span class="phndl">@ana_veedor</span><span class="pts">hace 5 h</span></div>
+            <p class="ptxt">El Ministerio Público formalizó a cuatro alcaldes por el caso Convenios. Según los datos del IEA, Chile ya mostraba anomalías en el pilar de Transparencia desde 2021. ¿Alguien tiene acceso a los contratos originales? Necesitamos cruzar montos con el indicador de contratación pública.</p>
+            <div class="pact"><button class="pact-b">▲ 14</button><button class="pact-b">Responder</button><button class="pact-b">Citar</button></div></div>
+          </div>
+          <div class="post" style="animation-delay:80ms">
+            <div class="pav b">PL</div>
+            <div><div class="phd"><span class="pauth">Pancho Linares</span><span class="phndl">@pancho.l</span><span class="pts">hace 4 h</span></div>
+            <p class="ptxt">Los contratos están en el portal de Contraloría. El problema es que los montos no cuadran con las rendiciones. CIPER publicó el desglose — hay una discrepancia de 340M CLP en una sola ONG. El IEA baja 2.1 puntos en 2023 y este caso explica parte significativa.</p>
+            <div class="pact"><button class="pact-b">▲ 9</button><button class="pact-b">Responder</button><button class="pact-b">Citar</button></div></div>
+          </div>
+          <div class="post post-ai" style="animation-delay:160ms">
+            <div class="pav ai">IA</div>
+            <div><div class="phd"><span class="pauth">Insight Engine</span><span class="ai-tag">análisis automatizado</span><span class="pts">hace 3 h</span></div>
+            <p class="ptxt">Correlación detectada: pilar de Transparencia con caída consistente desde Q4 2021 (55.3 → 48.1 en 3 períodos). Caso Convenios involucra 14 organizaciones, contratos acumulados &gt;2.400M CLP. Patrón: adjudicación directa con entidades vinculadas a funcionarios activos. Recomiendo cruzar con <code>v_president_expenditure</code> filtrando sector=administración, 2021–2023.</p>
+            <div class="pact"><button class="pact-b">Ver fuentes</button><button class="pact-b">Explorar datos</button></div></div>
+          </div>
+          <div class="post" style="animation-delay:240ms">
+            <div class="pav u">JR</div>
+            <div><div class="phd"><span class="pauth">Julieta Ramírez</span><span class="phndl">@julieta.r</span><span class="pts">hace 2 h</span></div>
+            <p class="ptxt">El caso tiene un patrón muy similar a lo documentado en Paraguay en 2019. Misma estructura: ONG pantalla, funcionario intermediario, contrato sin licitación. La diferencia es que en Chile sí hay fiscalía independiente. El juicio podría ser un test para el sistema institucional.</p>
+            <div class="pact"><button class="pact-b">▲ 22</button><button class="pact-b">Responder</button><button class="pact-b">Citar</button></div></div>
+          </div>
+        </div>
+        <div class="reply-area">
+          <textarea class="reply-ta" placeholder="Añade tu análisis o hallazgo…"></textarea>
+          <button class="reply-send">Publicar →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+function show(id) {
+  document.querySelectorAll('.sc').forEach(s => s.classList.remove('on'));
+  document.querySelectorAll('.mnav button').forEach(b => b.classList.remove('on'));
+  document.getElementById('sc-' + id).classList.add('on');
+  const idx = {auth:0,app:1,focus:2,forum:3}[id];
+  document.querySelectorAll('.mnav button')[idx].classList.add('on');
+  if (id === 'auth')  runAuth();
+  if (id === 'focus') runFocus();
+}
+function afTab(el) {
+  document.querySelectorAll('.af-tab').forEach(b => b.classList.remove('on'));
+  el.classList.add('on');
+}
+function counter(el, target, suffix, dur) {
+  const ease = t => 1 - Math.pow(1-t, 3);
+  const t0 = performance.now();
+  (function tick(now) {
+    const p = Math.min(1, (now - t0) / dur);
+    el.textContent = Math.round(target * ease(p)) + (suffix || '');
+    if (p < 1) requestAnimationFrame(tick);
+  })(t0);
+}
+function runAuth() {
+  setTimeout(() => {
+    document.querySelectorAll('.ah-stat-n[data-target]').forEach(el => {
+      counter(el, +el.dataset.target, el.dataset.suffix || '', 1100);
+    });
+  }, 450);
+}
+function runFocus() {
+  const el = document.getElementById('score-num');
+  if (el) counter(el, 41, '', 900);
+}
+window.addEventListener('load', runAuth);
+</script>
+</body>
+</html>

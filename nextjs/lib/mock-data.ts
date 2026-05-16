@@ -1,0 +1,158 @@
+// ─── MOCK DATA — set USE_MOCK = false in each page to switch to live Supabase ───
+
+import type { Country, IeaScore, RiskSignal, ForumThread, ForumReply } from './supabase'
+
+// ── Atlas country list ─────────────────────────────────────────────────────────
+export type MockCountry = { iso3: string; name: string; flag: string; lat: number; lng: number; iea: number | null }
+
+export const MOCK_COUNTRIES: MockCountry[] = [
+  { iso3: 'URY', name: 'Uruguay',     flag: '🇺🇾', lat: -32.52, lng: -55.77, iea: 18.2 },
+  { iso3: 'CRI', name: 'Costa Rica',  flag: '🇨🇷', lat:  9.75,  lng: -83.75, iea: 26.9 },
+  { iso3: 'CHL', name: 'Chile',       flag: '🇨🇱', lat: -35.68, lng: -71.54, iea: 34.8 },
+  { iso3: 'PAN', name: 'Panamá',      flag: '🇵🇦', lat:  8.42,  lng: -80.11, iea: 44.2 },
+  { iso3: 'BRA', name: 'Brasil',      flag: '🇧🇷', lat: -14.24, lng: -51.93, iea: 51.7 },
+  { iso3: 'ECU', name: 'Ecuador',     flag: '🇪🇨', lat: -1.83,  lng: -78.18, iea: 55.4 },
+  { iso3: 'COL', name: 'Colombia',    flag: '🇨🇴', lat:  4.57,  lng: -74.30, iea: 59.1 },
+  { iso3: 'PER', name: 'Perú',        flag: '🇵🇪', lat: -9.19,  lng: -75.02, iea: 61.8 },
+  { iso3: 'ARG', name: 'Argentina',   flag: '🇦🇷', lat: -38.42, lng: -63.62, iea: 63.4 },
+  { iso3: 'PRY', name: 'Paraguay',    flag: '🇵🇾', lat: -23.44, lng: -58.44, iea: 65.7 },
+  { iso3: 'BOL', name: 'Bolivia',     flag: '🇧🇴', lat: -16.29, lng: -63.59, iea: 67.2 },
+  { iso3: 'MEX', name: 'México',      flag: '🇲🇽', lat: 23.63,  lng: -102.55, iea: 69.9 },
+  { iso3: 'SLV', name: 'El Salvador', flag: '🇸🇻', lat: 13.79,  lng: -88.90, iea: 71.3 },
+  { iso3: 'GTM', name: 'Guatemala',   flag: '🇬🇹', lat: 15.78,  lng: -90.23, iea: 74.5 },
+  { iso3: 'HND', name: 'Honduras',    flag: '🇭🇳', lat: 15.20,  lng: -86.24, iea: 77.1 },
+  { iso3: 'NIC', name: 'Nicaragua',   flag: '🇳🇮', lat: 12.87,  lng: -85.21, iea: 80.8 },
+  { iso3: 'VEN', name: 'Venezuela',   flag: '🇻🇪', lat:  6.42,  lng: -66.59, iea: 87.3 },
+]
+
+// ── Country panel data ─────────────────────────────────────────────────────────
+type PanelData = { country: Country; score: IeaScore | null; signals: RiskSignal[]; threads: Array<{ id: string; title: string; alert_level: string; reply_count: number }> }
+
+const mkCountry = (iso3: string, name: string, flag: string, region: string): Country => ({
+  id: iso3, iso_alpha2: iso3.slice(0,2), iso_alpha3: iso3, name_es: name, name_en: name,
+  region, latitude: 0, longitude: 0, flag_emoji: flag, active: true,
+})
+
+const mkScore = (id: string, iea: number, pillars: Record<string, number>, bic_low: number, bic_high: number, vol: 'low'|'medium'|'high'): IeaScore => ({
+  id, country_id: id, period: '2023', iea_score: iea,
+  pillar_scores: pillars, bic_score: iea, bic_low, bic_high, bic_volatility: vol,
+})
+
+export const MOCK_PANELS: Record<string, PanelData> = {
+  CHL: {
+    country: mkCountry('CHL', 'Chile', '🇨🇱', 'Sudamérica'),
+    score: mkScore('CHL', 34.8, { fiscal_discipline: 68, social_investment: 71, transparency: 55, sector_stability: 63 }, 29, 41, 'low'),
+    signals: [
+      { id: 's1', country_id: 'CHL', pattern_type: 'contratación directa', description: 'Adjudicaciones directas en sector salud superan 40% del total — umbral de alerta activado en Q2 2023.', severity: 3, active: true, detected_at: '2023-06-01' },
+      { id: 's2', country_id: 'CHL', pattern_type: 'transferencias irregulares', description: 'Caso Convenios: 14 organizaciones involucradas, contratos acumulados >2.400M CLP, patrón de adjudicación directa.', severity: 4, active: true, detected_at: '2023-08-14' },
+    ],
+    threads: [
+      { id: 't1', title: 'Caso Convenios: seguimiento de imputados y avance del proceso en Fiscalía', alert_level: 'alert', reply_count: 41 },
+      { id: 't2', title: 'IEA 2015–2023: análisis de tendencias en transparencia institucional', alert_level: 'watch', reply_count: 18 },
+    ],
+  },
+  VEN: {
+    country: mkCountry('VEN', 'Venezuela', '🇻🇪', 'Sudamérica'),
+    score: mkScore('VEN', 87.3, { fiscal_discipline: 14, social_investment: 11, transparency: 8, sector_stability: 16 }, 80, 94, 'high'),
+    signals: [
+      { id: 's3', country_id: 'VEN', pattern_type: 'colapso institucional', description: 'Desaparición de reportes presupuestarios públicos desde Q1 2022. Sin auditorías externas en 3 períodos consecutivos.', severity: 5, active: true, detected_at: '2023-01-15' },
+      { id: 's4', country_id: 'VEN', pattern_type: 'desvío gasto social', description: 'Gasto social declarado cae 34% sin correlato en indicadores de pobreza — discrepancia estadística significativa.', severity: 5, active: true, detected_at: '2023-03-22' },
+      { id: 's5', country_id: 'VEN', pattern_type: 'empresa pública', description: 'PDVSA: sin estados financieros auditados desde 2016. Pérdidas estimadas no contabilizadas: $18.000M.', severity: 5, active: true, detected_at: '2023-05-10' },
+    ],
+    threads: [
+      { id: 't3', title: 'Presupuesto 2023 muestra caída del 34% en gasto social. ¿Qué explica este desplome?', alert_level: 'urgent', reply_count: 23 },
+    ],
+  },
+  URY: {
+    country: mkCountry('URY', 'Uruguay', '🇺🇾', 'Sudamérica'),
+    score: mkScore('URY', 18.2, { fiscal_discipline: 88, social_investment: 84, transparency: 91, sector_stability: 82 }, 14, 23, 'low'),
+    signals: [],
+    threads: [
+      { id: 't4', title: 'Uruguay como benchmark regional: ¿qué explica su consistencia en el IEA?', alert_level: 'watch', reply_count: 34 },
+    ],
+  },
+  ARG: {
+    country: mkCountry('ARG', 'Argentina', '🇦🇷', 'Sudamérica'),
+    score: mkScore('ARG', 63.4, { fiscal_discipline: 44, social_investment: 58, transparency: 42, sector_stability: 46 }, 56, 71, 'high'),
+    signals: [
+      { id: 's6', country_id: 'ARG', pattern_type: 'deuda pública', description: 'Restructuración de deuda en condiciones no publicadas — falta de transparencia en términos acordados con acreedores.', severity: 3, active: true, detected_at: '2023-04-18' },
+    ],
+    threads: [
+      { id: 't5', title: 'IEA 2015–2023: ciclo kirchnerista vs. macrismo en disciplina fiscal', alert_level: 'watch', reply_count: 67 },
+    ],
+  },
+  MEX: {
+    country: mkCountry('MEX', 'México', '🇲🇽', 'Centroamérica'),
+    score: mkScore('MEX', 69.9, { fiscal_discipline: 42, social_investment: 48, transparency: 38, sector_stability: 44 }, 62, 78, 'medium'),
+    signals: [
+      { id: 's7', country_id: 'MEX', pattern_type: 'licitaciones', description: 'Gasto en seguridad supera 25% del presupuesto con opacidad en contratos — 68% adjudicaciones directas en obras federales.', severity: 4, active: true, detected_at: '2023-07-03' },
+    ],
+    threads: [
+      { id: 't6', title: 'Gasto en seguridad supera 25% del presupuesto — patrones históricos de desviación', alert_level: 'watch', reply_count: 18 },
+    ],
+  },
+}
+
+const DEFAULT_PANEL: PanelData = {
+  country: mkCountry('---', 'País', '🏳', 'América Latina'),
+  score: mkScore('---', 55.0, { fiscal_discipline: 50, social_investment: 55, transparency: 48, sector_stability: 52 }, 48, 62, 'medium'),
+  signals: [],
+  threads: [],
+}
+
+export function getMockPanel(iso3: string): PanelData {
+  return MOCK_PANELS[iso3] ?? DEFAULT_PANEL
+}
+
+// ── Forum threads ──────────────────────────────────────────────────────────────
+export const MOCK_THREADS: ForumThread[] = [
+  { id: 'th1', country_id: 'VEN', title: 'El presupuesto 2023 muestra caída del 34% en gasto social. ¿Qué explica este desplome?', body: null, alert_level: 'urgent', reply_count: 23, pinned: true,  created_at: new Date(Date.now() - 2*3600*1000).toISOString() },
+  { id: 'th2', country_id: 'CHL', title: 'Caso Convenios: seguimiento de imputados y avance del proceso en Fiscalía Nacional', body: null, alert_level: 'alert',  reply_count: 41, pinned: false, created_at: new Date(Date.now() - 5*3600*1000).toISOString() },
+  { id: 'th3', country_id: 'PER', title: 'Cinco gobiernos, cinco investigados. ¿Es el sistema judicial capaz de actuar de forma independiente?', body: null, alert_level: 'alert',  reply_count: 52, pinned: false, created_at: new Date(Date.now() - 1*86400*1000).toISOString() },
+  { id: 'th4', country_id: 'MEX', title: 'Gasto en seguridad supera 25% del presupuesto — patrones históricos de desviación identificados', body: null, alert_level: 'watch',  reply_count: 18, pinned: false, created_at: new Date(Date.now() - 1*86400*1000).toISOString() },
+  { id: 'th5', country_id: 'ARG', title: 'IEA 2015–2023: ciclo kirchnerista vs. macrismo en disciplina fiscal y transparencia', body: null, alert_level: 'watch',  reply_count: 67, pinned: false, created_at: new Date(Date.now() - 2*86400*1000).toISOString() },
+  { id: 'th6', country_id: 'BRA', title: 'Lula 2023: ¿recuperación real en el IEA o efecto estadístico de la base baja?', body: null, alert_level: 'watch',  reply_count: 29, pinned: false, created_at: new Date(Date.now() - 3*86400*1000).toISOString() },
+  { id: 'th7', country_id: 'URY', title: 'Uruguay como benchmark regional: ¿qué explica su consistencia histórica en el índice?', body: null, alert_level: 'watch',  reply_count: 34, pinned: false, created_at: new Date(Date.now() - 4*86400*1000).toISOString() },
+  { id: 'th8', country_id: 'GTM', title: 'Redes de captura estatal en Guatemala: análisis del patrón de adjudicaciones 2020–2023', body: null, alert_level: 'alert',  reply_count: 15, pinned: false, created_at: new Date(Date.now() - 5*86400*1000).toISOString() },
+]
+
+// ── Thread detail (th2 — Caso Convenios CHL) ───────────────────────────────────
+export const MOCK_THREAD: ForumThread = MOCK_THREADS[1]
+
+export const MOCK_REPLIES: ForumReply[] = [
+  {
+    id: 'r1', thread_id: 'th2', created_by: 'Ana Veedor', is_analyst: false, upvotes: 14, created_at: new Date(Date.now() - 5*3600*1000).toISOString(),
+    body: 'El Ministerio Público formalizó a cuatro alcaldes por el caso Convenios. Según los datos del IEA, Chile ya mostraba anomalías en el pilar de Transparencia desde 2021. ¿Alguien tiene acceso a los contratos originales? Necesitamos cruzar montos con el indicador de contratación pública.',
+  },
+  {
+    id: 'r2', thread_id: 'th2', created_by: 'Pancho Linares', is_analyst: false, upvotes: 9, created_at: new Date(Date.now() - 4*3600*1000).toISOString(),
+    body: 'Los contratos están en el portal de Contraloría. El problema es que los montos no cuadran con las rendiciones. CIPER publicó el desglose — hay una discrepancia de 340M CLP en una sola ONG. El IEA baja 2.1 puntos en 2023 y este caso explica parte significativa.',
+  },
+  {
+    id: 'r3', thread_id: 'th2', created_by: 'Insight Engine', is_analyst: true,  upvotes: 0,  created_at: new Date(Date.now() - 3*3600*1000).toISOString(),
+    body: 'Correlación detectada: pilar de Transparencia con caída consistente desde Q4 2021 (55.3 → 48.1 en 3 períodos). El Caso Convenios involucra 14 organizaciones, contratos acumulados >2.400M CLP. Patrón: adjudicación directa con entidades vinculadas a funcionarios activos. Recomiendo cruzar con datos de contratación pública, sector administración, 2021–2023.',
+  },
+  {
+    id: 'r4', thread_id: 'th2', created_by: 'Julieta Ramírez', is_analyst: false, upvotes: 22, created_at: new Date(Date.now() - 2*3600*1000).toISOString(),
+    body: 'El caso tiene un patrón muy similar a lo documentado en Paraguay en 2019. Misma estructura: ONG pantalla, funcionario intermediario, contrato sin licitación. La diferencia es que en Chile sí hay fiscalía independiente. El juicio podría ser un test para el sistema institucional.',
+  },
+  {
+    id: 'r5', thread_id: 'th2', created_by: 'Rodrigo Mena', is_analyst: false, upvotes: 7,  created_at: new Date(Date.now() - 1*3600*1000).toISOString(),
+    body: 'Importante distinguir: el IEA mide corrupción estimada, no corrupción detectada. El hecho de que el caso llegue a Fiscalía podría indicar que el sistema de control funciona — lo que paradójicamente es positivo para el índice a largo plazo. Hay que seguir la evolución.',
+  },
+]
+
+// ── News reports ───────────────────────────────────────────────────────────────
+export type MockReport = { id: string; title: string; excerpt: string | null; corruption_types: string[]; severity: number; published_at: string; source_name: string | null; url: string | null }
+
+export const MOCK_REPORTS: MockReport[] = [
+  { id: 'n1',  title: 'Caso Convenios: Fiscalía Nacional imputa a cuatro alcaldes por desvío de fondos públicos', excerpt: 'La investigación revela una red de transferencias irregulares a organizaciones sociales vinculadas a funcionarios activos, con contratos que superan los 2.400 millones de pesos.', corruption_types: ['licitación directa', 'tráfico de influencias'], severity: 4, published_at: new Date(Date.now() - 2*86400*1000).toISOString(), source_name: 'CIPER Chile', url: null },
+  { id: 'n2',  title: 'Venezuela: sin estados financieros de PDVSA auditados desde 2016', excerpt: 'La petrolera estatal acumula siete años sin publicar cuentas verificables. Analistas estiman pérdidas no contabilizadas superiores a 18.000 millones de dólares.', corruption_types: ['opacidad financiera', 'empresa pública'], severity: 5, published_at: new Date(Date.now() - 3*86400*1000).toISOString(), source_name: 'Reuters', url: null },
+  { id: 'n3',  title: 'México: 68% de contratos federales en obras públicas se adjudican de forma directa', excerpt: 'Auditoría Superior de la Federación detecta patrón sistemático de opacidad en licitaciones, particularmente en proyectos de infraestructura prioritaria del gobierno federal.', corruption_types: ['licitación directa', 'gasto público'], severity: 4, published_at: new Date(Date.now() - 4*86400*1000).toISOString(), source_name: 'El País', url: null },
+  { id: 'n4',  title: 'Perú: cinco expresidentes bajo investigación simultánea por corrupción', excerpt: 'El Ministerio Público mantiene abiertas causas contra cinco mandatarios en distintas etapas procesales, convirtiendo al país en el caso más extremo de la región en materia de responsabilidad ejecutiva.', corruption_types: ['corrupción ejecutiva', 'impunidad'], severity: 5, published_at: new Date(Date.now() - 5*86400*1000).toISOString(), source_name: 'La República', url: null },
+  { id: 'n5',  title: 'Argentina mejora 1.8 puntos en disciplina fiscal pese a contexto económico adverso', excerpt: 'El índice IEA registra una leve recuperación en el pilar de disciplina fiscal durante el primer semestre de 2023, aunque la volatilidad estructural continúa siendo alta.', corruption_types: ['disciplina fiscal'], severity: 2, published_at: new Date(Date.now() - 6*86400*1000).toISOString(), source_name: 'Infobae', url: null },
+  { id: 'n6',  title: 'Guatemala: red de captura estatal vinculada a tres ministerios', excerpt: 'Investigadores del MP identifican un esquema de cooptación de cargos públicos clave que permitió desviar fondos de cooperación internacional hacia empresas fantasma.', corruption_types: ['captura estatal', 'fraude'], severity: 4, published_at: new Date(Date.now() - 7*86400*1000).toISOString(), source_name: 'Plaza Pública', url: null },
+  { id: 'n7',  title: 'Uruguay mantiene liderazgo regional en transparencia con índice 91/100', excerpt: 'Por séptimo año consecutivo Uruguay encabeza el ranking IEA en el pilar de Transparencia Institucional, consolidándose como referencia para reformas en otros países de la región.', corruption_types: ['transparencia'], severity: 1, published_at: new Date(Date.now() - 8*86400*1000).toISOString(), source_name: 'El Observador', url: null },
+  { id: 'n8',  title: 'Brasil: operación policial descubre esquema de sobornos en contratos de saneamiento', excerpt: 'La Policía Federal ejecuta 34 órdenes de allanamiento en cuatro estados. El esquema habría desviado cerca de 800 millones de reales durante tres administraciones municipales consecutivas.', corruption_types: ['soborno', 'contratos públicos'], severity: 4, published_at: new Date(Date.now() - 9*86400*1000).toISOString(), source_name: 'Folha de S.Paulo', url: null },
+  { id: 'n9',  title: 'Honduras: gasto discrecional de la presidencia aumenta 112% sin rendición de cuentas', excerpt: 'Los fondos reservados de la Casa Presidencial crecen de manera sostenida sin respaldo en el presupuesto aprobado por el Congreso, según análisis del presupuesto ejecutado 2023.', corruption_types: ['gasto discrecional', 'opacidad'], severity: 5, published_at: new Date(Date.now() - 10*86400*1000).toISOString(), source_name: 'Criterio.hn', url: null },
+]
