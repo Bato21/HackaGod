@@ -1,0 +1,16 @@
+venv/
+.env.local
+
+# Excel viejo / archivos temporales
+backend/datosduros.xlsx
+etl_output.txt
+etl_run*.txt
+mensaje_commit.txt
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Claude Code internal
+.claude/
