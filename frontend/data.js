@@ -3,7 +3,7 @@
 // Los valores base se inspiran libremente en la percepción pública internacional,
 // pero las cifras año a año son generadas con un PRNG determinístico para esta demo.
 
-window.YEARS = [2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024];
+window.YEARS = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025];
 
 // [isoNumeric, iso3, nombre, region, base, lat, lng]
 window.COUNTRIES_RAW = [

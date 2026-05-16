@@ -235,7 +235,7 @@
   function seedPosts(thread) {
     const country = window.COUNTRIES.find(c => c.iso3 === thread.iso3);
     if (!country) return [];
-    const score = thread.year != null ? country.scores[thread.year] : country.scores[2024];
+    const score = thread.year != null ? country.scores[thread.year] : country.scores[window.YEARS[window.YEARS.length - 1]];
     const r = mulberry32(hash(thread.id + ":count"));
     const count = 4 + Math.floor(r() * 7); // 4–10 posts raíz
     const baseSeed = hash(thread.id + ":seed");
@@ -469,6 +469,7 @@
 
   // ── API pública ────────────────────────────────────────────────────
   window.ForumAPI = {
+    invalidateIndex() { _indexCache = null; },
     listThreads(filter = {}) {
       let list = getIndex();
       if (filter.iso3)   list = list.filter(t => t.iso3 === filter.iso3);

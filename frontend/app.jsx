@@ -98,6 +98,10 @@ window.COUNTRIES.forEach(c => {
   COUNTRIES_BY_ID[+c.id] = c; // cover IDs without leading zeros (e.g. 76 → "076")
 });
 
+// Dynamic year bounds — always derived from window.YEARS (driven by DB/cpi-override).
+const YEAR_FIRST  = window.YEARS[0];
+const YEAR_LATEST = window.YEARS[window.YEARS.length - 1];
+
 const GEOJSON_URL = "countries-110m.json";
 
 // ───────────────────────────────────────────────────────────
@@ -513,7 +517,7 @@ function Sparkline({ country, year, onYearChange }) {
     <div>
       <div className="st">
         <span>Serie 2015–2024</span>
-        <span className="mono">Δ {(country.scores[2024] - country.scores[2015]).toFixed(1)}</span>
+        <span className="mono">Δ {(country.scores[YEAR_LATEST] - country.scores[YEAR_FIRST]).toFixed(1)}</span>
       </div>
       <svg className="spark-svg" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none">
         <path d={areaPath} className="spark-area" />
@@ -1472,9 +1476,9 @@ function App({ user: authUser, onLogout }) {
                   </div>
 
                   <div className="cf-block">
-                    <div className="cb-lbl"><span>Tendencia 2015–2024</span>
-                      <span className="mono" style={{ color: c.scores[2024] > c.scores[2015] ? "var(--bad)" : "var(--good)" }}>
-                        {c.scores[2024] > c.scores[2015] ? "▲" : "▼"} {Math.abs(c.scores[2024] - c.scores[2015]).toFixed(1)} pts
+                    <div className="cb-lbl"><span>Tendencia {YEAR_FIRST}–{YEAR_LATEST}</span>
+                      <span className="mono" style={{ color: c.scores[YEAR_LATEST] > c.scores[YEAR_FIRST] ? "var(--bad)" : "var(--good)" }}>
+                        {c.scores[YEAR_LATEST] > c.scores[YEAR_FIRST] ? "▲" : "▼"} {Math.abs(c.scores[YEAR_LATEST] - c.scores[YEAR_FIRST]).toFixed(1)} pts
                       </span>
                     </div>
                     <Sparkline country={c} year={year} onYearChange={setYear} />
@@ -1696,8 +1700,8 @@ function App({ user: authUser, onLogout }) {
                 <div className="cd-card">
                   <div className="cd-card-h">
                     <span>Evolución del índice</span>
-                    <span className="mono" style={{ color: c.scores[2024] > c.scores[2015] ? "var(--bad)" : "var(--good)" }}>
-                      {c.scores[2024] > c.scores[2015] ? "▲" : "▼"} {Math.abs(c.scores[2024] - c.scores[2015]).toFixed(1)} pts 2015→2024
+                    <span className="mono" style={{ color: c.scores[YEAR_LATEST] > c.scores[YEAR_FIRST] ? "var(--bad)" : "var(--good)" }}>
+                      {c.scores[YEAR_LATEST] > c.scores[YEAR_FIRST] ? "▲" : "▼"} {Math.abs(c.scores[YEAR_LATEST] - c.scores[YEAR_FIRST]).toFixed(1)} pts {YEAR_FIRST}→{YEAR_LATEST}
                     </span>
                   </div>
                   <Sparkline country={c} year={year} onYearChange={setYear} />

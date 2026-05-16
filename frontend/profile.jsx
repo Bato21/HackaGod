@@ -402,7 +402,8 @@ function ProfilePage({ user, onClose, theme }) {
                   <div className="pp-starred-grid">
                     {starred.map(s => {
                       const c = (window.COUNTRIES || []).find(x => x.iso3 === s.iso3);
-                      const score = c ? c.scores[2024] : null;
+                      const _yr = window.YEARS ? window.YEARS[window.YEARS.length - 1] : 2025;
+                      const score = c ? c.scores[_yr] : null;
                       return (
                         <div key={s.iso3} className="pp-starred-chip">
                           <span className="pp-sc-star">★</span>
@@ -476,7 +477,8 @@ function ProfilePage({ user, onClose, theme }) {
                 </div>
               ) : activity.countries.map((c, i) => {
                 const country = window.COUNTRIES ? window.COUNTRIES.find(x => x.iso3 === c.iso3) : null;
-                const score2024 = country ? country.scores[2024] : null;
+                const _latestYr = window.YEARS ? window.YEARS[window.YEARS.length - 1] : 2025;
+                const score2024 = country ? country.scores[_latestYr] : null;
                 const maxCount = activity.countries[0].count;
                 return (
                   <div key={c.iso3} className="pp-country-row">

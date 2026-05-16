@@ -677,6 +677,12 @@ function Forum({ initialIso3, initialThreadId, user, onClose, theme, onToggleThe
   }, [refresh]);
 
   React.useEffect(() => {
+    const onRefresh = () => refresh();
+    window.addEventListener("aletheia:forum:refresh", onRefresh);
+    return () => window.removeEventListener("aletheia:forum:refresh", onRefresh);
+  }, [refresh]);
+
+  React.useEffect(() => {
     if (initialThreadId) { setSelectedId(initialThreadId); refresh(); }
   }, [initialThreadId]);
 
