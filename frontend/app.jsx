@@ -547,14 +547,16 @@ function App({ user: authUser, onLogout }) {
   // Palette activa para colorFor() (módulo-scope, actualizado en render)
   ACTIVE_PALETTE = tweaks.palette || "editorial";
 
+  // Force navy palette on first load (clears stale localStorage value)
+  useEffect(() => {
+    if (tweaks.palette === "riesgo" || tweaks.palette === "editorial") {
+      setTweak("palette", "navy");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", tweaks.theme || "dark");
-    // Auto-switch palette to match theme
-    if (tweaks.theme === "corporate" && tweaks.palette === "editorial") {
-      setTweak("palette", "riesgo");
-    } else if (tweaks.theme !== "corporate" && tweaks.palette === "riesgo") {
-      setTweak("palette", "editorial");
-    }
   }, [tweaks.theme]);
 
   useEffect(() => {
@@ -564,6 +566,15 @@ function App({ user: authUser, onLogout }) {
   // ── Estado
   const [topology, setTopology] = useState(null);
   const [year, setYear] = useState(2024);
+
+  // Americas features for CountryLoop silhouettes
+  const americasFeatures = useMemo(() => {
+    if (!topology) return [];
+    try {
+      const raw = topojson.feature(topology, topology.objects.countries).features;
+      return raw.filter(f => COUNTRIES_BY_ID[f.id]);
+    } catch (e) { return []; }
+  }, [topology]);
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState("desc"); // desc | asc | name
   const [filterRange, setFilterRange] = useState([0, 100]);
@@ -576,6 +587,7 @@ function App({ user: authUser, onLogout }) {
   const [zoomLevel, setZoomLevel] = useState(3);
   const [mapSettingsOpen, setMapSettingsOpen] = useState(false);
   const [countryFocus, setCountryFocus] = useState(null);
+  const [cdRightTab, setCdRightTab] = useState('events');
   const [countryDashboard, setCountryDashboard] = useState(null);
   const [compareMode, setCompareMode] = useState(false);
   const [forumOpen, setForumOpen] = useState(null); // null | { iso3?, threadId?, _global? }
@@ -733,6 +745,7 @@ function App({ user: authUser, onLogout }) {
     setSelectedId(id);
     setComparedId(null);
     setCountryFocus(id);
+    setCdRightTab('events');
     setTimeout(() => {
       const feat = mapApi.current?.getFeatureById?.(id);
       if (feat) mapApi.current?.zoomToFeature(feat, true);
@@ -750,40 +763,44 @@ function App({ user: authUser, onLogout }) {
   const selected = selectedId ? COUNTRIES_BY_ID[selectedId] : null;
   const compared = comparedId ? COUNTRIES_BY_ID[comparedId] : null;
 
+  const pillNavItems = [
+    { label: 'Foro',        href: '#foro',       onClick: () => setForumOpen({}) },
+    { label: 'Metodología', href: '#metod',      onClick: () => setShowNotes(true) },
+    { label: 'Comparar',    href: '#comparar',   onClick: () => {} },
+    {
+      label: tweaks.theme === "dark" ? "☀ Claro" : tweaks.theme === "light" ? "◑ Corp." : "● Oscuro",
+      href: '#theme',
+      onClick: () => {
+        const next = tweaks.theme === "dark" ? "light" : tweaks.theme === "light" ? "corporate" : "dark";
+        setTweak("theme", next);
+      }
+    },
+  ];
+
   return (
     <>
       <div className="app">
         {/* Topbar */}
-        <div className="topbar">
+        <div className="topbar" style={{ position: 'relative' }}>
           <div className="brand">
             <div className="logo">Aletheia</div>
             <div className="tagline">Índice ilustrativo · América · 2015–2024</div>
           </div>
+
+          {/* Centered PillNav */}
+          <div className="topbar-center">
+            {window.PillNav && (
+              <window.PillNav
+                items={pillNavItems}
+                baseColor="#0e0c13"
+                pillColor="#1d1a2d"
+                hoveredPillTextColor="#e6b840"
+              />
+            )}
+          </div>
+
           <div className="meta">
             <span className="pill pill--tag">DATOS ILUSTRATIVOS</span>
-            <span className="pill" onClick={() => setForumOpen({})}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
-                <path d="M1 2h10v7H7l-3 2V9H1z"/>
-              </svg>
-              Foro
-            </span>
-            <span className="pill" onClick={() => setShowNotes(true)}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
-                <path d="M2 1h8v10H2z M4 4h4 M4 6.5h4 M4 9h2"/>
-              </svg>
-              Metodología
-            </span>
-            <span className="pill pill--theme" onClick={() => {
-                const next = tweaks.theme === "dark" ? "light" : tweaks.theme === "light" ? "corporate" : "dark";
-                setTweak("theme", next);
-              }}>
-              {tweaks.theme === "dark"
-                ? <><span className="pill-icon">◐</span> Claro</>
-                : tweaks.theme === "light"
-                  ? <><span className="pill-icon">◑</span> Corporativo</>
-                  : <><span className="pill-icon">●</span> Oscuro</>
-              }
-            </span>
             {authUser.kind !== "guest" && (
               <div className="notif-bell-wrap">
                 <button
@@ -976,7 +993,7 @@ function App({ user: authUser, onLogout }) {
           {/* Map */}
           <div className="col" style={{ borderRight: "none", borderLeft: "none" }}>
             <div className="map-wrap">
-              <div className="map-frame">
+              <div className={`map-frame${countryFocus ? ' cd-active' : ''}`}>
                 {!topology && <div className="loading">Cargando geometría</div>}
                 {topology && (
                   <MapView
@@ -995,6 +1012,10 @@ function App({ user: authUser, onLogout }) {
                     apiRef={mapApi}
                     onZoomChange={setZoomLevel}
                   />
+                )}
+                {/* Water cursor effect — ripples over ocean areas */}
+                {window.WaterCanvas && (
+                  <window.WaterCanvas isOverCountry={!!hoverData?.country} />
                 )}
                 <div className="map-zoom-controls">
                   <button className="map-zoom-btn" onClick={() => mapApi.current?.zoomIn()} title="Acercar (+)">
@@ -1144,7 +1165,7 @@ function App({ user: authUser, onLogout }) {
                     </div>
                   </div>
                 )}
-                <div className="map-overlay map-title">
+                <div className={`map-overlay map-title${mapFullscreen ? ' slide-out' : ''}`}>
                   <div className="kicker">Índice IEA · {window.COUNTRIES.length} países · América</div>
                   <div className="h">
                     ¿Dónde se siente<br/>
@@ -1275,6 +1296,23 @@ function App({ user: authUser, onLogout }) {
                       su evolución y compararlo con otro.
                     </div>
                   </div>
+
+                  {/* Country silhouette loop */}
+                  {window.CountryLoop && (
+                    <window.CountryLoop
+                      countries={americasFeatures.map(f => ({
+                        id:       f.id,
+                        iso3:     COUNTRIES_BY_ID[f.id]?.iso3,
+                        name:     COUNTRIES_BY_ID[f.id]?.name,
+                        scores:   COUNTRIES_BY_ID[f.id]?.scores,
+                        geometry: f.geometry,
+                      })).filter(c => c.name)}
+                      year={year}
+                      onSelect={handleSelect}
+                      onForumOpen={setForumOpen}
+                    />
+                  )}
+
                   <div className="top-block">
                     <div className="tb-title">
                       <span>Top 10 · más corruptos</span>
@@ -1367,7 +1405,7 @@ function App({ user: authUser, onLogout }) {
       )}
 
       {/* News Focus Panel — slide-in desde la izquierda */}
-      <div className={`news-focus${selected && mapFullscreen ? " open" : ""}`}>
+      <div className={`news-focus${selected && mapFullscreen && !countryFocus ? " open" : ""}`}>
         {selected && (
           <>
             <div className="nf-header">
@@ -1400,6 +1438,235 @@ function App({ user: authUser, onLogout }) {
         )}
       </div>
 
+      {/* ── Country Dashboard Overlay ── */}
+      {countryFocus && (() => {
+        const c = COUNTRIES_BY_ID[countryFocus];
+        if (!c) return null;
+        const data  = window.COUNTRY_DATA ? window.COUNTRY_DATA(c, year) : { indicators: [], events: [], headlines: [] };
+        const rank  = window.COUNTRIES.slice().sort((a, b) => b.scores[year] - a.scores[year]).findIndex(x => x.id === c.id) + 1;
+        const score = c.scores[year];
+        const scoreColor = score < 25 ? '#4aad88' : score < 50 ? '#e6b840' : score < 75 ? '#d4822e' : '#c94545';
+
+        // Get silhouette from americasFeatures
+        const feat = americasFeatures.find(f => f.id === countryFocus || +f.id === +countryFocus);
+        function geoToPath(geometry, w, h) {
+          if (!geometry) return '';
+          const rings = geometry.type === 'Polygon'
+            ? geometry.coordinates
+            : geometry.type === 'MultiPolygon'
+              ? geometry.coordinates.flat()
+              : [];
+          let minLng=Infinity, maxLng=-Infinity, minLat=Infinity, maxLat=-Infinity;
+          rings.forEach(ring => ring.forEach(([lng, lat]) => {
+            if (lng < minLng) minLng = lng; if (lng > maxLng) maxLng = lng;
+            if (lat < minLat) minLat = lat; if (lat > maxLat) maxLat = lat;
+          }));
+          const lngSpan = maxLng - minLng || 1, latSpan = maxLat - minLat || 1;
+          const scale = Math.min(w / lngSpan, h / latSpan) * 0.82;
+          const offX = (w - lngSpan * scale) / 2, offY = (h - latSpan * scale) / 2;
+          let d = '';
+          rings.forEach(ring => {
+            ring.forEach(([lng, lat], i) => {
+              const x = (lng - minLng) * scale + offX;
+              const y = h - ((lat - minLat) * scale + offY);
+              d += (i === 0 ? 'M' : 'L') + x.toFixed(1) + ',' + y.toFixed(1);
+            });
+            d += 'Z';
+          });
+          return d;
+        }
+
+        const scorePct = Math.max(0, Math.min(100, score));
+        const trendDelta = c.scores[2024] - c.scores[2015];
+
+        return (
+          <div className="cd-overlay">
+            {/* Pure blur backdrop — no dark color */}
+            <div className="cd-blur" onClick={closeCountryFocus} />
+
+            {/* Close */}
+            <button className="cd-x" onClick={closeCountryFocus}>✕</button>
+
+            {/* Center — silhouette + score overlay */}
+            <div className="cd-center" style={{ '--cd-score-color': scoreColor }}>
+              <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 0 }}>
+                {feat && feat.geometry && (
+                  <svg
+                    className="cd-center-sil"
+                    viewBox="0 0 320 320"
+                    style={{ overflow: 'visible', width: '90%', height: 'auto', maxWidth: 400, maxHeight: '52vh', display: 'block' }}
+                  >
+                    <path
+                      d={geoToPath(feat.geometry, 320, 320)}
+                      fill={scoreColor}
+                      fillOpacity={0.22}
+                      stroke={scoreColor}
+                      strokeWidth={1.0}
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+                {/* Score overlaid on top of silhouette */}
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+                  <div className="cd-center-score" style={{ color: scoreColor }}>{score.toFixed(1)}</div>
+                  <div className="cd-center-denom">/ 100</div>
+                </div>
+              </div>
+              <div className="cd-center-name">{c.name.toUpperCase()} · #{rank} DE {window.COUNTRIES.length}</div>
+            </div>
+
+            {/* Left panel — Country stats */}
+            <div className="cd-left" onClick={e => e.stopPropagation()}>
+              {/* Header */}
+              <div className="cdl-head">
+                <div className="cdl-kicker">FICHA DE PAÍS · {year}</div>
+                <div className="cdl-name">{c.name}</div>
+                <div className="cdl-meta">{c.iso3} · {c.region} · #{rank} de {window.COUNTRIES.length}</div>
+              </div>
+
+              {/* Score block */}
+              <div className="cdl-score-wrap">
+                <div className="cdl-score" style={{ color: scoreColor }}>{score.toFixed(1)}</div>
+                <div className="cdl-score-of">/100</div>
+                <div className="cdl-trend" style={{ color: trendDelta > 0 ? '#c94545' : '#4aad88' }}>
+                  {trendDelta > 0 ? '▲' : '▼'} {Math.abs(trendDelta).toFixed(1)} pts desde 2015
+                </div>
+              </div>
+
+              {/* Scale bar */}
+              <div style={{ padding:'0 22px 16px' }}>
+                <div style={{ height:4, background:'linear-gradient(to right, #4aad88 0%, #e6b840 50%, #c94545 100%)', borderRadius:2, position:'relative' }}>
+                  <div style={{ position:'absolute', top:-4, left:`${scorePct}%`, transform:'translateX(-50%)', width:3, height:12, background:'#fff', borderRadius:2, boxShadow:'0 0 6px rgba(255,255,255,0.8)' }} />
+                </div>
+                <div style={{ display:'flex', justifyContent:'space-between', fontFamily:'var(--mono)', fontSize:7.5, color:'rgba(237,233,224,0.3)', marginTop:5 }}>
+                  <span>0 limpio</span><span>50</span><span>100 corrupto</span>
+                </div>
+              </div>
+
+              {/* Sparkline */}
+              <div style={{ padding:'0 22px 16px' }}>
+                <div style={{ fontFamily:'var(--mono)', fontSize:7.5, letterSpacing:'0.18em', color:'rgba(230,184,64,0.6)', textTransform:'uppercase', marginBottom:8 }}>TENDENCIA 2015–2024</div>
+                <svg viewBox="0 0 240 48" width="100%" height={48} style={{ overflow:'visible' }}>
+                  <polyline
+                    points={(window.YEARS||[]).map((y, i) => `${(i/9)*240},${48-(c.scores[y]/100)*40}`).join(' ')}
+                    fill="none" stroke="#e6b840" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"
+                  />
+                  {window.YEARS && (
+                    <circle
+                      cx={(window.YEARS.indexOf(year)/9)*240}
+                      cy={48-(c.scores[year]/100)*40}
+                      r={3.5} fill="#e6b840"
+                      style={{ filter:'drop-shadow(0 0 4px #e6b840)' }}
+                    />
+                  )}
+                </svg>
+              </div>
+
+              {/* Indicators */}
+              <div style={{ flex:1, overflowY:'auto', padding:'0 22px 16px' }}>
+                <div style={{ fontFamily:'var(--mono)', fontSize:7.5, letterSpacing:'0.18em', color:'rgba(230,184,64,0.6)', textTransform:'uppercase', marginBottom:10 }}>INDICADORES</div>
+                {(data.indicators || []).map((ind, i) => (
+                  <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0', borderBottom:'1px solid rgba(237,233,224,0.06)' }}>
+                    <span style={{ fontFamily:'var(--mono)', fontSize:8.5, letterSpacing:'0.08em', color:'rgba(237,233,224,0.45)', textTransform:'uppercase' }}>{ind.label}</span>
+                    <span style={{ fontFamily:'var(--mono)', fontSize:16, fontWeight:700, color:'rgba(237,233,224,0.9)' }}>
+                      {ind.value}<span style={{ fontSize:10, color:'rgba(237,233,224,0.35)', marginLeft:2 }}>{ind.unit}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Actions */}
+              <div className="cdl-footer">
+                <button className="cd-btn" onClick={() => setForumOpen({ iso3: c.iso3 })}>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M1 2h10v7H7l-3 2V9H1z"/></svg>
+                  Foro
+                </button>
+                <button className="cd-btn" onClick={() => setCompareMode(true)}>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 6h8M6 2l4 4-4 4"/></svg>
+                  Comparar
+                </button>
+                <button className="cd-btn cd-btn-primary" onClick={() => setCountryDashboard(countryFocus)}>
+                  Expandir ficha →
+                </button>
+              </div>
+            </div>
+
+            {/* Right panel — Context tabs */}
+            <div className="cd-right" onClick={e => e.stopPropagation()}>
+              <div className="cdl-head" style={{ paddingBottom: 0 }}>
+                <div className="cdl-kicker">CONTEXTO · {year}</div>
+                <div className="cdl-name" style={{ fontSize:18, marginBottom:14 }}>{c.name}</div>
+                {/* Tab bar */}
+                <div className="cd-tabs">
+                  {[['events','Actividad'],['news','Noticias']].map(([key, label]) => (
+                    <button
+                      key={key}
+                      className={`cd-tab${cdRightTab === key ? ' cd-tab--active' : ''}`}
+                      onClick={() => setCdRightTab(key)}
+                    >{label}</button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Events tab */}
+              {cdRightTab === 'events' && (
+                <div style={{ flex:1, overflowY:'auto', padding:'16px 22px' }}>
+                  {(data.events || []).slice(0, 4).map((ev, i) => (
+                    <div key={i} style={{ padding:'12px 0', borderBottom:'1px solid rgba(237,233,224,0.06)' }}>
+                      <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:5 }}>
+                        <span style={{ fontFamily:'var(--mono)', fontSize:7.5, color:'rgba(237,233,224,0.35)', letterSpacing:'0.1em' }}>{ev.date}</span>
+                        <span style={{ fontFamily:'var(--mono)', fontSize:7, letterSpacing:'0.12em', textTransform:'uppercase', color:scoreColor, background:`${scoreColor}18`, border:`1px solid ${scoreColor}30`, padding:'1px 7px', borderRadius:99 }}>{ev.sector}</span>
+                      </div>
+                      <div style={{ fontFamily:'var(--sans)', fontSize:12.5, color:'rgba(237,233,224,0.8)', lineHeight:1.55 }}>{ev.text}</div>
+                    </div>
+                  ))}
+                  {(data.headlines||[]).length > 0 && (
+                    <div style={{ fontFamily:'var(--mono)', fontSize:7.5, letterSpacing:'0.18em', color:'rgba(230,184,64,0.6)', textTransform:'uppercase', margin:'20px 0 10px' }}>TITULARES DE PRENSA</div>
+                  )}
+                  {(data.headlines || []).slice(0, 3).map((h, i) => (
+                    <div key={i} style={{ padding:'10px 0', borderBottom:'1px solid rgba(237,233,224,0.06)' }}>
+                      <div style={{ fontFamily:'var(--mono)', fontSize:7.5, color:'rgba(237,233,224,0.3)', letterSpacing:'0.08em', marginBottom:4 }}>{h.source}</div>
+                      <div style={{ fontFamily:'var(--sans)', fontSize:12, color:'rgba(237,233,224,0.75)', lineHeight:1.55, fontStyle:'italic' }}>«{h.text}»</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* News tab — embedded NewsRail */}
+              {cdRightTab === 'news' && (
+                <div style={{ flex:1, overflowY:'auto', minHeight:0 }}>
+                  <NewsRail
+                    country={c}
+                    year={year}
+                    onBack={() => setCdRightTab('events')}
+                    onDiscuss={(item) => {
+                      const t = window.ForumAPI.createThread({
+                        iso3: c.iso3,
+                        country: c.name,
+                        region: c.region,
+                        scope: 'tema',
+                        subtype: 'news',
+                        title: item.title,
+                        subtitle: `Noticia · ${item.source} · ${item.categoryLabel} · ${year}`,
+                        year,
+                        source: item.source,
+                      });
+                      if (t) setForumOpen({ iso3: c.iso3, threadId: t.id });
+                    }}
+                  />
+                </div>
+              )}
+
+              <div style={{ padding:'10px 22px', borderTop:'1px solid rgba(237,233,224,0.06)', flexShrink:0 }}>
+                <div style={{ fontFamily:'var(--mono)', fontSize:8, color:'rgba(237,233,224,0.2)', lineHeight:1.5, letterSpacing:'0.04em' }}>
+                  DATOS ILUSTRATIVOS — no corresponden a hechos reales.
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Country Focus Panel — slide-in desde la derecha */}
       {(() => {
         const c = countryFocus ? COUNTRIES_BY_ID[countryFocus] : null;
@@ -1408,7 +1675,7 @@ function App({ user: authUser, onLogout }) {
           .sort((a, b) => b.scores[year] - a.scores[year])
           .findIndex(x => x.id === c.id) + 1 : null;
         return (
-          <div className={`country-focus${countryFocus ? " open" : ""}`}>
+          <div className={`country-focus${countryFocus ? " open country-focus--behind" : ""}`}>
             {c && (
               <>
                 <div className="cf-head">
