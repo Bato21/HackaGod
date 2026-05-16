@@ -325,6 +325,7 @@
   let _indexCache = null;
 
   function buildIndex() {
+    return []; // scaffold eliminado — solo hilos reales de usuarios
     const list = [];
     if (!window.COUNTRIES) return list;
     const PERIODS = [

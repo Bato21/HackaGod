@@ -1,29 +1,38 @@
 // Auth — pantalla de inicio de sesión / registro / invitado.
-// Es un prototipo: las credenciales se guardan en localStorage en TEXTO PLANO.
-// Para producción, esto debe ir contra un backend real con hash + sesión.
+// Backed by Supabase Auth (email/password). A small synchronous session
+// cache in localStorage ('aletheia.session') lets the React tree read the
+// current user without awaiting; cloud-sync.js keeps it in step with the
+// real Supabase session on load. Guest = local-only, read-only.
 
 const STORAGE_USERS = "aletheia.users";
 const STORAGE_SESSION = "aletheia.session";
 
+function _displayNameFrom(name, email) {
+  if (name && name.trim()) return name.trim();
+  if (email) return email.split("@")[0];
+  return "Usuario";
+}
+
 window.AuthAPI = {
+  // Synchronous: reads the cached session written by login/register or
+  // by cloud-sync.js after restoring the Supabase session on reload.
   current() {
     try { return JSON.parse(localStorage.getItem(STORAGE_SESSION)) || null; }
     catch (_) { return null; }
   },
+
   setSession(user) {
     if (user) {
       try {
         localStorage.setItem(STORAGE_SESSION, JSON.stringify(user));
       } catch (e) {
         if (e.name === "QuotaExceededError") {
-          // Storage full — purge all forum thread caches (largest consumer) and retry.
           const drop = [];
           for (let i = 0; i < localStorage.length; i++) {
             const k = localStorage.key(i);
             if (k && k.startsWith("aletheia.forum.thread.")) drop.push(k);
           }
           drop.forEach(k => localStorage.removeItem(k));
-          // Also reset seed version so threads re-seed lazily on next open.
           localStorage.removeItem("aletheia.forum.seedv");
           try { localStorage.setItem(STORAGE_SESSION, JSON.stringify(user)); } catch (_) {}
         }
@@ -32,53 +41,91 @@ window.AuthAPI = {
       localStorage.removeItem(STORAGE_SESSION);
     }
   },
+
+  // Local "members since" cache (read by profile.jsx). No passwords.
   users() {
     try { return JSON.parse(localStorage.getItem(STORAGE_USERS)) || []; }
     catch (_) { return []; }
   },
   saveUsers(list) {
-    try {
-      localStorage.setItem(STORAGE_USERS, JSON.stringify(list));
-    } catch (e) {
-      if (e.name === "QuotaExceededError") {
-        const drop = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const k = localStorage.key(i);
-          if (k && k.startsWith("aletheia.forum.thread.")) drop.push(k);
-        }
-        drop.forEach(k => localStorage.removeItem(k));
-        localStorage.removeItem("aletheia.forum.seedv");
-        try { localStorage.setItem(STORAGE_USERS, JSON.stringify(list)); } catch (_) {}
-      }
+    try { localStorage.setItem(STORAGE_USERS, JSON.stringify(list)); } catch (_) {}
+  },
+  _rememberMember(name, email) {
+    if (!email) return;
+    const list = this.users();
+    if (!list.some(x => x.email && x.email.toLowerCase() === email.toLowerCase())) {
+      list.push({ name, email, createdAt: new Date().toISOString() });
+      this.saveUsers(list);
     }
   },
-  login(email, password) {
-    const u = this.users().find(x => x.email.toLowerCase() === email.toLowerCase());
-    if (!u) return { ok: false, error: "No existe una cuenta con ese correo." };
-    if (u.password !== password) return { ok: false, error: "Contraseña incorrecta." };
-    const session = { name: u.name, email: u.email, kind: "user" };
+
+  async login(email, password) {
+    if (!window.sb) return { ok: false, error: "Servicio no disponible. Reintenta." };
+    const { data, error } = await window.sb.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+    if (error || !data?.user) {
+      return { ok: false, error: "Correo o contraseña incorrectos." };
+    }
+    const name = _displayNameFrom(
+      data.user.user_metadata?.name, data.user.email
+    );
+    const session = { name, email: data.user.email, kind: "user", uid: data.user.id };
     this.setSession(session);
+    this._rememberMember(name, data.user.email);
     return { ok: true, user: session };
   },
-  register(name, email, password) {
+
+  async register(name, email, password) {
     if (name.trim().length < 2) return { ok: false, error: "Ingresa tu nombre." };
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { ok: false, error: "Correo no válido." };
     if (password.length < 6) return { ok: false, error: "La contraseña debe tener al menos 6 caracteres." };
-    const list = this.users();
-    if (list.some(x => x.email.toLowerCase() === email.toLowerCase()))
-      return { ok: false, error: "Ya existe una cuenta con ese correo." };
-    list.push({ name: name.trim(), email: email.trim(), password, createdAt: new Date().toISOString() });
-    this.saveUsers(list);
-    const session = { name: name.trim(), email: email.trim(), kind: "user" };
+    if (!window.sb) return { ok: false, error: "Servicio no disponible. Reintenta." };
+
+    const clean = email.trim();
+    const { data, error } = await window.sb.auth.signUp({
+      email: clean,
+      password,
+      options: { data: { name: name.trim() } },
+    });
+    if (error) {
+      const msg = /already registered/i.test(error.message || "")
+        ? "Ya existe una cuenta con ese correo."
+        : (error.message || "No se pudo crear la cuenta.");
+      return { ok: false, error: msg };
+    }
+
+    // If email confirmation is enabled, signUp returns no session — try a
+    // direct sign-in so the demo flow continues without an inbox round-trip.
+    let user = data?.session ? data.user : null;
+    if (!user) {
+      const r = await window.sb.auth.signInWithPassword({ email: clean, password });
+      if (r.error || !r.data?.user) {
+        return {
+          ok: false,
+          error: "Cuenta creada. Confirma tu correo para iniciar sesión.",
+        };
+      }
+      user = r.data.user;
+    }
+
+    const session = { name: name.trim(), email: clean, kind: "user", uid: user.id };
     this.setSession(session);
+    this._rememberMember(name.trim(), clean);
     return { ok: true, user: session };
   },
+
   asGuest() {
     const session = { name: "Invitado", email: null, kind: "guest" };
     this.setSession(session);
     return session;
   },
-  logout() { this.setSession(null); },
+
+  async logout() {
+    this.setSession(null);
+    try { window.sb && await window.sb.auth.signOut(); } catch (_) {}
+  },
 };
 
 function AuthScreen({ onAuth }) {
@@ -88,18 +135,24 @@ function AuthScreen({ onAuth }) {
   const [name, setName] = React.useState("");
   const [error, setError] = React.useState("");
   const [remember, setRemember] = React.useState(true);
+  const [submitting, setSubmitting] = React.useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
     setError("");
-    let result;
-    if (tab === "login") {
-      result = window.AuthAPI.login(email, password);
-    } else {
-      result = window.AuthAPI.register(name, email, password);
+    setSubmitting(true);
+    try {
+      const result = tab === "login"
+        ? await window.AuthAPI.login(email, password)
+        : await window.AuthAPI.register(name, email, password);
+      if (!result.ok) { setError(result.error); return; }
+      onAuth(result.user);
+    } catch (err) {
+      setError("Error de conexión. Reintenta.");
+    } finally {
+      setSubmitting(false);
     }
-    if (!result.ok) { setError(result.error); return; }
-    onAuth(result.user);
   };
 
   const handleGuest = () => {
@@ -232,8 +285,10 @@ function AuthScreen({ onAuth }) {
               )}
             </div>
 
-            <button type="submit" className="auth-submit">
-              {tab === "login" ? "Ingresar" : "Crear cuenta"}
+            <button type="submit" className="auth-submit" disabled={submitting}>
+              {submitting
+                ? "Procesando…"
+                : (tab === "login" ? "Ingresar" : "Crear cuenta")}
             </button>
           </form>
 
