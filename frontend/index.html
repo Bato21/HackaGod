@@ -4403,12 +4403,8 @@
       transform: translateY(-2px) !important;
       box-shadow: 0 6px 28px rgba(200,146,30,0.60) !important;
     }
-    .chat-panel {
-      position: fixed !important;
-      bottom: auto !important;
-      top: 395px !important;
-      right: 18px !important;
-    }
+    /* Removed: la regla beta forzaba top:395 right:18 con !important,
+       rompiendo el drag/resize/dock. Posición ahora la maneja el componente. */
 
     /* ── Beta animations ────────────────────────────────────── */
     @keyframes appReveal {
@@ -4535,7 +4531,7 @@
   <script type="text/babel" src="auth.jsx"></script>
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
-  <script type="text/babel" src="chatbot.jsx?v=9"></script>
+  <script type="text/babel" src="chatbot.jsx?v=10"></script>
   <script type="text/babel" src="app.jsx"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
