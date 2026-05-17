@@ -151,6 +151,8 @@ function MapView({
   const nameGroupRef  = useRef(null);
   const layersById    = useRef({});
   const tileLayerRef  = useRef(null);
+  const newsPoiGroup   = useRef(null);
+  const elevGroupRef   = useRef(null); // tracks which layer has elevation applied
   const liveProps     = useRef({});
   liveProps.current   = { year, viewMode, showLabels, selectedId, comparedId, filterRange, onHover, onLeave, onSelect, theme };
 
@@ -206,11 +208,13 @@ function MapView({
     const dim   = score < fr[0] || score > fr[1];
     const isSel = sid === feature.id;
     const isCmp = cid === feature.id;
+    const hasFocus = !!sid;
+    const notActive = hasFocus && !isSel && !isCmp;
     return {
       fillColor:   colorFor(score),
-      fillOpacity: dim ? 0.15 : 1,
-      color:  isSel ? '#facc15' : isCmp ? '#38bdf8' : 'rgba(0,0,0,0.5)',
-      weight: isSel ? 2.5       : isCmp ? 2          : 0.6,
+      fillOpacity: dim ? 0.12 : notActive ? 0.32 : 1,
+      color:  isSel ? '#facc15' : isCmp ? '#38bdf8' : (notActive ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.5)'),
+      weight: isSel ? 3         : isCmp ? 2          : 0.6,
     };
   }, []);
 
@@ -238,6 +242,10 @@ function MapView({
     map.createPane('labels');
     map.getPane('labels').style.zIndex = 650;
     map.getPane('labels').style.pointerEvents = 'none';
+
+    // Pane for news POIs (above country layer)
+    map.createPane('news-pois');
+    map.getPane('news-pois').style.zIndex = 620;
 
     map.setMaxBounds([[-80, -180], [85, 180]]);
     map.fitBounds([[-58, -120], [74, -32]]);
@@ -385,6 +393,26 @@ function MapView({
     geoLayer.current.setStyle(getStyle);
   }, [year, filterRange, selectedId, comparedId, theme, palette]);
 
+  // ── Floating elevation effect: drop-shadow on selected country ──
+  useEffect(() => {
+    // Remove elevation from previous selection
+    if (elevGroupRef.current) {
+      try { elevGroupRef.current._path.style.filter = ''; } catch (_) {}
+      try { elevGroupRef.current._path.style.transform = ''; } catch (_) {}
+      elevGroupRef.current = null;
+    }
+    if (selectedId && layersById.current[selectedId]) {
+      const lyr = layersById.current[selectedId];
+      try {
+        lyr.bringToFront?.();
+        if (lyr._path) {
+          lyr._path.style.filter = 'drop-shadow(0 6px 18px rgba(0,0,0,0.65)) drop-shadow(0 0 10px rgba(250,204,21,0.45))';
+        }
+        elevGroupRef.current = lyr;
+      } catch (_) {}
+    }
+  }, [selectedId]);
+
   // ── Swap tile layer on theme change ──────────────────────────────
   useEffect(() => {
     const map = mapInst.current;
@@ -453,6 +481,82 @@ function MapView({
     grp.addTo(map);
     labelGroup.current = grp;
   }, [showLabels, americasFeatures]);
+
+  // ── News Points of Interest ─────────────────────────────────────
+  useEffect(() => {
+    const map = mapInst.current;
+    if (!map || !americasFeatures.length) return;
+    if (newsPoiGroup.current) { map.removeLayer(newsPoiGroup.current); newsPoiGroup.current = null; }
+
+    const sorted = window.COUNTRIES.slice().sort((a, b) => b.scores[year] - a.scores[year]);
+
+    // High importance (red) — top 4 most corrupt
+    const highNews = sorted.slice(0, 4).map(c => ({
+      country: c,
+      title: `${c.name}: Investigación por corrupción activa`,
+      type: 'high',
+    }));
+
+    // Medium importance (orange) — positions 5–6 by corruption
+    const medNews = sorted.slice(4, 6).map(c => ({
+      country: c,
+      title: `${c.name}: Alerta por irregularidades detectadas`,
+      type: 'medium',
+    }));
+
+    const grp = L.layerGroup();
+    [...highNews, ...medNews].forEach(({ country, title, type }) => {
+      const isHigh = type === 'high';
+      const color  = isHigh ? '#dc2626' : '#f97316';
+      const pulse  = isHigh ? '#ef4444' : '#fb923c';
+      const radius = isHigh ? 7 : 5.5;
+
+      // Outer pulse ring
+      const ring = L.circleMarker([country.lat, country.lng], {
+        radius: radius + 5,
+        color: color,
+        weight: 1.5,
+        fillColor: color,
+        fillOpacity: 0.12,
+        pane: 'news-pois',
+        interactive: false,
+      }).addTo(grp);
+
+      // Inner dot
+      const dot = L.circleMarker([country.lat, country.lng], {
+        radius,
+        color: '#fff',
+        weight: 1.2,
+        fillColor: color,
+        fillOpacity: 0.92,
+        pane: 'news-pois',
+      });
+
+      dot.bindTooltip(`
+        <div style="font-family:monospace;font-size:10px;line-height:1.5;max-width:200px;">
+          <div style="font-weight:700;color:${color};letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;">
+            ${isHigh ? '⬤ ALTA IMPORTANCIA' : '◉ MEDIA IMPORTANCIA'}
+          </div>
+          <div style="font-weight:600;">${country.name}</div>
+          <div style="color:#888;margin-top:2px;">${title.replace(country.name + ': ', '')}</div>
+          <div style="color:#888;margin-top:2px;">Índice: ${country.scores[year].toFixed(1)}/100</div>
+        </div>
+      `, {
+        direction: 'top',
+        offset: [0, -8],
+        opacity: 1,
+        className: 'news-poi-tooltip',
+      });
+
+      dot.addTo(grp);
+    });
+
+    grp.addTo(map);
+    newsPoiGroup.current = grp;
+    return () => {
+      if (newsPoiGroup.current) { map.removeLayer(newsPoiGroup.current); newsPoiGroup.current = null; }
+    };
+  }, [americasFeatures, year]);
 
   return <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />;
 }
@@ -1089,7 +1193,22 @@ function App({ user: authUser, onLogout }) {
         {/* Topbar */}
         <div className="topbar">
           <div className="brand">
-            <div className="logo">Aletheia</div>
+            <div className="logo">
+              <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+                <path d="M16 4 L22 6 L26 12 L26 22 L20 27 L12 27 L6 22 L6 12 L10 6 Z" stroke="var(--accent)" strokeWidth="1.2" fill="rgba(250,204,21,0.08)"/>
+                <circle cx="12" cy="13" r="3.5" stroke="var(--accent)" strokeWidth="1.1" fill="rgba(250,204,21,0.10)"/>
+                <circle cx="12" cy="13" r="1.7" fill="var(--accent)" opacity="0.95"/>
+                <circle cx="12" cy="13" r="0.8" fill="#0a0b0d"/>
+                <circle cx="20" cy="13" r="3.5" stroke="var(--accent)" strokeWidth="1.1" fill="rgba(250,204,21,0.10)"/>
+                <circle cx="20" cy="13" r="1.7" fill="var(--accent)" opacity="0.95"/>
+                <circle cx="20" cy="13" r="0.8" fill="#0a0b0d"/>
+                <path d="M14.5 15.5 L16 18 L17.5 15.5" stroke="var(--accent)" strokeWidth="1" strokeLinejoin="round" fill="rgba(250,204,21,0.3)"/>
+                <path d="M11 5.5 L9 2.5 M21 5.5 L23 2.5" stroke="var(--accent)" strokeWidth="1" strokeLinecap="round"/>
+                <path d="M6 16 L3.5 13.5 L6 20 M26 16 L28.5 13.5 L26 20" stroke="var(--accent)" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 27 L10 30 M16 27 L16 30 M20 27 L22 30" stroke="var(--accent)" strokeWidth="0.9" strokeLinecap="round"/>
+              </svg>
+              <span className="logo-text">Aletheia</span>
+            </div>
             <div className="tagline">Índice ilustrativo · América · 2015–2024</div>
           </div>
           <div className="meta">

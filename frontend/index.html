@@ -6,7 +6,7 @@
   <title>Aletheia</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Montserrat:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link href="forum.css" rel="stylesheet" />
   <style>
@@ -161,6 +161,19 @@
       color: var(--accent);
       margin-right: 8px;
       vertical-align: middle;
+    }
+    /* Greek brand name — Cinzel only on the ALETHEIA text */
+    .brand .logo {
+      font-family: "Montserrat", Georgia, serif;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .brand .logo-text {
+      font-family: "Cinzel", Georgia, serif;
+      letter-spacing: 0.12em;
+      font-weight: 700;
+      text-transform: uppercase;
     }
     .brand .tagline {
       font-size: 11px;
@@ -447,15 +460,23 @@
     }
 
     .map-legend {
-      right: 18px;
-      bottom: 18px;
+      left: 18px;
+      top: 14px;
       background: rgba(var(--bg-2-rgb, 22,27,34), 0.82);
       border: 1px solid var(--line);
       padding: 12px 14px;
       pointer-events: auto;
       min-width: 220px;
+      max-width: 220px;
       backdrop-filter: blur(8px);
       border-radius: 4px;
+    }
+    /* Map title moves right to avoid legend overlap */
+    .map-title {
+      left: auto !important;
+      right: 18px !important;
+      top: 18px !important;
+      max-width: 320px !important;
     }
     .map-legend .lt {
       font-size: 10px;
@@ -2762,6 +2783,20 @@
     }
     html[data-theme="corporate"] .leaflet-control-attribution {
       background: rgba(13,27,42,0.7) !important;
+    }
+    /* News POI tooltip */
+    .news-poi-tooltip .leaflet-tooltip-content,
+    .news-poi-tooltip {
+      background: rgba(10,11,15,0.96) !important;
+      border: 1px solid rgba(255,255,255,0.12) !important;
+      border-radius: 8px !important;
+      padding: 8px 12px !important;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+      color: #f5f5f4 !important;
+      font-family: var(--mono) !important;
+    }
+    .news-poi-tooltip.leaflet-tooltip::before {
+      border-top-color: rgba(10,11,15,0.96) !important;
     }
     /* Region labels (low zoom) */
     .map-region-name {
