@@ -3873,14 +3873,44 @@
     /* ── Aletheia chatbot — paleta navy + oro, líneas finas, sin gradientes vibrantes ── */
     .chat-panel {
       position: fixed; bottom: 90px; right: 28px; z-index: 8999;
-      width: 410px; max-height: 600px;
+      width: 410px; height: 580px;
+      min-width: 320px; min-height: 420px;
+      max-width: 95vw; max-height: 95vh;
       background: #0e0c13;
       border: 1px solid rgba(230, 184, 64, 0.18);
       border-radius: 12px; display: flex; flex-direction: column;
       box-shadow: 0 24px 60px rgba(0,0,0,.65),
                   0 0 0 1px rgba(230,184,64,0.06);
       overflow: hidden;
+      resize: both;
       font-family: inherit;
+    }
+    /* Custom resize grip — visible cue at bottom-right */
+    .chat-resize-grip {
+      position: absolute; bottom: 0; right: 0;
+      width: 18px; height: 18px;
+      pointer-events: none;
+      opacity: 0.45;
+      transition: opacity .15s;
+    }
+    .chat-panel:hover .chat-resize-grip { opacity: 0.85; }
+    .chat-resize-grip::before,
+    .chat-resize-grip::after {
+      content: ""; position: absolute;
+      background: #e6b840;
+      border-radius: 1px;
+    }
+    .chat-resize-grip::before {
+      width: 10px; height: 1.5px;
+      bottom: 4px; right: 3px;
+      transform: rotate(-45deg);
+      transform-origin: right;
+    }
+    .chat-resize-grip::after {
+      width: 5px; height: 1.5px;
+      bottom: 8px; right: 3px;
+      transform: rotate(-45deg);
+      transform-origin: right;
     }
     .chat-header {
       display: flex; align-items: center; justify-content: space-between;

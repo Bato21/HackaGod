@@ -224,6 +224,16 @@ function AletheiaChat({ selectedCountry }) {
     return () => window.removeEventListener("aletheia:chat:toggle", toggle);
   }, []);
 
+  // Al abrir por primera vez: ancla en top/left (no bottom/right) para que el
+  // resize nativo (CSS resize: both) crezca hacia abajo-derecha, no hacia arriba.
+  useEffect(() => {
+    if (!open || pos) return;
+    requestAnimationFrame(() => {
+      const rect = panelRef.current?.getBoundingClientRect();
+      if (rect) setPos({ x: rect.left, y: rect.top });
+    });
+  }, [open, pos]);
+
   // Fetch con retry para sobrevivir cold start del backend (Render free duerme tras 15min).
   // Reintenta en network error / 404 / 502 / 503 / 504 hasta MAX_RETRIES (~60s total).
   const fetchWithRetry = async (body) => {
@@ -411,6 +421,7 @@ function AletheiaChat({ selectedCountry }) {
               CPI Transparencia Internacional · 2017–2025 · Solo fines informativos
             </div>
           </div>
+          <div className="chat-resize-grip" aria-hidden="true" />
         </div>
       )}
     </>
