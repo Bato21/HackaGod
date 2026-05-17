@@ -554,7 +554,9 @@ function MapView({
         </div>
       `, { direction: 'top', offset: [0, -8], opacity: 1, className: 'news-poi-tooltip' });
 
-      dot.on('click', () => onSelect(country.id));
+      dot.on('click', () =>
+        window.dispatchEvent(new CustomEvent("aletheia:risk:open", { detail: { iso3: sig.iso3 } }))
+      );
       dot.addTo(grp);
     });
 
@@ -934,6 +936,79 @@ function useNewsVersion() {
   return v;
 }
 
+function useRiskVersion() {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    const bump = () => setV(x => x + 1);
+    window.addEventListener("aletheia:risk:loaded", bump);
+    return () => window.removeEventListener("aletheia:risk:loaded", bump);
+  }, []);
+  return v;
+}
+
+// Panel de señales de riesgo — se abre al clickear una pelotita del mapa.
+// Agrupa por los 3 rangos de signal_strength.
+const RISK_BUCKETS = [
+  { key: "critico", label: "Riesgo crítico", hint: "0.9 – 1.0", color: "#dc2626", min: 0.9,  max: 1.01 },
+  { key: "alto",    label: "Riesgo alto",    hint: "0.7 – 0.9", color: "#f97316", min: 0.7,  max: 0.9 },
+  { key: "medio",   label: "Riesgo medio",   hint: "0.5 – 0.7", color: "#eab308", min: 0.5,  max: 0.7 },
+];
+
+function RiskPanel({ open, onClose, onPick }) {
+  useRiskVersion();
+  const risk = window.ALETHEIA_RISK || {};
+  const all = Object.values(risk)
+    .filter(r => r.strength >= 0.5)
+    .sort((a, b) => b.strength - a.strength);
+  const groups = RISK_BUCKETS
+    .map(b => ({ ...b, items: all.filter(r => r.strength >= b.min && r.strength < b.max) }))
+    .filter(g => g.items.length > 0);
+
+  return (
+    <div className={`risk-panel${open ? " open" : ""}`}>
+      <div className="rp-head">
+        <div>
+          <div className="rp-kicker">Inteligencia de señales</div>
+          <div className="rp-title">Señales de riesgo</div>
+        </div>
+        <button className="rp-close" onClick={onClose} title="Cerrar">✕</button>
+      </div>
+      <div className="rp-body">
+        {all.length === 0 && <div className="rp-empty">Sin señales de riesgo activas.</div>}
+        {groups.map(g => (
+          <div key={g.key} className="rp-group">
+            <div className="rp-group-h">
+              <span className="rp-dot" style={{ background: g.color }}></span>
+              <span className="rp-group-name">{g.label}</span>
+              <span className="rp-group-hint">{g.hint}</span>
+              <span className="rp-group-count">{g.items.length}</span>
+            </div>
+            {g.items.map(it => {
+              const c = window.COUNTRIES.find(x => x.iso3 === it.iso3);
+              return (
+                <div key={it.iso3} className="rp-item"
+                     onClick={() => { if (c) onPick(c.id); onClose(); }}>
+                  <div className="rp-item-top">
+                    <span className="rp-country">{it.country}</span>
+                    <span className="rp-strength" style={{ color: g.color }}>
+                      {(it.strength * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="rp-item-meta">
+                    {it.pattern} · {it.count} señal{it.count === 1 ? "" : "es"}
+                  </div>
+                  {it.summary && <div className="rp-item-sum">{it.summary}</div>}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      <div className="rp-foot">Fuente: risk_signals · Supabase</div>
+    </div>
+  );
+}
+
 function NewsRail({ country, year, onBack, onDiscuss }) {
   useNewsVersion();
   const news = window.COUNTRY_NEWS(country, year);
@@ -1311,6 +1386,13 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
   const [compareMode, setCompareMode] = useState(false);
   const [forumOpen, setForumOpen] = useState(null); // null | { iso3?, threadId?, _global? }
   const [profileOpen, setProfileOpen] = useState(false);
+  const [riskPanelOpen, setRiskPanelOpen] = useState(false);
+
+  useEffect(() => {
+    const openRisk = () => setRiskPanelOpen(true);
+    window.addEventListener("aletheia:risk:open", openRisk);
+    return () => window.removeEventListener("aletheia:risk:open", openRisk);
+  }, []);
 
   // ── Estrellas y notificaciones
   const [stars, setStars] = useState(() =>
@@ -1387,6 +1469,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") {
+        if (riskPanelOpen) { setRiskPanelOpen(false); return; }
         if (compareMode) { setCompareMode(false); return; }
         if (countryDashboard) { setCountryDashboard(null); setDashMode(null); return; }
         if (countryFocus) { closeCountryFocus(); return; }
@@ -1402,7 +1485,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [mapFullscreen, mapSettingsOpen, countryFocus, countryDashboard, compareMode]);
+  }, [mapFullscreen, mapSettingsOpen, countryFocus, countryDashboard, compareMode, riskPanelOpen]);
 
   // Lista filtrada y ordenada
   const sortedList = useMemo(() => {
@@ -2526,6 +2609,13 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
           </button>
         </div>
       )}
+
+      {/* Risk Panel — se abre al clickear una pelotita de riesgo */}
+      <RiskPanel
+        open={riskPanelOpen}
+        onClose={() => setRiskPanelOpen(false)}
+        onPick={handleSelect}
+      />
 
       {/* News Focus Panel — slide-in desde la izquierda */}
       <div className={`news-focus${selected && mapFullscreen ? " open" : ""}`} data-tour="news">
