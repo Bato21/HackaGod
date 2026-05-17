@@ -1460,10 +1460,18 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
     prevSelectedId.current = selectedId;
   }, [selectedId]);
 
+  const prevDashboard = useRef(countryDashboard);
+  useEffect(() => {
+    if (!prevDashboard.current && countryDashboard) {
+      window.dispatchEvent(new CustomEvent("aletheia:tour:dashboard-opened"));
+    }
+    prevDashboard.current = countryDashboard;
+  }, [countryDashboard]);
+
   // Tour: reacciona a eventos del TourOverlay
   useEffect(() => {
     const openPanel  = () => setMapFullscreen(false);
-    const toFullscreen = () => setMapFullscreen(true);
+    const toFullscreen = () => { setMapFullscreen(true); setCountryDashboard(null); setDashMode(null); };
     const selectForTour = () => {
       const c = (window.COUNTRIES || []).find(c => c.iso3 === "MEX") || (window.COUNTRIES || [])[0];
       if (c) handleSelectRef.current(c.id);
@@ -2419,7 +2427,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
           .sort((a, b) => b.scores[year] - a.scores[year])
           .findIndex(x => x.id === c.id) + 1 : null;
         return (
-          <div className={`country-focus${countryFocus ? " open" : ""}`}>
+          <div className={`country-focus${countryFocus ? " open" : ""}`} data-tour="country-focus">
             {c && (
               <>
                 <div className="cf-head">
@@ -2542,7 +2550,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
                     {compareMode ? "Comparando…" : (comparedId ? "Comparar otro" : "Comparar")}
                   </button>
                   <button className="cf-action-btn" onClick={() => setForumOpen({ iso3: c.iso3 })}>Foro</button>
-                  <button className="cf-action-btn primary" onClick={() => { setCountryDashboard(countryFocus); setDashMode("expand"); }}>Expandir ficha</button>
+                  <button className="cf-action-btn primary" data-tour="expand-btn" onClick={() => { setCountryDashboard(countryFocus); setDashMode("expand"); }}>Expandir ficha</button>
                   <button className="cf-action-btn" onClick={closeCountryFocus}>Cerrar</button>
                 </div>
               </>
@@ -2657,7 +2665,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
         const presInitials = detail.president.name.split(" ").map(w => w[0]).join("").slice(0, 2);
         return (
           <div className="cd-backdrop" onClick={() => { setCountryDashboard(null); setDashMode(null); }}>
-            <div className="cd-shell" onClick={e => e.stopPropagation()}>
+            <div className="cd-shell" data-tour="ficha-dashboard" onClick={e => e.stopPropagation()}>
               <div className="cd-head">
                 <div>
                   <div className="cd-kicker">Dashboard de país · {year}</div>
@@ -2991,18 +2999,35 @@ const TOUR_STEPS = [
   },
   {
     type: "spotlight",
-    selector: '[data-tour="country-ficha"]',
+    selector: '[data-tour="country-focus"]',
+    tooltipPos: "left",
+    delay: 450,
+    title: "🗂️  Ficha de país",
+    desc: "Puntaje CPI, posición global, evolución histórica y comparación con otro país. Usa el botón «Comparar» para contrastar con cualquier otro.",
+  },
+  {
+    type: "spotlight-action",
+    selector: '[data-tour="expand-btn"]',
+    tooltipPos: "top",
+    actionEvent: "aletheia:tour:dashboard-opened",
+    title: "📋  Expande la ficha completa",
+    desc: "Haz clic en «Expandir ficha» para ver el perfil detallado: presidente, gabinete ministerial, indicadores económicos e hitos históricos del país.",
+    actionHint: "Toca «Expandir ficha» ↓",
+  },
+  {
+    type: "spotlight",
+    selector: '[data-tour="ficha-dashboard"]',
     tooltipPos: "left",
     delay: 350,
-    title: "🗂️  Ficha de país",
-    desc: "Aquí ves el puntaje CPI del país seleccionado, su evolución histórica en los últimos años y la comparación con otro país. Haz clic en otro país del ranking para activar la comparación.",
+    title: "📊  Perfil completo del país",
+    desc: "Aquí encuentras todo: el presidente y su período, el gabinete de ministros, indicadores macro (deuda, desempleo, inflación) y los hitos políticos más relevantes del año.",
   },
   {
     type: "spotlight",
     selector: '[data-tour="news"]',
     tooltipPos: "right",
     event: "aletheia:tour:go-fullscreen",
-    delay: 420,
+    delay: 480,
     title: "📰  Noticias del país",
     desc: "Panel de noticias del país seleccionado, clasificadas en Corrupción, Política y Gobierno. Puedes abrir un hilo de debate en el foro desde cualquier noticia.",
   },
