@@ -952,20 +952,50 @@
    RESPONSIVE: mobile
 ══════════════════════════════════════════════════════════════════ */
 @media (max-width: 720px) {
+  /* Topbar y scope-bar crecen según contenido (wrap), no altura fija */
+  .fv-stage { grid-template-rows: auto auto 1fr; }
   .fv-body { grid-template-columns: 1fr; }
   .fv-list-pane.mobile-hide { display: none; }
   .fv-detail-pane.mobile-hide { display: none; }
-  .fv-topbar { gap: 8px; padding: 0 12px; flex-wrap: wrap; min-height: 56px; }
+  .fv-topbar { gap: 8px; padding: 8px 12px; flex-wrap: wrap; min-height: 0; }
   .fvt-brand { gap: 6px; flex-shrink: 0; }
   .fvt-name { font-size: 14px; }
   .fvt-live { display: none; }
+  .fvt-slash { display: none; }
   .fvt-close-btn span { display: none; }
+  .fvt-new-btn span { display: none; }
+  .fvt-new-btn { padding: 8px 10px; }
   .fvt-search-group { flex: 1 1 100%; order: 3; min-width: 0; }
   .fvt-search-wrap { flex: 1 1 auto; min-width: 0; }
   .fvt-filter-btn span { display: none; }
+  .fvt-right { gap: 6px; flex-shrink: 0; }
+
+  /* Scope-bar: scroll horizontal, sin desbordar; oculta label "Ordenar" */
+  .fv-scope-bar {
+    padding: 0 12px;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .fv-scope-bar::-webkit-scrollbar { display: none; }
+  .fv-scope-tabs { flex-shrink: 0; }
+  .fv-scope-tab { font-size: 11px; gap: 5px; padding: 0 10px; white-space: nowrap; }
+  .fv-sort-group { flex-shrink: 0; gap: 4px; }
+  .fv-sort-lbl { display: none; }
+  .fv-sort-btn { font-size: 10px; padding: 4px 7px; white-space: nowrap; }
+
   .fvd-mobile-back { display: flex; }
-  .fvd-head { padding: 16px 18px 14px; }
-  .fvd-body { padding: 14px 18px; }
-  .fvd-composer { padding: 12px 14px; }
+  .fvd-head { padding: 14px 16px 12px; }
+  .fvd-body { padding: 14px 16px; }
+  /* Composer: respeta el notch inferior (ya no hay bottom-nav encima) */
+  .fvd-composer { padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); }
   .fvl-scroll::-webkit-scrollbar { display: none; }
+}
+@media (max-width: 420px) {
+  .fvt-logo { font-size: 13px; }
+  .fv-scope-tab { font-size: 10.5px; padding: 0 8px; }
+  .fvd-head { padding: 12px 14px 10px; }
+  .fvd-body { padding: 12px 14px; }
 }

@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Montserrat:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link href="forum.css" rel="stylesheet" />
+  <link href="forum.css?v=2" rel="stylesheet" />
   <link href="CardNav.css" rel="stylesheet" />
   <link href="PillNav.css" rel="stylesheet" />
   <style>
@@ -152,6 +152,8 @@
     }
     /* Bottom nav: oculto en desktop, el bloque @media 760px lo muestra */
     .mobile-nav { display: none; }
+    /* Foro es takeover con su propia nav → esconder bottom-nav encima */
+    body.forum-open .mobile-nav { display: none !important; }
     .topbar .brand {
       display: flex;
       align-items: baseline;
@@ -4903,7 +4905,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=3"></script>
+  <script type="text/babel" src="app.jsx?v=4"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>

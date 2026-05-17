@@ -1262,6 +1262,13 @@ function App({ user: authUser, onLogout }) {
     return () => window.removeEventListener("aletheia:select-country", handler);
   }, []);
 
+  // Forum takeover abierto → marca body para ocultar el bottom-nav mobile
+  // (el foro tiene su propia navegación y el nav tapaba el composer).
+  useEffect(() => {
+    document.body.classList.toggle("forum-open", !!forumOpen);
+    return () => document.body.classList.remove("forum-open");
+  }, [forumOpen]);
+
   const selected = selectedId ? COUNTRIES_BY_ID[selectedId] : null;
   const compared = comparedId ? COUNTRIES_BY_ID[comparedId] : null;
 
