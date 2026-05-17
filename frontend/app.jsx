@@ -556,9 +556,7 @@ function MapView({
           <div style="font-weight:700;color:${color};letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;">
             ▲ ${label} · ${(sig.strength * 100).toFixed(0)}%
           </div>
-          <div style="font-weight:600;">${esc(country.name)}</div>
-          <div style="color:#aaa;margin-top:2px;">${esc(sig.pattern)} · ${sig.count} señal${sig.count === 1 ? '' : 'es'}</div>
-          ${sig.summary ? `<div style="color:#888;margin-top:4px;">${esc(sig.summary)}</div>` : ''}
+          <div style="font-weight:600;">${esc(sig.pattern)}</div>
         </div>
       `, { direction: 'top', offset: [0, -size], opacity: 1, className: 'news-poi-tooltip' });
 
