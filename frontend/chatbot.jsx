@@ -325,16 +325,20 @@ function AletheiaChat({ selectedCountry }) {
     return () => window.removeEventListener("aletheia:chat:dock", onDock);
   }, []);
 
-  // Marca body con clase cuando el chat dockeado está en pestaña Aletheia.
-  // Esto oculta el news-focus vía CSS para que no haya doble render visual.
+  // Marca body con clases:
+  //  - chat-docked-aletheia → oculta news-focus (cuando tab=chat)
+  //  - chat-tabs-visible    → news-focus se baja 40px para no chocar con tab bar
   useEffect(() => {
-    const cls = "chat-docked-aletheia";
-    if (open && docked && leftTab === "chat") {
-      document.body.classList.add(cls);
-    } else {
-      document.body.classList.remove(cls);
-    }
-    return () => document.body.classList.remove(cls);
+    const isDockedActive = open && docked;
+    const isAletheiaTab  = isDockedActive && leftTab === "chat";
+
+    document.body.classList.toggle("chat-docked-aletheia", isAletheiaTab);
+    document.body.classList.toggle("chat-tabs-visible", isDockedActive);
+
+    return () => {
+      document.body.classList.remove("chat-docked-aletheia");
+      document.body.classList.remove("chat-tabs-visible");
+    };
   }, [open, docked, leftTab]);
 
   // Al abrir por primera vez: ancla en top/left (no bottom/right) para que el
@@ -456,6 +460,42 @@ function AletheiaChat({ selectedCountry }) {
       {/* Trigger en el header (window.dispatchEvent aletheia:chat:toggle) */}
 
       {/* Chat panel */}
+      {/* Tab bar dockeado — SEPARADO del chat panel para que siga visible
+          aunque el chat esté en tab Noticias. Así el usuario puede volver. */}
+      {open && docked && (
+        <div className="chat-dock-tabs">
+          <button
+            className={`chat-tab${leftTab === "chat" ? " active" : ""}`}
+            onClick={() => setLeftTab("chat")}
+          >
+            <OwlLogo size={14} />
+            <span>Aletheia</span>
+          </button>
+          <button
+            className={`chat-tab${leftTab === "news" ? " active" : ""}`}
+            onClick={() => setLeftTab("news")}
+          >
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2" y="3" width="12" height="10" rx="1"/>
+              <path d="M5 6 L11 6 M5 8.5 L11 8.5 M5 11 L9 11"/>
+            </svg>
+            <span>Noticias</span>
+          </button>
+          <button
+            className="chat-undock"
+            onClick={() => { setDocked(false); setLeftTab("chat"); }}
+            title="Desacoplar (volver a flotante)"
+            aria-label="Desacoplar chat"
+          >
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 3 L13 3 L13 7"/>
+              <path d="M13 3 L7 9"/>
+              <path d="M11 13 L1 13 L1 3 L5 3"/>
+            </svg>
+          </button>
+        </div>
+      )}
+
       {open && (
         <div
           ref={panelRef}
@@ -465,41 +505,6 @@ function AletheiaChat({ selectedCountry }) {
             ...(size ? { width: size.w, height: size.h } : {}),
           } : undefined}
         >
-          {/* Tab toggle visible solo en modo docked */}
-          {docked && (
-            <div className="chat-tabs">
-              <button
-                className={`chat-tab${leftTab === "chat" ? " active" : ""}`}
-                onClick={() => setLeftTab("chat")}
-              >
-                <OwlLogo size={14} />
-                <span>Aletheia</span>
-              </button>
-              <button
-                className={`chat-tab${leftTab === "news" ? " active" : ""}`}
-                onClick={() => setLeftTab("news")}
-              >
-                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="2" y="3" width="12" height="10" rx="1"/>
-                  <path d="M5 6 L11 6 M5 8.5 L11 8.5 M5 11 L9 11"/>
-                </svg>
-                <span>Noticias</span>
-              </button>
-              <button
-                className="chat-undock"
-                onClick={() => { setDocked(false); setLeftTab("chat"); }}
-                title="Desacoplar (volver a flotante)"
-                aria-label="Desacoplar chat"
-              >
-                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M9 3 L13 3 L13 7"/>
-                  <path d="M13 3 L7 9"/>
-                  <path d="M11 13 L1 13 L1 3 L5 3"/>
-                </svg>
-              </button>
-            </div>
-          )}
-
           <div
             className="chat-header"
             onPointerDown={docked ? undefined : onHeaderPointerDown}

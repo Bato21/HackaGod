@@ -3889,7 +3889,7 @@
        !important fuerza el override sobre inline styles residuales del drag. */
     .chat-panel--docked {
       position: fixed !important;
-      top: 56px !important;
+      top: 96px !important;
       left: 0 !important;
       right: auto !important;
       bottom: 76px !important;
@@ -3916,7 +3916,27 @@
       to   { transform: translateX(0);     opacity: 1; }
     }
 
-    /* Tab bar visible solo en docked */
+    /* Tab bar dockeado — element separado, position:fixed sobre ambos paneles.
+       Permite togglear entre Aletheia y Noticias sin perder los tabs. */
+    .chat-dock-tabs {
+      position: fixed !important;
+      top: 56px;
+      left: 0;
+      width: 380px;
+      height: 40px;
+      z-index: 9999;
+      display: flex; align-items: stretch;
+      border-bottom: 1px solid rgba(230, 184, 64, 0.18);
+      background: #0a0810;
+      box-shadow: 0 2px 8px rgba(0,0,0,.4);
+      animation: chatDockSlide .35s cubic-bezier(.4,0,.2,1);
+    }
+    /* Offset news-focus top cuando el dock está activo, para que no
+       choque visualmente con la tab bar. */
+    body.chat-tabs-visible .news-focus {
+      top: 40px !important;
+    }
+    /* Antiguo .chat-tabs (interno al panel) — ya no se usa, reservado por si vuelve */
     .chat-tabs {
       display: flex; align-items: stretch;
       border-bottom: 1px solid rgba(230, 184, 64, 0.14);
@@ -4531,7 +4551,7 @@
   <script type="text/babel" src="auth.jsx"></script>
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
-  <script type="text/babel" src="chatbot.jsx?v=11"></script>
+  <script type="text/babel" src="chatbot.jsx?v=12"></script>
   <script type="text/babel" src="app.jsx"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
