@@ -145,6 +145,7 @@ function AletheiaChat({ selectedCountry }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput]       = useState("");
   const [loading, setLoading]   = useState(false);
+  const [loadingStatus, setLoadingStatus] = useState("");
   const [error, setError]       = useState("");
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
@@ -164,6 +165,48 @@ function AletheiaChat({ selectedCountry }) {
     return () => window.removeEventListener("aletheia:chat:toggle", toggle);
   }, []);
 
+  // Fetch con retry para sobrevivir cold start del backend (Render free duerme tras 15min).
+  // Reintenta en network error / 404 / 502 / 503 / 504 hasta MAX_RETRIES (~60s total).
+  const fetchWithRetry = async (body) => {
+    const MAX_RETRIES = 8;
+    const RETRY_DELAY = 4000; // 4s entre intentos
+    const TIMEOUT_PER_TRY = 60000; // 60s por intento (cold start típico 30-50s)
+    const TRANSIENT_STATUS = new Set([404, 502, 503, 504]);
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      if (attempt === 1) setLoadingStatus("Despertando servidor… (~30s)");
+      if (attempt >= 3) setLoadingStatus("Aún despertando, paciencia…");
+
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), TIMEOUT_PER_TRY);
+
+      try {
+        const res = await fetch(BACKEND_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: ctrl.signal,
+        });
+        clearTimeout(timer);
+
+        if (TRANSIENT_STATUS.has(res.status) && attempt < MAX_RETRIES - 1) {
+          await new Promise(r => setTimeout(r, RETRY_DELAY));
+          continue;
+        }
+        return res;
+      } catch (e) {
+        clearTimeout(timer);
+        // network error o abort → reintenta
+        if (attempt < MAX_RETRIES - 1) {
+          await new Promise(r => setTimeout(r, RETRY_DELAY));
+          continue;
+        }
+        throw e;
+      }
+    }
+    throw new Error("El servidor no responde. Intenta de nuevo en un momento.");
+  };
+
   const sendMessage = async (text) => {
     const msg = (text || input).trim();
     if (!msg || loading) return;
@@ -173,6 +216,7 @@ function AletheiaChat({ selectedCountry }) {
     const userMsg = { role: "user", content: msg };
     setMessages(prev => [...prev, userMsg]);
     setLoading(true);
+    setLoadingStatus("");
 
     try {
       const history = messages.slice(-10).map(m => ({
@@ -182,11 +226,7 @@ function AletheiaChat({ selectedCountry }) {
 
       const iso3 = selectedCountry?.iso3 || null;
 
-      const res = await fetch(BACKEND_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg, country_iso3: iso3, history }),
-      });
+      const res = await fetchWithRetry({ message: msg, country_iso3: iso3, history });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -202,6 +242,7 @@ function AletheiaChat({ selectedCountry }) {
       setError(e.message || "Error de conexión. ¿Está corriendo el backend?");
     } finally {
       setLoading(false);
+      setLoadingStatus("");
     }
   };
 
@@ -255,6 +296,9 @@ function AletheiaChat({ selectedCountry }) {
                 <div className="chat-avatar">A</div>
                 <div className="chat-bubble chat-thinking">
                   <span/><span/><span/>
+                  {loadingStatus && (
+                    <div className="chat-thinking-status">{loadingStatus}</div>
+                  )}
                 </div>
               </div>
             )}
