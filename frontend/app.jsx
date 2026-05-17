@@ -1476,15 +1476,59 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
       const c = (window.COUNTRIES || []).find(c => c.iso3 === "MEX") || (window.COUNTRIES || [])[0];
       if (c) handleSelectRef.current(c.id);
     };
+    const resetView = () => {
+      setCountryFocus(null); setSelectedId(null); setComparedId(null);
+      setCompareMode(false); setCountryDashboard(null); setDashMode(null);
+      setMapFullscreen(true); setMapSettingsOpen(false);
+      mapApi.current?.reset();
+    };
     window.addEventListener("aletheia:tour:open-panel",      openPanel);
     window.addEventListener("aletheia:tour:go-fullscreen",   toFullscreen);
     window.addEventListener("aletheia:tour:select-country",  selectForTour);
+    window.addEventListener("aletheia:tour:reset-view",      resetView);
     return () => {
       window.removeEventListener("aletheia:tour:open-panel",     openPanel);
       window.removeEventListener("aletheia:tour:go-fullscreen",  toFullscreen);
       window.removeEventListener("aletheia:tour:select-country", selectForTour);
+      window.removeEventListener("aletheia:tour:reset-view",     resetView);
     };
   }, []);
+
+  // Tour: dispara eventos cuando el usuario interactúa con opciones del mapa
+  const prevSettingsOpen = useRef(mapSettingsOpen);
+  useEffect(() => {
+    if (!prevSettingsOpen.current && mapSettingsOpen)
+      window.dispatchEvent(new CustomEvent("aletheia:tour:settings-opened"));
+    prevSettingsOpen.current = mapSettingsOpen;
+  }, [mapSettingsOpen]);
+
+  const prevPalette = useRef(tweaks.palette);
+  useEffect(() => {
+    if (prevPalette.current !== tweaks.palette)
+      window.dispatchEvent(new CustomEvent("aletheia:tour:palette-changed"));
+    prevPalette.current = tweaks.palette;
+  }, [tweaks.palette]);
+
+  const prevLabelScale = useRef(tweaks.labelScale);
+  useEffect(() => {
+    if (prevLabelScale.current !== tweaks.labelScale)
+      window.dispatchEvent(new CustomEvent("aletheia:tour:labelscale-changed"));
+    prevLabelScale.current = tweaks.labelScale;
+  }, [tweaks.labelScale]);
+
+  const prevTheme = useRef(tweaks.theme);
+  useEffect(() => {
+    if (prevTheme.current !== tweaks.theme)
+      window.dispatchEvent(new CustomEvent("aletheia:tour:theme-changed"));
+    prevTheme.current = tweaks.theme;
+  }, [tweaks.theme]);
+
+  const prevProjection = useRef(tweaks.projection);
+  useEffect(() => {
+    if (prevProjection.current !== "orthographic" && tweaks.projection === "orthographic")
+      window.dispatchEvent(new CustomEvent("aletheia:tour:globe-selected"));
+    prevProjection.current = tweaks.projection;
+  }, [tweaks.projection]);
 
   // Forum takeover abierto → marca body para ocultar el bottom-nav mobile
   // (el foro tiene su propia navegación y el nav tapaba el composer).
@@ -2056,6 +2100,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
                 <div className="map-overlay map-actions">
                   <button
                     className={`map-action-btn${mapSettingsOpen ? " active" : ""}`}
+                    data-tour="settings-btn"
                     onClick={() => setMapSettingsOpen(o => !o)}
                     title="Configuración del mapa"
                     aria-label="Configuración del mapa"
@@ -2125,11 +2170,12 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
                           >Mapa</button>
                           <button
                             className={tweaks.projection === "orthographic" ? "active" : ""}
+                            data-tour="settings-globe"
                             onClick={() => setTweak("projection", "orthographic")}
                           >Globo</button>
                         </div>
                       </div>
-                      <div className="mp-section">
+                      <div className="mp-section" data-tour="settings-palette">
                         <div className="mp-lbl">Paleta de colores</div>
                         <div className="mp-palette-grid">
                           {PALETTE_KEYS.map(k => (
@@ -2144,7 +2190,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
                           ))}
                         </div>
                       </div>
-                      <div className="mp-section">
+                      <div className="mp-section" data-tour="settings-textsize">
                         <div className="mp-lbl">Tamaño de letras</div>
                         <div className="mp-seg cols-4">
                           {[
@@ -2161,7 +2207,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
                           ))}
                         </div>
                       </div>
-                      <div className="mp-section">
+                      <div className="mp-section" data-tour="settings-theme">
                         <div className="mp-lbl">Tema</div>
                         <div className="mp-seg cols-3">
                           <button
@@ -3052,6 +3098,59 @@ const TOUR_STEPS = [
     tooltipPos: "bottom",
     title: "🦉  Aletheia IA",
     desc: "Asistente con acceso a todos los datos de la plataforma. Pregúntale por rankings, comparativas, evolución histórica o contexto político de cualquier país.",
+  },
+  {
+    type: "modal",
+    icon: "⚙️",
+    title: "Personaliza tu vista",
+    desc: "Cerramos la ficha del país. Ahora exploraremos las opciones del mapa: paletas de color, tamaño de etiquetas, tema de interfaz y el modo Globo 3D.",
+    event: "aletheia:tour:reset-view",
+  },
+  {
+    type: "spotlight-action",
+    selector: '[data-tour="settings-btn"]',
+    tooltipPos: "right",
+    actionEvent: "aletheia:tour:settings-opened",
+    title: "⚙️  Abre la configuración",
+    desc: "Haz clic en el engranaje del mapa para abrir las opciones de personalización.",
+    actionHint: "Toca el engranaje ↓",
+  },
+  {
+    type: "spotlight-action",
+    selector: '[data-tour="settings-palette"]',
+    tooltipPos: "right",
+    actionEvent: "aletheia:tour:palette-changed",
+    delay: 300,
+    title: "🎨  Paleta de colores",
+    desc: "Cada paleta resalta distintos rangos del índice CPI. Prueba haciendo clic en cualquiera para ver el cambio en el mapa.",
+    actionHint: "Toca una paleta ↓",
+  },
+  {
+    type: "spotlight-action",
+    selector: '[data-tour="settings-textsize"]',
+    tooltipPos: "right",
+    actionEvent: "aletheia:tour:labelscale-changed",
+    title: "🔤  Tamaño de etiquetas",
+    desc: "Ajusta el tamaño de las etiquetas de países sobre el mapa. Toca cualquier opción para probarla.",
+    actionHint: "Toca un tamaño ↓",
+  },
+  {
+    type: "spotlight-action",
+    selector: '[data-tour="settings-theme"]',
+    tooltipPos: "right",
+    actionEvent: "aletheia:tour:theme-changed",
+    title: "🌙  Tema de la interfaz",
+    desc: "Cambia entre tema oscuro, claro o corporativo. El cambio aplica a toda la interfaz.",
+    actionHint: "Toca un tema ↓",
+  },
+  {
+    type: "spotlight-action",
+    selector: '[data-tour="settings-globe"]',
+    tooltipPos: "right",
+    actionEvent: "aletheia:tour:globe-selected",
+    title: "🌍  Vista Globo 3D",
+    desc: "Activa el modo globo tridimensional. Arrastra para rotar el planeta y usa la rueda para hacer zoom sobre cualquier región.",
+    actionHint: "Toca «Globo» ↓",
   },
 ];
 
