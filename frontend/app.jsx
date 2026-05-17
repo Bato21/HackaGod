@@ -252,7 +252,24 @@ function MapView({
     mapInst.current = map;
     setTimeout(() => { map.invalidateSize(); map.fitBounds([[-58, -120], [74, -32]]); }, 100);
 
+    // Mobile: el layout (topbar wrap, dvh, rotación) cambia el tamaño del
+    // contenedor después del mount → Leaflet queda con size 0 (mapa en blanco).
+    // ResizeObserver + resize/orientationchange fuerzan invalidateSize.
+    let rafId = null;
+    const refresh = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => map.invalidateSize({ animate: false }));
+    };
+    const ro = new ResizeObserver(refresh);
+    ro.observe(containerRef.current);
+    window.addEventListener("resize", refresh);
+    window.addEventListener("orientationchange", refresh);
+
     return () => {
+      ro.disconnect();
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", refresh);
+      window.removeEventListener("orientationchange", refresh);
       map.remove();
       mapInst.current = null;
       geoLayer.current = null;

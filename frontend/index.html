@@ -4542,18 +4542,32 @@
 
     /* ── Mobile (≤760px) ──────────────────────────────────────── */
     @media (max-width: 760px) {
-      html, body { overflow-x: hidden; }
+      html, body {
+        overflow: hidden !important;
+        height: 100% !important;
+        position: fixed;
+        inset: 0;
+        overscroll-behavior: none;
+      }
 
       /* Anular el zoom/label-scale en mobile para que el viewport sea real.
-         Sin timeline (fila 3 = 0): en mobile el año se controla distinto y
-         el zoom es pinch nativo, así que ganamos toda la altura para el mapa. */
+         position:fixed + inset:0 bloquea el scroll del documento (antes
+         se podía deslizar más allá del mapa hacia área en blanco).
+         Sin timeline (fila 3 = 0): zoom es pinch nativo, mapa full alto. */
+      #root { height: 100%; }
       .app {
         zoom: 1 !important;
+        position: fixed !important;
+        inset: 0 !important;
         height: 100vh !important;
         height: 100dvh !important;
         width: 100vw !important;
+        overflow: hidden !important;
         grid-template-rows: auto 1fr 0 !important;
       }
+      .main { height: 100%; min-height: 0; overflow: hidden; }
+      .map-wrap, .map-frame { height: 100%; min-height: 0; }
+      .leaflet-container { height: 100% !important; }
 
       /* Mobile: fuera timeline y controles de zoom (pinch con dedos) */
       .timeline { display: none !important; }
@@ -4889,7 +4903,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=2"></script>
+  <script type="text/babel" src="app.jsx?v=3"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>
