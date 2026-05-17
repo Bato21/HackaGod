@@ -1548,7 +1548,7 @@ function App({ user: authUser, onLogout }) {
                       <path d="M7 3 L7 11 M3 7 L11 7" />
                     </svg>
                   </button>
-                  <div className="zoom-level">z{zoomLevel}</div>
+                  <div className="zoom-level">z{Math.round(zoomLevel)}</div>
                   <button className="map-zoom-btn" onClick={() => mapApi.current?.zoomOut()} title="Alejar (−)">
                     <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
                       <path d="M3 7 L11 7" />
