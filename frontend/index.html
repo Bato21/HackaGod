@@ -580,6 +580,12 @@
       top: 14px;
       left: 18px;
       max-width: 60%;
+      background: rgba(10,11,14,0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border-radius: 6px;
+      padding: 10px 14px;
+      border: 1px solid rgba(255,255,255,0.06);
     }
     .map-title .kicker {
       font-size: 10px;
@@ -3218,9 +3224,16 @@
     html[data-theme="corporate"] .map-legend .lt,
     html[data-theme="light"] .map-legend .lt { color: #fff; font-weight: 700; font-size: 12px; }
     html[data-theme="corporate"] .map-title .h {
-      color: #0d1b2a;
-      text-shadow: 0 1px 3px rgba(255,255,255,0.6);
+      color: #eef4fc;
+      text-shadow: none;
     }
+    html[data-theme="corporate"] .map-title,
+    html[data-theme="light"] .map-title {
+      background: rgba(10,12,18,0.62);
+      border-color: rgba(255,255,255,0.08);
+    }
+    html[data-theme="corporate"] .map-title .kicker { color: rgba(168,163,184,0.8); }
+    html[data-theme="corporate"] .map-title .sub { color: rgba(200,196,216,0.75); }
 
     /* Map overlay cards — frosted glass for light themes */
     html[data-theme="light"] .map-stats,
