@@ -150,6 +150,8 @@
       position: relative;
       z-index: 10;
     }
+    /* Bottom nav: oculto en desktop, el bloque @media 760px lo muestra */
+    .mobile-nav { display: none; }
     .topbar .brand {
       display: flex;
       align-items: baseline;
@@ -4578,23 +4580,62 @@
       .user-chip .uc-tag { display: none; }
       .user-chip .uc-avatar { margin: 0; }
 
-      /* PillNav baja a una segunda fila, ocupa todo el ancho y scrollea horiz */
-      .topbar-center {
-        position: static !important;
-        transform: none !important;
-        order: 3;
-        flex-basis: 100%;
-        width: 100%;
-        justify-content: flex-start;
-        overflow-x: auto;
-        overflow-y: hidden;
-        -webkit-overflow-scrolling: touch;
-        gap: 8px;
-        padding: 2px 0 4px;
-        scrollbar-width: none;
-      }
-      .topbar-center::-webkit-scrollbar { display: none; }
+      /* PillNav fuera en mobile — reemplazado por bottom nav con iconos */
+      .topbar-center { display: none !important; }
       .ask-aletheia-btn { display: none; }
+
+      /* Bottom nav mobile */
+      .mobile-nav {
+        display: flex !important;
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        z-index: 8000;
+        align-items: stretch;
+        justify-content: space-around;
+        gap: 4px;
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+        background: rgba(14, 12, 19, 0.94);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        border-top: 1px solid rgba(230, 184, 64, 0.18);
+        box-shadow: 0 -6px 24px rgba(0,0,0,.45);
+      }
+      .mn-btn {
+        flex: 1;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        gap: 4px;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 12px;
+        color: rgba(245, 241, 232, 0.62);
+        padding: 7px 4px 5px;
+        font-family: inherit;
+        font-size: 9.5px;
+        letter-spacing: 0.02em;
+        cursor: pointer;
+        transition: color .15s, background .15s, border-color .15s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mn-btn svg { width: 22px; height: 22px; }
+      .mn-btn span { line-height: 1; }
+      .mn-btn:active {
+        background: rgba(230, 184, 64, 0.08);
+        color: #f5f1e8;
+      }
+      .mn-btn--accent {
+        color: #e6b840;
+      }
+      .mn-btn--accent:active {
+        background: rgba(230, 184, 64, 0.16);
+        border-color: rgba(230, 184, 64, 0.4);
+      }
+
+      /* Espacio inferior para que el bottom nav no tape contenido scrolleable */
+      .news-focus, .country-focus, .chat-panel {
+        padding-bottom: 0;
+      }
+      .news-rail-body, .cf-body { padding-bottom: 78px !important; }
 
       /* Country search: compacta y dropdown ancho */
       .country-search { margin-left: 0; }

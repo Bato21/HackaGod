@@ -1404,6 +1404,77 @@ function App({ user: authUser, onLogout }) {
           </div>
         </div>
 
+        {/* Bottom nav — solo mobile (CSS lo oculta en desktop) */}
+        <nav className="mobile-nav" aria-label="Navegación móvil">
+          <button
+            className="mn-btn"
+            onClick={() => {
+              setForumOpen(null);
+              setShowNotes(false);
+              setProfileOpen(false);
+              setCompareMode(false);
+              closeCountryFocus();
+            }}
+            aria-label="Inicio"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 10.5 L12 3 L21 10.5" />
+              <path d="M5 9.5 L5 20 L19 20 L19 9.5" />
+              <path d="M10 20 L10 14 L14 14 L14 20" />
+            </svg>
+            <span>Mapa</span>
+          </button>
+
+          <button className="mn-btn" onClick={() => setForumOpen({})} aria-label="Foro">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="4" width="18" height="5" rx="1.5" />
+              <path d="M5 9 L5 19 A1 1 0 0 0 6 20 L18 20 A1 1 0 0 0 19 19 L19 9" />
+              <path d="M10 13 L14 13" />
+            </svg>
+            <span>Foro</span>
+          </button>
+
+          <button
+            className="mn-btn mn-btn--accent"
+            onClick={() => window.dispatchEvent(new CustomEvent("aletheia:chat:toggle"))}
+            aria-label="Pregunta a Aletheia"
+          >
+            <svg viewBox="0 0 32 32" fill="none">
+              <path d="M16 4 L22 6 L26 12 L26 22 L20 27 L12 27 L6 22 L6 12 L10 6 Z" stroke="currentColor" strokeWidth="1.4" />
+              <circle cx="12" cy="13" r="3.3" stroke="currentColor" strokeWidth="1.3" />
+              <circle cx="12" cy="13" r="1.5" fill="currentColor" />
+              <circle cx="20" cy="13" r="3.3" stroke="currentColor" strokeWidth="1.3" />
+              <circle cx="20" cy="13" r="1.5" fill="currentColor" />
+              <path d="M14.5 15.5 L16 18 L17.5 15.5" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round" />
+              <path d="M11 5.5 L9 2.5 M21 5.5 L23 2.5" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" />
+            </svg>
+            <span>Aletheia</span>
+          </button>
+
+          <button
+            className="mn-btn"
+            onClick={() => {
+              if (authUser.kind === "guest") onLogout();
+              else setProfileOpen(true);
+            }}
+            aria-label="Perfil"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="9" r="3.4" />
+              <path d="M5.5 20 A6.5 6.5 0 0 1 18.5 20" />
+            </svg>
+            <span>Perfil</span>
+          </button>
+
+          <button className="mn-btn" onClick={() => setShowNotes(true)} aria-label="Metodología">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="12" cy="12" r="3.2" />
+              <path d="M12 2.5 L12 5 M12 19 L12 21.5 M2.5 12 L5 12 M19 12 L21.5 12 M5.2 5.2 L7 7 M17 17 L18.8 18.8 M5.2 18.8 L7 17 M17 7 L18.8 5.2" />
+            </svg>
+            <span>Info</span>
+          </button>
+        </nav>
+
         {/* Main */}
         <div className={`main${mapFullscreen ? " fullscreen" : ""}`}>
           {/* Left rail */}
