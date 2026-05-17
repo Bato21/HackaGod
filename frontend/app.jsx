@@ -2249,6 +2249,21 @@ function App({ user: authUser, onLogout }) {
                   </div>
                 </div>
 
+                {/* Hitos del año */}
+                {detail.milestones && detail.milestones.length > 0 && (
+                  <div className="cd-card span-2">
+                    <div className="cd-card-h">
+                      <span>Hitos del año · {year}</span>
+                      <span className="mono" style={{ color: "var(--good)" }}>● datos reales</span>
+                    </div>
+                    <ul className="milestones-list">
+                      {detail.milestones.map((h, i) => (
+                        <li key={i}>{h}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 {/* Contexto macro */}
                 <div className="cd-card span-2">
                   <div className="cd-card-h">

@@ -2074,6 +2074,27 @@
       border-radius: 4px;
       background: var(--bg);
     }
+    .milestones-list {
+      margin: 6px 0 0;
+      padding-left: 0;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .milestones-list li {
+      position: relative;
+      padding-left: 16px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--text-2);
+    }
+    .milestones-list li::before {
+      content: "▸";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+    }
     .cd-card .cd-card-h {
       font-size: 10px;
       letter-spacing: 0.14em;
@@ -4218,6 +4239,7 @@
   <script src="cpi-override.js"></script>
   <script src="presidents-override.js"></script>
   <script src="cabinet-override.js"></script>
+  <script src="milestones-override.js"></script>
   <script src="world-data.js"></script>
   <script src="events.js"></script>
   <script src="forum.js"></script>

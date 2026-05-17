@@ -466,6 +466,17 @@
       if (cab.length) detail.real = true;
     } catch (_) {}
 
+    // ── Hitos del año (Excel → Supabase → window.MILESTONES) ──
+    try {
+      const ms = window.MILESTONES
+        && window.MILESTONES[country.iso3]
+        && window.MILESTONES[country.iso3][year];
+      if (ms && ms.length) {
+        detail.milestones = ms;
+        detail.real = true;
+      }
+    } catch (_) {}
+
     return detail;
   };
 

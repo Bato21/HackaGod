@@ -1,23 +1,15 @@
-"""ETL: PRESIDENTES_POR_AÑO_GABINETE_LO_MAS_COMPLETO_DEFENDIBLE.xlsx
-→ Supabase cabinet_ministers.
+"""ETL: PRESIDENTES_POR_AÑO_GABINETE_HITOS_MINISTROS_COMPLETADOS.xlsx
+→ Supabase milestones.
 
-Hoja 1 ('CPI país-año con presidente'), 15 columnas:
-  0 País CPI · 1 Año · 8 Postura política
-  9  Ministro/a de Economía
-  10 Ministro/a de Salud
-  11 Ministro/a de Vivienda
-  12 Ministro/a de Transporte
-  13 Ministro/a de Trabajo
-  14 Ministro/a de Justicia
-
-ESTE xlsx SÍ usa sharedStrings (a diferencia del de presidentes).
-Valor de celda: "Nombre APELLIDO (Min. of X)" → minister_name + source_role.
+Hoja 1, columnas 15-22 = 'Hito 1..8 del año presidencial' (texto por país-año).
+Algunas celdas traen una fórmula Excel filtrada (… clasificado como: =IF(ISBLANK(G2)…);
+se sanitiza cortando desde '=IF(' / '=' inicial de fórmula.
 Reutiliza el mapeo nombre→iso3 de etl_presidents.
 """
 
 import os, sys, zipfile, re, xml.etree.ElementTree as ET
 from dotenv import load_dotenv
-from etl_presidents import name_to_iso3, NO_DATA  # mapeo + set "sin dato"
+from etl_presidents import name_to_iso3, NO_DATA
 
 load_dotenv()
 
@@ -28,15 +20,7 @@ if not os.path.exists(XLSX):
     sys.exit(f"ERROR: {XLSX} not found")
 
 NS = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
-
-PORTFOLIOS = {
-    9:  "Economía",
-    10: "Salud",
-    11: "Vivienda",
-    12: "Transporte",
-    13: "Trabajo",
-    14: "Justicia",
-}
+HITO_COLS = list(range(15, 23))  # 15..22 → idx 1..8
 
 
 def _col_idx(ref: str) -> int:
@@ -47,11 +31,25 @@ def _col_idx(ref: str) -> int:
     return c - 1
 
 
+def _clean(t: str) -> str | None:
+    if not t:
+        return None
+    # Corta fórmulas Excel filtradas (=IF(…), =…) y restos colgantes.
+    t = re.split(r"=\s*IF\s*\(", t, maxsplit=1)[0]
+    t = re.split(r"(?<!\w)=[A-Z]{2,}\s*\(", t, maxsplit=1)[0]
+    t = t.strip()
+    t = re.sub(r"[\s:;,\-]+$", "", t).strip()
+    if not t or t.lower() in NO_DATA:
+        return None
+    if len(t) < 4:
+        return None
+    return t
+
+
 def parse(path: str):
     with zipfile.ZipFile(path) as z:
-        ss = ET.fromstring(z.read("xl/sharedStrings.xml"))
         S = ["".join(t.text or "" for t in si.iter(NS + "t"))
-             for si in ss.findall(NS + "si")]
+             for si in ET.fromstring(z.read("xl/sharedStrings.xml")).findall(NS + "si")]
         sh = ET.fromstring(z.read("xl/worksheets/sheet1.xml"))
 
     def cv(c):
@@ -74,36 +72,23 @@ def parse(path: str):
         yr = cells.get(1, "")
         if not country or not yr.isdigit():
             continue
-        stance = cells.get(8, "")
-        if stance.strip().lower() in NO_DATA:
-            stance = None
-        for col, portfolio in PORTFOLIOS.items():
-            raw = cells.get(col, "")
-            if not raw or raw.strip().lower() in NO_DATA:
-                continue
-            m = re.match(r"^(.*?)\s*\(([^)]*)\)\s*$", raw)
-            if m:
-                name = m.group(1).strip()
-                role = m.group(2).strip()
-            else:
-                name, role = raw.strip(), None
-            if not name or name.lower() in NO_DATA:
+        for n, col in enumerate(HITO_COLS, start=1):
+            txt = _clean(cells.get(col, ""))
+            if not txt:
                 continue
             out.append({
-                "country_name":     country,
-                "year":             int(yr),
-                "portfolio":        portfolio,
-                "minister_name":    name,
-                "source_role":      role,
-                "political_stance": stance,
+                "country_name": country,
+                "year": int(yr),
+                "idx": n,
+                "text": txt,
             })
     return out
 
 
 def main():
-    print("Parsing Excel (gabinete) …")
+    print("Parsing Excel (hitos) …")
     recs = parse(XLSX)
-    print(f"  {len(recs)} minister rows extracted")
+    print(f"  {len(recs)} milestone rows extracted")
 
     try:
         import pycountry  # noqa: F401
@@ -134,34 +119,34 @@ def main():
         import psycopg2
 
     print("Uploading via direct Postgres …")
-    conn = psycopg2.connect(pg_url, sslmode="require")
+    conn = psycopg2.connect(
+        pg_url, sslmode="require",
+        connect_timeout=15, keepalives=1,
+        keepalives_idle=20, keepalives_interval=10, keepalives_count=3,
+    )
     cur = conn.cursor()
     upsert = """
-        INSERT INTO cabinet_ministers
-          (iso3, country_name, year, portfolio, minister_name, source_role, political_stance)
-        VALUES (%s,%s,%s,%s,%s,%s,%s)
-        ON CONFLICT (iso3, year, portfolio) DO UPDATE SET
-          country_name     = EXCLUDED.country_name,
-          minister_name     = EXCLUDED.minister_name,
-          source_role       = EXCLUDED.source_role,
-          political_stance  = EXCLUDED.political_stance
+        INSERT INTO milestones (iso3, country_name, year, idx, text)
+        VALUES (%s,%s,%s,%s,%s)
+        ON CONFLICT (iso3, year, idx) DO UPDATE SET
+          country_name = EXCLUDED.country_name,
+          text          = EXCLUDED.text
     """
     batch = 500
     for i in range(0, len(rows_up), batch):
         chunk = rows_up[i:i + batch]
         cur.executemany(upsert, [
-            (r["iso3"], r["country_name"], r["year"], r["portfolio"],
-             r["minister_name"], r["source_role"], r["political_stance"])
+            (r["iso3"], r["country_name"], r["year"], r["idx"], r["text"])
             for r in chunk
         ])
         conn.commit()
         print(f"  batch {i // batch + 1}: {len(chunk)} rows OK")
 
-    cur.execute("SELECT COUNT(*), COUNT(DISTINCT iso3) FROM cabinet_ministers")
+    cur.execute("SELECT COUNT(*), COUNT(DISTINCT iso3) FROM milestones")
     total, paises = cur.fetchone()
     cur.close()
     conn.close()
-    print(f"\nDone. {len(rows_up)} upserted. Total cabinet_ministers: {total} ({paises} países)")
+    print(f"\nDone. {len(rows_up)} upserted. Total milestones: {total} ({paises} países)")
 
 
 if __name__ == "__main__":
