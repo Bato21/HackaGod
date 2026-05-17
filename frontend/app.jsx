@@ -2883,6 +2883,16 @@ const TOUR_STEPS = [
     desc: "Toca cualquier país en el mapa para ver su ficha completa: presidente actual, gabinete, indicadores económicos y datos judiciales.",
   },
   {
+    icon: "📰",
+    title: "Noticias por país",
+    desc: "Cada ficha de país incluye una sección de noticias recientes. Mantente informado sobre los eventos más relevantes de cada nación.",
+  },
+  {
+    icon: "💬",
+    title: "Foro ciudadano",
+    desc: "Debate, comenta y discute con otros usuarios sobre la situación de cada país. El foro está abierto por país — tu voz cuenta.",
+  },
+  {
     icon: "🦉",
     title: "Aletheia — IA",
     desc: "El botón del búho (esquina inferior derecha) abre el asistente de IA. Puedes preguntarle sobre cualquier país, dato o contexto histórico.",
