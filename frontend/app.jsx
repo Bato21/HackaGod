@@ -527,19 +527,18 @@ function MapView({
       if (!country) return;
       const color = window.riskColor(sig.strength) || '#eab308';
       const label = window.riskLabel(sig.strength);
-      const size = 18 + Math.round((sig.strength - 0.5) / 0.5 * 10); // 18→28
-      const box  = Math.ceil(size * 2.6); // caja con espacio para el eco
+      const size = 20 + Math.round((sig.strength - 0.5) / 0.5 * 12); // 20→32
+      const box  = Math.ceil(size * 3); // espacio para las ondas
 
-      // Triángulo de alerta + 2 ecos de pulso (avisa que hay señal)
+      // Triángulo de alerta + 3 ondas de color expandiéndose (tipo radar)
       const poly = '12,1.5 22.5,20.5 1.5,20.5';
-      const tri = (cls, extra) =>
-        `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 24 22">` +
-        `<polygon points="${poly}" ${extra}/></svg>`;
+      const wave = cls =>
+        `<span class="risk-wave ${cls}" style="width:${size}px;height:${size}px"></span>`;
       const html =
-        `<div class="risk-poi-wrap">` +
-        tri('risk-echo', `fill="${color}" opacity="0.45"`) +
-        tri('risk-echo d2', `fill="${color}" opacity="0.45"`) +
-        tri('risk-tri', `fill="${color}" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"`) +
+        `<div class="risk-poi-wrap" style="--rc:${color}">` +
+        wave('') + wave('d2') + wave('d3') +
+        `<svg class="risk-tri" width="${size}" height="${size}" viewBox="0 0 24 22">` +
+        `<polygon points="${poly}" fill="${color}" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"/></svg>` +
         `</div>`;
 
       const marker = L.marker([country.lat, country.lng], {
