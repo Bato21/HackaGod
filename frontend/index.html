@@ -4698,8 +4698,11 @@
       .ficha-tabs-close:active { color: #e6b840; }
 
       /* Paneles → overlay full-screen bajo la barra de pestañas.
-         transform:none anula el slide-in lateral del desktop. */
+         transform:none anula el slide-in lateral del desktop.
+         OCULTOS por defecto: sin esto cubren toda la pantalla en blanco
+         cuando no hay país (se renderizan siempre, vacíos). */
       .country-focus, .news-focus {
+        display: none !important;
         position: fixed !important;
         inset: 0 !important;
         top: calc(50px + env(safe-area-inset-top)) !important;
@@ -4710,10 +4713,8 @@
         box-shadow: none !important;
         z-index: 250 !important;
       }
-      /* Visibilidad por pestaña activa */
-      body.ficha-tab-info  .news-focus    { display: none !important; }
+      /* Solo se muestra el panel de la pestaña activa (y solo con país) */
       body.ficha-tab-info  .country-focus { display: flex !important; }
-      body.ficha-tab-news  .country-focus { display: none !important; }
       body.ficha-tab-news  .news-focus    { display: flex !important; }
       /* Ocultar los botones de cerrar internos (la barra ya tiene su X) */
       .country-focus .cf-close,
