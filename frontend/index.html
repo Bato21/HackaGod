@@ -3276,10 +3276,10 @@
     html[data-theme="corporate"] .map-iso-label { color: rgba(255,255,255,0.95); }
 
     /* ── Risk POI: triángulo de alerta con pulso ── */
-    .risk-poi { width: 0; height: 0; }
-    .risk-poi-wrap { position: absolute; left: 0; top: 0; }
+    .risk-poi { background: none !important; border: none !important; }
+    .risk-poi-wrap { width: 100%; height: 100%; position: relative; }
     .risk-tri, .risk-echo {
-      position: absolute; left: 0; top: 0;
+      position: absolute; left: 50%; top: 50%;
       transform: translate(-50%, -50%);
       transform-origin: center;
     }
@@ -3293,9 +3293,9 @@
     }
     .risk-echo.d2 { animation-delay: 0.9s; }
     @keyframes risk-pulse {
-      0%   { opacity: 0.55; transform: translate(-50%,-50%) scale(0.5); }
+      0%   { opacity: 0.55; transform: translate(-50%,-50%) scale(0.45); }
       70%  { opacity: 0; }
-      100% { opacity: 0; transform: translate(-50%,-50%) scale(2.3); }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(1.7); }
     }
     @media (prefers-reduced-motion: reduce) {
       .risk-echo { animation: none; opacity: 0; }
@@ -5739,7 +5739,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=52"></script>
+  <script type="text/babel" src="app.jsx?v=53"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>

@@ -527,7 +527,8 @@ function MapView({
       if (!country) return;
       const color = window.riskColor(sig.strength) || '#eab308';
       const label = window.riskLabel(sig.strength);
-      const size  = 18 + Math.round((sig.strength - 0.5) / 0.5 * 10); // 18→28
+      const size = 18 + Math.round((sig.strength - 0.5) / 0.5 * 10); // 18→28
+      const box  = Math.ceil(size * 2.6); // caja con espacio para el eco
 
       // Triángulo de alerta + 2 ecos de pulso (avisa que hay señal)
       const poly = '12,1.5 22.5,20.5 1.5,20.5';
@@ -542,7 +543,10 @@ function MapView({
         `</div>`;
 
       const marker = L.marker([country.lat, country.lng], {
-        icon: L.divIcon({ className: 'risk-poi', html, iconSize: [0, 0], iconAnchor: [0, 0] }),
+        icon: L.divIcon({
+          className: 'risk-poi', html,
+          iconSize: [box, box], iconAnchor: [box / 2, box / 2],
+        }),
         pane: 'news-pois',
         riseOnHover: true,
       });
