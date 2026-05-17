@@ -299,6 +299,18 @@ function AletheiaChat({ selectedCountry }) {
     return () => window.removeEventListener("aletheia:chat:dock", onDock);
   }, []);
 
+  // Marca body con clase cuando el chat dockeado está en pestaña Aletheia.
+  // Esto oculta el news-focus vía CSS para que no haya doble render visual.
+  useEffect(() => {
+    const cls = "chat-docked-aletheia";
+    if (open && docked && leftTab === "chat") {
+      document.body.classList.add(cls);
+    } else {
+      document.body.classList.remove(cls);
+    }
+    return () => document.body.classList.remove(cls);
+  }, [open, docked, leftTab]);
+
   // Al abrir por primera vez: ancla en top/left (no bottom/right) para que el
   // resize nativo (CSS resize: both) crezca hacia abajo-derecha, no hacia arriba.
   useEffect(() => {

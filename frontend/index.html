@@ -3899,6 +3899,9 @@
       animation: chatDockSlide .35s cubic-bezier(.4,0,.2,1);
     }
     .chat-panel--hidden { display: none !important; }
+    /* Cuando el chat dockeado muestra pestaña Aletheia, ocultar news-focus
+       para evitar que ambos paneles se vean apilados en la misma columna. */
+    body.chat-docked-aletheia .news-focus { display: none !important; }
     @keyframes chatDockSlide {
       from { transform: translateX(-100%); opacity: 0; }
       to   { transform: translateX(0);     opacity: 1; }
@@ -4523,7 +4526,7 @@
   <script type="text/babel" src="auth.jsx"></script>
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
-  <script type="text/babel" src="chatbot.jsx?v=6"></script>
+  <script type="text/babel" src="chatbot.jsx?v=7"></script>
   <script type="text/babel" src="app.jsx"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
