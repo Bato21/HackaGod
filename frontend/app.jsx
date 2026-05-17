@@ -2490,12 +2490,27 @@ function App({ user: authUser, onLogout }) {
               vacío en vez de rellenar con un nombre o número falso.
             </p>
 
+            <div className="nh">Qué significa cada dato</div>
+            <ul className="meth-src meth-def">
+              <li><b>Puntaje 0–100</b> — percepción de corrupción del sector público (CPI invertido).</li>
+              <li><b>Aprobación del gobierno</b> — % de ciudadanía que aprueba la gestión ese año.</li>
+              <li><b>Pobreza</b> — % de población bajo la línea nacional de pobreza.</li>
+              <li><b>Homicidios</b> — homicidios intencionales por cada 100.000 habitantes.</li>
+              <li><b>Crecimiento del PIB</b> — variación anual de la economía (%).</li>
+              <li><b>Inflación</b> — subida anual de precios al consumidor (%).</li>
+              <li><b>Postura política</b> — orientación del gobierno: izquierda, centro o derecha.</li>
+              <li><b>Gabinete</b> — ministros de 6 carteras clave (Economía, Salud, Vivienda, Transporte, Trabajo, Justicia).</li>
+              <li><b>Hitos del año</b> — resumen de lo relevante del país en ese año, armado con los datos reales.</li>
+            </ul>
+
             <div className="nh">Indicadores judiciales: léelos con cuidado</div>
             <p style={{ fontSize: 12.5, color: "var(--text-2)" }}>
-              Reportes UIF, sentencias, allanamientos, casos abiertos, etc. son
-              un <strong>estimado comparativo</strong>, no un conteo oficial de
-              tribunales. Sirven para comparar la <em>intensidad</em> de actividad
-              institucional entre años y países, no como cifra legal exacta.
+              <b>Casos abiertos, imputaciones, sentencias firmes, allanamientos,
+              reportes UIF, acceso a información negado y casos de corrupción</b> son
+              un <strong>estimado comparativo calculado</strong> a partir de los datos
+              reales (PIB, pobreza, homicidios, aprobación). <strong>No son un conteo
+              oficial de tribunales</strong>: sirven para comparar la <em>intensidad</em>
+              de actividad institucional entre países y años, no como cifra legal exacta.
             </p>
 
             <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 14 }}>
