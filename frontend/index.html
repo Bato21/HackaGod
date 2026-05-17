@@ -631,35 +631,41 @@
       top: 14px;
       right: 18px;
       display: flex;
-      gap: 8px;
+      gap: 6px;
       pointer-events: auto;
+      align-items: center;
     }
     .map-action-btn {
-      background: var(--bg-2);
-      border: 1px solid var(--line-2);
-      color: var(--text-2);
-      width: 36px;
-      height: 36px;
+      background: rgba(15, 23, 42, 0.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      color: rgba(226, 232, 240, 0.78);
+      width: 38px;
+      height: 38px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      border-radius: 4px;
-      transition: all .12s;
+      border-radius: 8px;
+      transition: background .15s, border-color .15s, color .15s, transform .12s;
       padding: 0;
     }
     .map-action-btn:hover {
-      color: var(--text);
-      border-color: var(--accent);
+      color: #fff;
+      border-color: rgba(56, 189, 248, 0.55);
+      background: rgba(15, 23, 42, 0.88);
+      transform: translateY(-1px);
     }
     .map-action-btn svg {
-      width: 14px;
-      height: 14px;
+      width: 16px;
+      height: 16px;
     }
     .map-action-btn.active {
-      color: var(--text);
-      border-color: var(--accent);
-      background: rgba(250,204,21,0.08);
+      color: #fff;
+      border-color: rgba(56, 189, 248, 0.7);
+      background: rgba(56, 189, 248, 0.14);
+      box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.25) inset;
     }
     .map-action-btn .lbl-glyph {
       font-family: var(--mono);
@@ -669,13 +675,22 @@
     }
     .map-action-btn.expanded {
       width: auto;
-      padding: 0 12px;
+      padding: 0 14px 0 12px;
       gap: 8px;
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text);
-      border-color: var(--accent);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      text-transform: none;
+      color: #fff;
+      border-color: rgba(56, 189, 248, 0.55);
+      background: rgba(56, 189, 248, 0.12);
+    }
+    .map-action-btn.expanded:hover {
+      background: rgba(56, 189, 248, 0.22);
+    }
+    .map-action-btn.expanded svg {
+      width: 14px;
+      height: 14px;
     }
 
     /* Map settings popover */

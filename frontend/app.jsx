@@ -1566,45 +1566,49 @@ function App({ user: authUser, onLogout }) {
                     className={`map-action-btn${mapSettingsOpen ? " active" : ""}`}
                     onClick={() => setMapSettingsOpen(o => !o)}
                     title="Opciones del mapa"
+                    aria-label="Opciones del mapa"
                   >
-                    <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="7" cy="7" r="2" />
-                      <path d="M7 1 L7 2.5 M7 11.5 L7 13 M1 7 L2.5 7 M11.5 7 L13 7 M2.76 2.76 L3.82 3.82 M10.18 10.18 L11.24 11.24 M2.76 11.24 L3.82 10.18 M10.18 3.82 L11.24 2.76" />
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="8" cy="8" r="2.4" />
+                      <path d="M8 1.5 L8 3.2 M8 12.8 L8 14.5 M1.5 8 L3.2 8 M12.8 8 L14.5 8 M3.4 3.4 L4.6 4.6 M11.4 11.4 L12.6 12.6 M3.4 12.6 L4.6 11.4 M11.4 4.6 L12.6 3.4" />
                     </svg>
                   </button>
                   <button
                     className={`map-action-btn${tweaks.showLabels ? " active" : ""}`}
                     onClick={() => setTweak("showLabels", !tweaks.showLabels)}
-                    title={tweaks.showLabels ? "Ocultar etiquetas (ISO)" : "Mostrar etiquetas (ISO)"}
+                    title={tweaks.showLabels ? "Ocultar nombres de países" : "Mostrar nombres de países"}
+                    aria-label={tweaks.showLabels ? "Ocultar nombres de países" : "Mostrar nombres de países"}
                   >
-                    {tweaks.showLabels ? (
-                      <span className="lbl-glyph">Aa</span>
-                    ) : (
-                      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                        <path d="M3 11 L5 4 L7 9 M3.7 8 L6.3 8" />
-                        <path d="M2 2 L12 12" stroke="currentColor" strokeWidth="1.5" />
-                      </svg>
-                    )}
+                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M1.5 8 C 3.5 4.5, 12.5 4.5, 14.5 8 C 12.5 11.5, 3.5 11.5, 1.5 8 Z" />
+                      <circle cx="8" cy="8" r="2" />
+                      {!tweaks.showLabels && (
+                        <path d="M2 14 L14 2" stroke="currentColor" strokeWidth="1.6" />
+                      )}
+                    </svg>
                   </button>
                   {mapFullscreen ? (
                     <button
                       className="map-action-btn expanded"
                       onClick={() => setMapFullscreen(false)}
-                      title="Volver al dashboard"
+                      title="Volver al panel principal"
+                      aria-label="Volver al panel principal"
                     >
-                      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <path d="M5 1 L1 5 M1 5 L5 9 M1 5 L13 5" strokeLinecap="round" />
+                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M7 3 L2 8 L7 13" />
+                        <path d="M2 8 L14 8" />
                       </svg>
-                      <span>Abrir panel</span>
+                      <span>Volver</span>
                     </button>
                   ) : (
                     <button
                       className="map-action-btn"
                       onClick={() => setMapFullscreen(true)}
                       title="Pantalla completa"
+                      aria-label="Pantalla completa"
                     >
-                      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4">
-                        <path d="M1 5 L1 1 L5 1 M9 1 L13 1 L13 5 M13 9 L13 13 L9 13 M5 13 L1 13 L1 9" strokeLinecap="round" strokeLinejoin="round" />
+                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 6 L2 2 L6 2 M10 2 L14 2 L14 6 M14 10 L14 14 L10 14 M6 14 L2 14 L2 10" />
                       </svg>
                     </button>
                   )}
