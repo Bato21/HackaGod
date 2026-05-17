@@ -3884,6 +3884,69 @@
       overflow: hidden;
       font-family: inherit;
     }
+    /* Docked = chat ocupa el lateral izquierdo (lugar del news-focus).
+       Coordenadas: bajo el topbar (56px) y sobre el timeline (76px). */
+    .chat-panel--docked {
+      top: 56px; left: 0; bottom: 76px; right: auto;
+      width: 380px; height: auto;
+      min-width: 0; min-height: 0; max-width: 380px; max-height: none;
+      border-radius: 0;
+      border-top: none;
+      border-left: none;
+      border-bottom: none;
+      border-right: 1px solid rgba(230, 184, 64, 0.18);
+      box-shadow: 12px 0 40px rgba(0,0,0,.45);
+      animation: chatDockSlide .35s cubic-bezier(.4,0,.2,1);
+    }
+    .chat-panel--hidden { display: none !important; }
+    @keyframes chatDockSlide {
+      from { transform: translateX(-100%); opacity: 0; }
+      to   { transform: translateX(0);     opacity: 1; }
+    }
+
+    /* Tab bar visible solo en docked */
+    .chat-tabs {
+      display: flex; align-items: stretch;
+      border-bottom: 1px solid rgba(230, 184, 64, 0.14);
+      background: #0a0810;
+      flex-shrink: 0;
+    }
+    .chat-tab {
+      flex: 1;
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 6px;
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: rgba(245, 241, 232, 0.55);
+      padding: 10px 8px;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: all .15s;
+      font-family: inherit;
+    }
+    .chat-tab:hover {
+      color: rgba(245, 241, 232, 0.9);
+      background: rgba(230, 184, 64, 0.04);
+    }
+    .chat-tab.active {
+      color: #e6b840;
+      border-bottom-color: #e6b840;
+      background: rgba(230, 184, 64, 0.06);
+    }
+    .chat-tab svg { width: 14px; height: 14px; }
+    .chat-undock {
+      background: transparent; border: none;
+      color: rgba(245, 241, 232, 0.4);
+      width: 36px;
+      cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center;
+      transition: color .15s;
+    }
+    .chat-undock:hover { color: #e6b840; }
+    .chat-undock svg { width: 14px; height: 14px; }
     /* Custom resize grip — bottom-right, encima del footer para no chocar con send */
     .chat-resize-grip {
       position: absolute;
@@ -4460,7 +4523,7 @@
   <script type="text/babel" src="auth.jsx"></script>
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
-  <script type="text/babel" src="chatbot.jsx?v=4"></script>
+  <script type="text/babel" src="chatbot.jsx?v=5"></script>
   <script type="text/babel" src="app.jsx"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>

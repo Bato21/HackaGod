@@ -98,9 +98,16 @@ function MarkdownText({ text }) {
                 key={i}
                 className="chat-country-link"
                 title={`Ver ${seg.name} en el mapa`}
-                onClick={() => window.dispatchEvent(
-                  new CustomEvent("aletheia:select-country", { detail: { iso3: seg.iso3 } })
-                )}
+                onClick={() => {
+                  window.dispatchEvent(
+                    new CustomEvent("aletheia:select-country", { detail: { iso3: seg.iso3 } })
+                  );
+                  // Dock al lateral izquierdo (sobre el news panel) para que
+                  // el usuario pueda comparar el chat con la ficha del país.
+                  window.dispatchEvent(
+                    new CustomEvent("aletheia:chat:dock", { detail: { iso3: seg.iso3 } })
+                  );
+                }}
               >
                 {seg.label}
               </span>
@@ -168,6 +175,11 @@ function AletheiaChat({ selectedCountry }) {
   const [error, setError]       = useState("");
   // Position: null = use default CSS anchor (bottom-right). Once user drags, becomes {x,y}.
   const [pos, setPos] = useState(null);
+  // Docked = chat se posiciona en el panel izquierdo, encima del news panel.
+  // Se activa cuando el usuario clickea un hyperlink de país dentro del chat.
+  const [docked, setDocked] = useState(false);
+  // Solo relevante en docked: qué pestaña mostrar.
+  const [leftTab, setLeftTab] = useState("chat"); // "chat" | "news"
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
   const panelRef  = useRef(null);
@@ -270,6 +282,17 @@ function AletheiaChat({ selectedCountry }) {
     const toggle = () => setOpen(o => !o);
     window.addEventListener("aletheia:chat:toggle", toggle);
     return () => window.removeEventListener("aletheia:chat:toggle", toggle);
+  }, []);
+
+  // Cuando el usuario clickea un país desde el chat → dock al lateral izquierdo.
+  useEffect(() => {
+    const onDock = () => {
+      setDocked(true);
+      setLeftTab("chat");
+      setOpen(true);
+    };
+    window.addEventListener("aletheia:chat:dock", onDock);
+    return () => window.removeEventListener("aletheia:chat:dock", onDock);
   }, []);
 
   // Al abrir por primera vez: ancla en top/left (no bottom/right) para que el
@@ -377,18 +400,54 @@ function AletheiaChat({ selectedCountry }) {
       {open && (
         <div
           ref={panelRef}
-          className="chat-panel"
-          style={{
+          className={`chat-panel${docked ? " chat-panel--docked" : ""}${docked && leftTab === "news" ? " chat-panel--hidden" : ""}`}
+          style={!docked ? {
             ...(pos  ? { left: pos.x, top: pos.y, right: "auto", bottom: "auto" } : {}),
             ...(size ? { width: size.w, height: size.h } : {}),
-          }}
+          } : undefined}
         >
+          {/* Tab toggle visible solo en modo docked */}
+          {docked && (
+            <div className="chat-tabs">
+              <button
+                className={`chat-tab${leftTab === "chat" ? " active" : ""}`}
+                onClick={() => setLeftTab("chat")}
+              >
+                <OwlLogo size={14} />
+                <span>Aletheia</span>
+              </button>
+              <button
+                className={`chat-tab${leftTab === "news" ? " active" : ""}`}
+                onClick={() => setLeftTab("news")}
+              >
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="3" width="12" height="10" rx="1"/>
+                  <path d="M5 6 L11 6 M5 8.5 L11 8.5 M5 11 L9 11"/>
+                </svg>
+                <span>Noticias</span>
+              </button>
+              <button
+                className="chat-undock"
+                onClick={() => { setDocked(false); setLeftTab("chat"); }}
+                title="Desacoplar (volver a flotante)"
+                aria-label="Desacoplar chat"
+              >
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 3 L13 3 L13 7"/>
+                  <path d="M13 3 L7 9"/>
+                  <path d="M11 13 L1 13 L1 3 L5 3"/>
+                </svg>
+              </button>
+            </div>
+          )}
+
           <div
             className="chat-header"
-            onPointerDown={onHeaderPointerDown}
-            onPointerMove={onHeaderPointerMove}
-            onPointerUp={onHeaderPointerUp}
-            onPointerCancel={onHeaderPointerUp}
+            onPointerDown={docked ? undefined : onHeaderPointerDown}
+            onPointerMove={docked ? undefined : onHeaderPointerMove}
+            onPointerUp={docked ? undefined : onHeaderPointerUp}
+            onPointerCancel={docked ? undefined : onHeaderPointerUp}
+            style={docked ? { cursor: "default" } : undefined}
           >
             <div className="chat-header-left">
               <div className="chat-header-avatar"><OwlLogo size={24} /></div>
@@ -397,7 +456,7 @@ function AletheiaChat({ selectedCountry }) {
                 <div className="chat-header-sub">aquello que no está oculto</div>
               </div>
             </div>
-            <button className="chat-close" onClick={() => setOpen(false)} aria-label="Cerrar chat">
+            <button className="chat-close" onClick={() => { setOpen(false); setDocked(false); }} aria-label="Cerrar chat">
               <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
                 <path d="M3 3 L11 11 M11 3 L3 11"/>
               </svg>
@@ -478,15 +537,17 @@ function AletheiaChat({ selectedCountry }) {
               CPI Transparencia Internacional · 2017–2025 · Solo fines informativos
             </div>
           </div>
-          <div
-            className="chat-resize-grip"
-            aria-label="Redimensionar"
-            role="separator"
-            onPointerDown={onResizePointerDown}
-            onPointerMove={onResizePointerMove}
-            onPointerUp={onResizePointerUp}
-            onPointerCancel={onResizePointerUp}
-          />
+          {!docked && (
+            <div
+              className="chat-resize-grip"
+              aria-label="Redimensionar"
+              role="separator"
+              onPointerDown={onResizePointerDown}
+              onPointerMove={onResizePointerMove}
+              onPointerUp={onResizePointerUp}
+              onPointerCancel={onResizePointerUp}
+            />
+          )}
         </div>
       )}
     </>
