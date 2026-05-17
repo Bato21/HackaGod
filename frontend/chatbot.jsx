@@ -2,7 +2,7 @@
 // Llama al backend FastAPI en /api/v1/chat (Claude + datos CPI de Supabase).
 // Montado como componente global window.AletheiaChat.
 
-const BACKEND_URL = "http://localhost:8000/api/v1/chat";
+const BACKEND_URL = (window.ALETHEIA_BACKEND_URL || "http://localhost:8000") + "/api/v1/chat";
 
 const SUGGESTIONS = [
   "¿Cuál es el país más corrupto de América Latina?",
