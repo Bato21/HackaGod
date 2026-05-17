@@ -2505,13 +2505,20 @@ function App({ user: authUser, onLogout }) {
 
             <div className="nh">Indicadores judiciales: léelos con cuidado</div>
             <p style={{ fontSize: 12.5, color: "var(--text-2)" }}>
-              <b>Casos abiertos, imputaciones, sentencias firmes, allanamientos,
-              reportes UIF, acceso a información negado y casos de corrupción</b> son
-              un <strong>estimado comparativo calculado</strong> a partir de los datos
-              reales (PIB, pobreza, homicidios, aprobación). <strong>No son un conteo
-              oficial de tribunales</strong>: sirven para comparar la <em>intensidad</em>
-              de actividad institucional entre países y años, no como cifra legal exacta.
+              Son un <strong>estimado comparativo calculado</strong> a partir de los
+              datos reales (PIB, pobreza, homicidios, aprobación). <strong>No son un
+              conteo oficial de tribunales</strong>: comparan la <em>intensidad</em> de
+              actividad institucional entre países y años, no son cifra legal exacta.
             </p>
+            <ul className="meth-src meth-def">
+              <li><b>Casos abiertos</b> — carga de causas o investigaciones en curso estimada.</li>
+              <li><b>Imputaciones</b> — personas o procesos formalmente acusados estimados.</li>
+              <li><b>Sentencias firmes</b> — fallos judiciales cerrados estimados.</li>
+              <li><b>Allanamientos</b> — operativos de seguridad/investigación estimados.</li>
+              <li><b>Reportes UIF</b> — alertas financieras antilavado estimadas.</li>
+              <li><b>Acceso a información negado</b> — restricción de transparencia estimada.</li>
+              <li><b>Casos de corrupción</b> — eventos de corrupción relevantes detectados.</li>
+            </ul>
 
             <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 14 }}>
               Cobertura: ~180 países, 2017–2025. Última actualización de datos:
