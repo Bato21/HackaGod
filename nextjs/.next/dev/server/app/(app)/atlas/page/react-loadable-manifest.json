@@ -1,0 +1,10 @@
+{
+  "[project]/components/atlas/LeafletMap.tsx [app-client] (ecmascript, next/dynamic entry)": {
+    "id": "[project]/components/atlas/LeafletMap.tsx [app-client] (ecmascript, next/dynamic entry)",
+    "files": [
+      "static/chunks/node_modules_leaflet_dist_leaflet-src_0unnri8.js",
+      "static/chunks/components_atlas_LeafletMap_tsx_0ea79y4._.js",
+      "static/chunks/components_atlas_LeafletMap_tsx_0dinipz._.js"
+    ]
+  }
+}
