@@ -4721,14 +4721,37 @@
         z-index: 250 !important;
         padding: 0 !important;
       }
+      /* El backdrop es el ÚNICO contenedor de scroll: todo fluye hacia
+         abajo en una sola columna continua. */
+      .cd-backdrop { overflow-y: auto !important; -webkit-overflow-scrolling: touch; }
       .cd-shell {
+        display: block !important;
         width: 100% !important;
-        height: 100% !important;
+        height: auto !important;
+        min-height: 100% !important;
         max-width: none !important;
         max-height: none !important;
         border-radius: 0 !important;
         border: none !important;
+        overflow: visible !important;
       }
+      /* Header fluye con el contenido (no fijo), apilado vertical */
+      .cd-head {
+        display: block !important;
+        position: static !important;
+      }
+      .cd-head-right { margin-top: 12px; }
+      .cd-head-actions { flex-wrap: wrap; }
+      /* Body: una sola columna, sin scroll interno → scrollea el backdrop */
+      .cd-body {
+        display: block !important;
+        overflow: visible !important;
+        height: auto !important;
+        max-height: none !important;
+      }
+      .cd-card { margin-bottom: 14px; }
+      .cd-card.span-2 { grid-column: auto !important; }
+
       /* Solo el panel de la pestaña activa (y solo con país) */
       body.ficha-tab-info  .cd-backdrop { display: block !important; }
       body.ficha-tab-news  .news-focus  { display: flex !important; }
