@@ -73,6 +73,66 @@ ALIAS = {
 }
 
 
+SUBREGION_ES = {
+    "Australia and New Zealand": "Australia y Nueva Zelanda",
+    "Balkans": "los Balcanes",
+    "Caribbean": "el Caribe",
+    "Central America": "Centroamérica",
+    "Central Asia": "Asia Central",
+    "Eastern Africa": "África Oriental",
+    "Eastern Asia": "Asia Oriental",
+    "Eastern Europe": "Europa Oriental",
+    "Melanesia": "Melanesia",
+    "Middle Africa": "África Central",
+    "Northern Africa": "África del Norte",
+    "Northern America": "América del Norte",
+    "Northern Europe": "Europa del Norte",
+    "South America": "América del Sur",
+    "South-Eastern Asia": "el Sudeste Asiático",
+    "Southern Africa": "África Austral",
+    "Southern Asia": "Asia Meridional",
+    "Southern Europe": "Europa del Sur",
+    "Western Africa": "África Occidental",
+    "Western Asia": "Asia Occidental",
+    "Western Europe": "Europa Occidental",
+}
+
+# Exónimos de capitales (solo los que difieren en español).
+CAPITAL_ES = {
+    "Berlin": "Berlín", "Tokyo": "Tokio", "Beijing": "Pekín",
+    "Moscow": "Moscú", "Rome": "Roma", "Lisbon": "Lisboa",
+    "Athens": "Atenas", "Brussels": "Bruselas", "Bucharest": "Bucarest",
+    "Copenhagen": "Copenhague", "Warsaw": "Varsovia", "Prague": "Praga",
+    "Vienna": "Viena", "Bern": "Berna", "Geneva": "Ginebra",
+    "Cairo": "El Cairo", "Algiers": "Argel", "Tripoli": "Trípoli",
+    "Tehran": "Teherán", "Baghdad": "Bagdad", "Damascus": "Damasco",
+    "Riyadh": "Riad", "Sanaa": "Saná", "Kuwait City": "Ciudad de Kuwait",
+    "New Delhi": "Nueva Delhi", "Bangkok": "Bangkok", "Hanoi": "Hanói",
+    "Seoul": "Seúl", "Pyongyang": "Pionyang", "Singapore": "Singapur",
+    "Kuala Lumpur": "Kuala Lumpur", "Jakarta": "Yakarta",
+    "Mexico City": "Ciudad de México", "Panama City": "Ciudad de Panamá",
+    "Guatemala City": "Ciudad de Guatemala", "Havana": "La Habana",
+    "Santo Domingo": "Santo Domingo", "Brasilia": "Brasilia",
+    "Asuncion": "Asunción", "Bogota": "Bogotá", "San Jose": "San José",
+    "Addis Ababa": "Adís Abeba", "Nairobi": "Nairobi", "Accra": "Acra",
+    "Khartoum": "Jartum", "Kyiv": "Kiev", "Kiev": "Kiev",
+}
+
+_DESC_RE = re.compile(
+    r"^(.*?) es un país de (.+?), con capital en (.+?)\.+ Su actividad", re.S
+)
+
+
+def translate_desc(text: str, name_es: str) -> str:
+    """Reemplaza nombre-país (EN→name_es), subregión y capital (EN→ES)."""
+    def _sub(m):
+        sub_es = SUBREGION_ES.get(m.group(2), m.group(2))
+        cap = m.group(3).strip().rstrip(".")
+        cap_es = CAPITAL_ES.get(cap, cap)
+        return f"{name_es} es un país de {sub_es}, con capital en {cap_es}. Su actividad"
+    return _DESC_RE.sub(_sub, str(text or "").strip(), count=1)
+
+
 def norm(s: str) -> str:
     s = unicodedata.normalize("NFD", str(s or ""))
     s = "".join(c for c in s if unicodedata.category(c) != "Mn").lower()
@@ -91,9 +151,11 @@ def main() -> int:
     conn = psycopg2.connect(dsn)
     cur = conn.cursor()
     cur.execute("SELECT iso_alpha3, name_en, name_es FROM countries")
-    by_name = {}
+    by_name, es_by_iso = {}, {}
     for iso3, en, es in cur.fetchall():
         iso3 = iso3.strip()
+        if es:
+            es_by_iso[iso3] = es
         for n in (en, es):
             if n:
                 by_name[norm(n)] = iso3
@@ -113,7 +175,8 @@ def main() -> int:
         year = str(int(row["Año"]))
         pop.setdefault(iso3, {})[year] = int(row["Población del país"])
         if iso3 not in desc:
-            desc[iso3] = str(row["Descripción del país"]).strip()
+            name_es = es_by_iso.get(iso3, raw)
+            desc[iso3] = translate_desc(row["Descripción del país"], name_es)
 
     banner = (
         "// population-data.js — GENERADO por backend/etl_population.py — NO editar a mano.\n"
