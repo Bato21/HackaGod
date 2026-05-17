@@ -1118,6 +1118,67 @@ function WorldNewsPanel() {
   );
 }
 
+// Población por año + descripción (datos reales del Excel base).
+// variant: "compact" (ficha lateral) | "card" (dashboard).
+function CountryContext({ country, year, variant }) {
+  const [open, setOpen] = useState(false);
+  if (!country) return null;
+  const pop  = (window.COUNTRY_POPULATION || {})[country.iso3];
+  const desc = (window.COUNTRY_DESC || {})[country.iso3];
+  if (!pop && !desc) return null;
+
+  const fmt = n => (n == null ? "—" : new Intl.NumberFormat("es-CL").format(n));
+  const yPop = pop ? (pop[year] ?? pop[String(year)]) : null;
+
+  // Variación vs primer año disponible.
+  let trend = null;
+  if (pop) {
+    const ys = Object.keys(pop).map(Number).sort((a, b) => a - b);
+    const first = pop[ys[0]] ?? pop[String(ys[0])];
+    if (first && yPop) {
+      const pct = ((yPop - first) / first) * 100;
+      trend = `${pct >= 0 ? "+" : ""}${pct.toFixed(1)}% desde ${ys[0]}`;
+    }
+  }
+
+  if (variant === "card") {
+    return (
+      <div className="cd-card">
+        <div className="cd-card-h">
+          <span>Contexto del país</span>
+          <span className="mono">Población {year}</span>
+        </div>
+        <div className="ctx-pop">
+          <span className="ctx-pop-n">{fmt(yPop)}</span>
+          <span className="ctx-pop-u">habitantes</span>
+          {trend && <span className="ctx-pop-t">{trend}</span>}
+        </div>
+        {desc && <div className="ctx-desc">{desc}</div>}
+      </div>
+    );
+  }
+
+  return (
+    <div className="ctx-block">
+      <div className="ctx-row">
+        <div className="ctx-pop">
+          <span className="ctx-pop-n">{fmt(yPop)}</span>
+          <span className="ctx-pop-u">hab. · {year}</span>
+        </div>
+        {trend && <span className="ctx-pop-t">{trend}</span>}
+      </div>
+      {desc && (
+        <>
+          <div className={`ctx-desc${open ? "" : " clamp"}`}>{desc}</div>
+          <button className="ctx-more" onClick={() => setOpen(o => !o)}>
+            {open ? "ver menos" : "ver más"}
+          </button>
+        </>
+      )}
+    </div>
+  );
+}
+
 function Sparkline({ country, year, onYearChange }) {
   const W = 280, H = 60, PAD = 6;
   const years = window.YEARS;
@@ -2357,6 +2418,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
                       <div className="marker" style={{ left: `${selected.scores[year]}%` }}></div>
                     </div>
                   </div>
+                  <CountryContext country={selected} year={year} variant="compact" />
                   <div className="spark-block">
                     <Sparkline country={selected} year={year} onYearChange={setYear} />
                   </div>
@@ -2789,6 +2851,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
               </div>
 
               <div className="cd-body">
+                <CountryContext country={c} year={year} variant="card" />
                 {/* Presidente — solo si hay dato real */}
                 {detail.realPresident && (
                   <div className="cd-card">
