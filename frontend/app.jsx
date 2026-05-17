@@ -159,6 +159,14 @@ function MapView({
 
   const [mapZoom, setMapZoom] = useState(3);
 
+  // Re-render POIs cuando cloud-sync hidrata risk_signals reales.
+  const [riskV, setRiskV] = useState(0);
+  useEffect(() => {
+    const bump = () => setRiskV(x => x + 1);
+    window.addEventListener("aletheia:risk:loaded", bump);
+    return () => window.removeEventListener("aletheia:risk:loaded", bump);
+  }, []);
+
 
   const { allFeatures, americasFeatures } = useMemo(() => {
     if (!topology) return { allFeatures: [], americasFeatures: [] };
@@ -501,72 +509,52 @@ function MapView({
     labelGroup.current = grp;
   }, [showLabels, americasFeatures]);
 
-  // ── News Points of Interest ─────────────────────────────────────
+  // ── Señales de riesgo (risk_signals reales desde Supabase) ──────
+  // Pelotita por país con signal_strength ≥ 0.5. Color por intensidad:
+  //   0.5–0.7 amarillo · 0.7–0.9 naranjo · 0.9+ rojo.
   useEffect(() => {
     const map = mapInst.current;
     if (!map || !americasFeatures.length) return;
     if (newsPoiGroup.current) { map.removeLayer(newsPoiGroup.current); newsPoiGroup.current = null; }
 
-    const sorted = window.COUNTRIES.slice().sort((a, b) => b.scores[year] - a.scores[year]);
-
-    // High importance (red) — top 4 most corrupt
-    const highNews = sorted.slice(0, 4).map(c => ({
-      country: c,
-      title: `${c.name}: Investigación por corrupción activa`,
-      type: 'high',
-    }));
-
-    // Medium importance (orange) — positions 5–6 by corruption
-    const medNews = sorted.slice(4, 6).map(c => ({
-      country: c,
-      title: `${c.name}: Alerta por irregularidades detectadas`,
-      type: 'medium',
-    }));
+    const risk = window.ALETHEIA_RISK || {};
+    const entries = Object.values(risk).filter(r => r.strength >= 0.5);
+    if (!entries.length) return;
 
     const grp = L.layerGroup();
-    [...highNews, ...medNews].forEach(({ country, title, type }) => {
-      const isHigh = type === 'high';
-      const color  = isHigh ? '#dc2626' : '#f97316';
-      const pulse  = isHigh ? '#ef4444' : '#fb923c';
-      const radius = isHigh ? 7 : 5.5;
+    entries.forEach(sig => {
+      const country = window.COUNTRIES.find(c => c.iso3 === sig.iso3);
+      if (!country) return;
+      const color  = window.riskColor(sig.strength) || '#eab308';
+      const label  = window.riskLabel(sig.strength);
+      const radius = 5 + Math.round((sig.strength - 0.5) / 0.5 * 5); // 5→10
 
-      // Outer pulse ring
-      const ring = L.circleMarker([country.lat, country.lng], {
+      // Anillo exterior
+      L.circleMarker([country.lat, country.lng], {
         radius: radius + 5,
-        color: color,
-        weight: 1.5,
-        fillColor: color,
-        fillOpacity: 0.12,
-        pane: 'news-pois',
-        interactive: false,
+        color, weight: 1.5, fillColor: color, fillOpacity: 0.12,
+        pane: 'news-pois', interactive: false,
       }).addTo(grp);
 
-      // Inner dot
+      // Punto interior
       const dot = L.circleMarker([country.lat, country.lng], {
-        radius,
-        color: '#fff',
-        weight: 1.2,
-        fillColor: color,
-        fillOpacity: 0.92,
-        pane: 'news-pois',
+        radius, color: '#fff', weight: 1.2,
+        fillColor: color, fillOpacity: 0.92, pane: 'news-pois',
       });
 
+      const esc = s => String(s || '').replace(/</g, '&lt;');
       dot.bindTooltip(`
-        <div style="font-family:monospace;font-size:10px;line-height:1.5;max-width:200px;">
+        <div style="font-family:monospace;font-size:10px;line-height:1.5;max-width:230px;">
           <div style="font-weight:700;color:${color};letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;">
-            ${isHigh ? '⬤ ALTA IMPORTANCIA' : '◉ MEDIA IMPORTANCIA'}
+            ⬤ ${label} · ${(sig.strength * 100).toFixed(0)}%
           </div>
-          <div style="font-weight:600;">${country.name}</div>
-          <div style="color:#888;margin-top:2px;">${title.replace(country.name + ': ', '')}</div>
-          <div style="color:#888;margin-top:2px;">Índice: ${country.scores[year].toFixed(1)}/100</div>
+          <div style="font-weight:600;">${esc(country.name)}</div>
+          <div style="color:#aaa;margin-top:2px;">${esc(sig.pattern)} · ${sig.count} señal${sig.count === 1 ? '' : 'es'}</div>
+          ${sig.summary ? `<div style="color:#888;margin-top:4px;">${esc(sig.summary)}</div>` : ''}
         </div>
-      `, {
-        direction: 'top',
-        offset: [0, -8],
-        opacity: 1,
-        className: 'news-poi-tooltip',
-      });
+      `, { direction: 'top', offset: [0, -8], opacity: 1, className: 'news-poi-tooltip' });
 
+      dot.on('click', () => onSelect(country.id));
       dot.addTo(grp);
     });
 
@@ -575,7 +563,7 @@ function MapView({
     return () => {
       if (newsPoiGroup.current) { map.removeLayer(newsPoiGroup.current); newsPoiGroup.current = null; }
     };
-  }, [americasFeatures, year]);
+  }, [americasFeatures, year, riskV]);
 
   return <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />;
 }

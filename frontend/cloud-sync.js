@@ -474,6 +474,17 @@
     } catch (_) { return false; }
   }
 
+  async function hydrateRisk() {
+    if (typeof window.applyRiskCache !== "function") return false;
+    try {
+      var r = await sb.rpc("get_risk_signals");
+      if (r.error || !r.data) return false;
+      var n = window.applyRiskCache(r.data);
+      window.dispatchEvent(new CustomEvent("aletheia:risk:loaded", { detail: { count: n } }));
+      return n > 0;
+    } catch (_) { return false; }
+  }
+
   // ── 6. Boot ────────────────────────────────────────────────────────
   async function hydrateAll() {
     var u   = currentUser();
@@ -486,6 +497,7 @@
       hydrateMilestones(),
       hydrateIndicators(),
       hydrateNews(),
+      hydrateRisk(),
       uid ? hydrateProfile(uid, u.email) : Promise.resolve(false),
       uid ? hydrateStars(uid, u.email)   : Promise.resolve(false),
     ]);
