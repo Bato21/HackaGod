@@ -3032,7 +3032,7 @@ function TourTooltip({ step: s, stepIdx, totalSteps, animKey, onPrev, onNext, on
 }
 
 function computeTooltipPos(rect, preferredPos) {
-  const PAD = 12, GAP = 16, TW = 300, TH_EST = 220;
+  const PAD = 12, GAP = 16, TW = 300, TH_EST = 230;
   const vw = window.innerWidth, vh = window.innerHeight;
   const cl = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
 
@@ -3041,19 +3041,31 @@ function computeTooltipPos(rect, preferredPos) {
   const spaceBottom = vh - rect.bottom - PAD;
   const spaceTop    = rect.top  - PAD;
 
-  // Auto-pick best side if preferred doesn't fit
-  let pos = preferredPos;
-  if (pos === "right"  && spaceRight  < TW + GAP) pos = spaceLeft > TW + GAP ? "left"   : "bottom";
-  if (pos === "left"   && spaceLeft   < TW + GAP) pos = spaceRight > TW + GAP ? "right"  : "bottom";
-  if (pos === "bottom" && spaceBottom < TH_EST + GAP) pos = spaceTop > TH_EST + GAP ? "top" : "right";
-  if (pos === "top"    && spaceTop    < TH_EST + GAP) pos = spaceBottom > TH_EST + GAP ? "bottom" : "right";
+  // Center-of-viewport fallback used when element fills the screen
+  const centerStyle = { position:"fixed", zIndex:10001,
+    left: cl(vw / 2 - TW / 2, 12, vw - TW - 12),
+    top:  cl(vh / 2 - TH_EST / 2, 12, vh - TH_EST - 12),
+    width: cl(TW, 200, vw - 24),
+  };
+
+  const sides = [
+    { key: "right",  ok: spaceRight  >= TW + GAP },
+    { key: "left",   ok: spaceLeft   >= TW + GAP },
+    { key: "bottom", ok: spaceBottom >= TH_EST + GAP },
+    { key: "top",    ok: spaceTop    >= TH_EST + GAP },
+  ];
+
+  // Try preferred first, then each side in order, then center
+  const order = [preferredPos, "right", "left", "bottom", "top"];
+  const pos = order.find(p => sides.find(s => s.key === p)?.ok) || null;
+  if (!pos) return centerStyle;
 
   const midX = rect.left + rect.width  / 2;
   const midY = rect.top  + rect.height / 2;
 
   switch (pos) {
     case "right": return { position:"fixed", zIndex:10001,
-      left: rect.right + PAD + GAP,
+      left: cl(rect.right + PAD + GAP, 12, vw - TW - 12),
       top:  cl(midY - TH_EST / 2, 12, vh - TH_EST - 12),
       width: cl(TW, 200, vw - 24),
     };
@@ -3064,19 +3076,15 @@ function computeTooltipPos(rect, preferredPos) {
     };
     case "bottom": return { position:"fixed", zIndex:10001,
       left: cl(midX - TW / 2, 12, vw - TW - 12),
-      top:  rect.bottom + PAD + GAP,
+      top:  cl(rect.bottom + PAD + GAP, 12, vh - TH_EST - 12),
       width: cl(TW, 200, vw - 24),
     };
     case "top": return { position:"fixed", zIndex:10001,
       left:   cl(midX - TW / 2, 12, vw - TW - 12),
-      bottom: cl(vh - rect.top + PAD + GAP, 12, vh - 60),
+      top:    cl(rect.top - PAD - GAP - TH_EST, 12, vh - TH_EST - 12),
       width:  cl(TW, 200, vw - 24),
     };
-    default: return { position:"fixed", zIndex:10001,
-      left: cl(vw / 2 - TW / 2, 12, vw - TW - 12),
-      top:  cl(vh / 2 - TH_EST / 2, 12, vh - TH_EST - 12),
-      width: cl(TW, 200, vw - 24),
-    };
+    default: return centerStyle;
   }
 }
 
@@ -3149,8 +3157,23 @@ function TourOverlay({ onDone }) {
     );
   }
 
-  // Polling — show dim but no spotlight yet
-  if (!ready) return <div className="ob-spotlight-overlay" />;
+  // Polling — show a minimal centered card while waiting for element
+  if (!ready) {
+    return (
+      <div className="ob-backdrop">
+        <div className="ob-card" style={{ textAlign:"center", padding:"32px 28px" }}>
+          <div className="ob-tour-dots" style={{ justifyContent:"center", marginBottom:20 }}>
+            {TOUR_STEPS.map((_, i) => (
+              <div key={i} className={`ob-tour-dot${i === step ? " active" : ""}`} />
+            ))}
+          </div>
+          <div className="ob-tour-icon">{s.icon || "⏳"}</div>
+          <div className="ob-tour-title" style={{ marginTop:12 }}>{s.title}</div>
+          <div className="ob-tour-desc">{s.desc}</div>
+        </div>
+      </div>
+    );
+  }
 
   // Spotlight mode
   const spotStyle = {
