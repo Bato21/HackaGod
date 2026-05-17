@@ -935,7 +935,19 @@ function GlobeView({
 }
 
 
+// Re-render cuando cloud-sync hidrata noticias reales desde Supabase.
+function useNewsVersion() {
+  const [v, setV] = useState(0);
+  useEffect(() => {
+    const bump = () => setV(x => x + 1);
+    window.addEventListener("aletheia:news:loaded", bump);
+    return () => window.removeEventListener("aletheia:news:loaded", bump);
+  }, []);
+  return v;
+}
+
 function NewsRail({ country, year, onBack, onDiscuss }) {
+  useNewsVersion();
   const news = window.COUNTRY_NEWS(country, year);
   const CATS = [
     { key: "corrupcion", label: "Corrupción" },
@@ -975,7 +987,12 @@ function NewsRail({ country, year, onBack, onDiscuss }) {
                     <span className="ni-source">{item.source}</span>
                     <span>{window.formatRelativeTime(item.ts)}</span>
                   </div>
-                  <div className="ni-title">{item.title}</div>
+                  {item.url ? (
+                    <a className="ni-title ni-title-link" href={item.url} target="_blank" rel="noopener noreferrer">{item.title}</a>
+                  ) : (
+                    <div className="ni-title">{item.title}</div>
+                  )}
+                  {item.summary && <div className="ni-summary">{item.summary}</div>}
                   <div className="ni-foot">
                     <span className="ni-sector">{item.sector}</span>
                     <button className="ni-discuss" onClick={() => onDiscuss(item)}>
@@ -1046,38 +1063,57 @@ const WORLD_NEWS_CATS = [
   { key: "gobernanza", label: "Gobernanza" },
 ];
 
+const WN_CAT_LABEL = { corrupcion: "Corrupción", politica: "Política", gobierno: "Gobierno", gobernanza: "Gobernanza" };
+
 function WorldNewsPanel() {
+  useNewsVersion();
+  const real = (window.ALETHEIA_NEWS_RECENT || []);
+  const useReal = real.length > 0;
+
+  const cats = useReal
+    ? ["corrupcion", "politica", "gobierno"]
+        .map(k => ({ key: k, label: WN_CAT_LABEL[k], items: real.filter(n => n.cat === k) }))
+        .filter(c => c.items.length)
+    : WORLD_NEWS_CATS.map(c => ({
+        key: c.key, label: c.label,
+        items: WORLD_NEWS_DATA.filter(n => n.cat === c.key),
+      }));
+
   return (
     <div className="world-news-panel">
       <div className="wnp-hint">
         Haz clic en un país en el mapa o el ranking para ver su detalle y compararlo con otro.
       </div>
       <div className="wnp-header-label">Noticias recientes · Mundial</div>
-      {WORLD_NEWS_CATS.map(cat => {
-        const items = WORLD_NEWS_DATA.filter(n => n.cat === cat.key);
-        return (
-          <div key={cat.key} className={`news-section ${cat.key}`}>
-            <div className="news-section-h">
-              <span className="dot"></span>
-              <span>{cat.label}</span>
-              <span className="count">{items.length}</span>
-            </div>
-            {items.map(item => (
-              <div key={item.id} className="news-item">
-                <div className="ni-meta">
-                  <span className="ni-source">{item.source}</span>
-                  <span>{item.rel}</span>
-                </div>
-                <div className="ni-title">{item.title}</div>
-                <div className="ni-foot">
-                  <span className="ni-sector">{item.tag}</span>
-                </div>
-              </div>
-            ))}
+      {cats.map(cat => (
+        <div key={cat.key} className={`news-section ${cat.key}`}>
+          <div className="news-section-h">
+            <span className="dot"></span>
+            <span>{cat.label}</span>
+            <span className="count">{cat.items.length}</span>
           </div>
-        );
-      })}
-      <div className="wnp-foot">Datos ilustrativos · Aletheia demo</div>
+          {cat.items.map(item => (
+            <div key={item.id} className="news-item">
+              <div className="ni-meta">
+                <span className="ni-source">{item.source}</span>
+                <span>{useReal ? window.formatRelativeTime(item.ts) : item.rel}</span>
+              </div>
+              {useReal && item.url ? (
+                <a className="ni-title ni-title-link" href={item.url} target="_blank" rel="noopener noreferrer">{item.title}</a>
+              ) : (
+                <div className="ni-title">{item.title}</div>
+              )}
+              {useReal && item.summary && <div className="ni-summary">{item.summary}</div>}
+              <div className="ni-foot">
+                <span className="ni-sector">{item.tag}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      ))}
+      <div className="wnp-foot">
+        {useReal ? "Cobertura real · vía Supabase" : "Datos ilustrativos · Aletheia demo"}
+      </div>
     </div>
   );
 }

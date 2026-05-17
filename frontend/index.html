@@ -3033,6 +3033,22 @@
       margin-bottom: 8px;
       text-wrap: pretty;
     }
+    .news-item a.ni-title-link {
+      display: block;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .news-item a.ni-title-link:hover {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+    .news-item .ni-summary {
+      font-size: 11px;
+      color: var(--text-2);
+      line-height: 1.5;
+      margin: -2px 0 8px;
+      text-wrap: pretty;
+    }
     .news-item .ni-foot {
       display: flex;
       justify-content: space-between;
@@ -5584,6 +5600,7 @@
   <script src="methodology-data.js"></script>
   <script src="world-data.js"></script>
   <script src="events.js"></script>
+  <script src="news-override.js"></script>
   <script src="forum.js"></script>
   <script>window.ALETHEIA_BACKEND_URL = "https://aletheia-qk3s.onrender.com";</script>
   <script type="text/babel" src="CardNav.jsx"></script>
@@ -5595,7 +5612,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=47"></script>
+  <script type="text/babel" src="app.jsx?v=48"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>

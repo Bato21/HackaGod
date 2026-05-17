@@ -463,6 +463,17 @@
     } catch (_) { return false; }
   }
 
+  async function hydrateNews() {
+    if (typeof window.applyNewsCache !== "function") return false;
+    try {
+      var r = await sb.rpc("get_news", { max_items: 200 });
+      if (r.error || !r.data) return false;
+      var n = window.applyNewsCache(r.data);
+      window.dispatchEvent(new CustomEvent("aletheia:news:loaded", { detail: { count: n } }));
+      return n > 0;
+    } catch (_) { return false; }
+  }
+
   // ── 6. Boot ────────────────────────────────────────────────────────
   async function hydrateAll() {
     var u   = currentUser();
@@ -474,6 +485,7 @@
       hydrateCabinet(),
       hydrateMilestones(),
       hydrateIndicators(),
+      hydrateNews(),
       uid ? hydrateProfile(uid, u.email) : Promise.resolve(false),
       uid ? hydrateStars(uid, u.email)   : Promise.resolve(false),
     ]);
