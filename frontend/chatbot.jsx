@@ -290,6 +290,10 @@ function AletheiaChat({ selectedCountry }) {
       setDocked(true);
       setLeftTab("chat");
       setOpen(true);
+      // Reset estado flotante: si el panel venía arrastrado/resized, esos
+      // valores ya no aplican y deben limpiarse para que el CSS docked rija.
+      setPos(null);
+      setSize(null);
     };
     window.addEventListener("aletheia:chat:dock", onDock);
     return () => window.removeEventListener("aletheia:chat:dock", onDock);
@@ -401,10 +405,19 @@ function AletheiaChat({ selectedCountry }) {
         <div
           ref={panelRef}
           className={`chat-panel${docked ? " chat-panel--docked" : ""}${docked && leftTab === "news" ? " chat-panel--hidden" : ""}`}
-          style={!docked ? {
-            ...(pos  ? { left: pos.x, top: pos.y, right: "auto", bottom: "auto" } : {}),
-            ...(size ? { width: size.w, height: size.h } : {}),
-          } : undefined}
+          style={docked
+            ? {
+                position: "fixed",
+                top: 56, left: 0, right: "auto", bottom: 76,
+                width: 380, height: "auto",
+                minWidth: 0, minHeight: 0, maxWidth: 380, maxHeight: "none",
+                borderRadius: 0,
+              }
+            : {
+                ...(pos  ? { left: pos.x, top: pos.y, right: "auto", bottom: "auto" } : {}),
+                ...(size ? { width: size.w, height: size.h } : {}),
+              }
+          }
         >
           {/* Tab toggle visible solo en modo docked */}
           {docked && (
