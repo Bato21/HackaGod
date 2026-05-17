@@ -1188,6 +1188,24 @@ function App({ user: authUser, onLogout }) {
     return list;
   }, [query, sortBy, year]);
 
+  // Tops del panel: 10 más corruptos, 10 más limpios, promedio por región.
+  const panelTops = useMemo(() => {
+    const all = window.COUNTRIES.slice();
+    const byScore = all.slice().sort((a, b) => b.scores[year] - a.scores[year]);
+    const topCorrupt = byScore.slice(0, 10);
+    const topClean = byScore.slice().reverse().slice(0, 10);
+    const reg = {};
+    all.forEach(c => {
+      (reg[c.region] ||= { sum: 0, n: 0 });
+      reg[c.region].sum += c.scores[year];
+      reg[c.region].n += 1;
+    });
+    const regional = Object.entries(reg)
+      .map(([region, { sum, n }]) => ({ region, avg: sum / n, n }))
+      .sort((a, b) => b.avg - a.avg);
+    return { topCorrupt, topClean, regional };
+  }, [year]);
+
   // Regional averages
   const regionAvgs = useMemo(() => {
     const groups = {};
@@ -1315,7 +1333,10 @@ function App({ user: authUser, onLogout }) {
   }, []);
 
   // Secciones colapsables del panel (mobile): filtros + ranking.
-  const [secOpen, setSecOpen] = useState({ filtros: true, ranking: true });
+  const [secOpen, setSecOpen] = useState({
+    filtros: true, ranking: true,
+    topCorrupt: true, topClean: false, regional: false,
+  });
   const toggleSec = (k) => setSecOpen(s => ({ ...s, [k]: !s[k] }));
 
   // Ficha país abierta (mobile): body classes para overlay full-screen
@@ -1676,6 +1697,84 @@ function App({ user: authUser, onLogout }) {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* Top 10 más corruptos */}
+            <button
+              className={`sec-toggle${secOpen.topCorrupt ? " open" : ""}`}
+              onClick={() => toggleSec("topCorrupt")}
+            >
+              <svg className="sec-chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 4.5 L6 7.5 L9 4.5"/>
+              </svg>
+              <span>Top 10 más corruptos</span>
+              <span className="mono sec-year">{year}</span>
+            </button>
+            <div className="body" style={{ display: secOpen.topCorrupt ? "block" : "none" }}>
+              <div className="ranking-list">
+                {panelTops.topCorrupt.map((c, i) => {
+                  const s = c.scores[year];
+                  return (
+                    <div key={c.id} className={`rank-row${selectedId === c.id ? " selected" : ""}`} onClick={() => handleSelect(c.id)}>
+                      <span className="pos">{String(i + 1).padStart(2, "0")}</span>
+                      <span className="name">{c.name}</span>
+                      <span className="chip" style={{ background: colorFor(s) }}></span>
+                      <span className="score">{s.toFixed(1)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Top 10 más limpios */}
+            <button
+              className={`sec-toggle${secOpen.topClean ? " open" : ""}`}
+              onClick={() => toggleSec("topClean")}
+            >
+              <svg className="sec-chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 4.5 L6 7.5 L9 4.5"/>
+              </svg>
+              <span>Top 10 más limpios</span>
+              <span className="mono sec-year">{year}</span>
+            </button>
+            <div className="body" style={{ display: secOpen.topClean ? "block" : "none" }}>
+              <div className="ranking-list">
+                {panelTops.topClean.map((c, i) => {
+                  const s = c.scores[year];
+                  return (
+                    <div key={c.id} className={`rank-row${selectedId === c.id ? " selected" : ""}`} onClick={() => handleSelect(c.id)}>
+                      <span className="pos">{String(i + 1).padStart(2, "0")}</span>
+                      <span className="name">{c.name}</span>
+                      <span className="chip" style={{ background: colorFor(s) }}></span>
+                      <span className="score">{s.toFixed(1)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Promedio regional */}
+            <button
+              className={`sec-toggle${secOpen.regional ? " open" : ""}`}
+              onClick={() => toggleSec("regional")}
+            >
+              <svg className="sec-chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 4.5 L6 7.5 L9 4.5"/>
+              </svg>
+              <span>Promedio regional</span>
+              <span className="mono sec-year">{year}</span>
+            </button>
+            <div className="body" style={{ display: secOpen.regional ? "block" : "none" }}>
+              <div className="ranking-list">
+                {panelTops.regional.map((r, i) => (
+                  <div key={r.region} className="rank-row">
+                    <span className="pos">{String(i + 1).padStart(2, "0")}</span>
+                    <span className="name">{r.region} <span className="mono" style={{ color: "var(--text-3)", fontSize: 10 }}>· {r.n}</span></span>
+                    <span className="chip" style={{ background: colorFor(r.avg) }}></span>
+                    <span className="score">{r.avg.toFixed(1)}</span>
+                  </div>
+                ))}
               </div>
             </div>
             </React.Fragment>
