@@ -4580,9 +4580,7 @@
       /* Mobile: fuera timeline y controles de zoom (pinch con dedos) */
       .timeline { display: none !important; }
       .map-zoom-controls { display: none !important; }
-      /* Gear/configuración SE MANTIENE. Solo fuera el toggle fullscreen:
-         en mobile el mapa es siempre full y ese toggle rompía el layout. */
-      .map-fs-toggle { display: none !important; }
+      /* Gear/configuración + botón Panel SE MANTIENEN en mobile. */
       /* Fuera el titular "¿Dónde se siente la corrupción…" — tapa el mapa */
       .map-title { display: none !important; }
 
@@ -4805,11 +4803,27 @@
         max-width: 90vw;
       }
 
-      /* Main: una sola columna (mapa) */
+      /* Main: una sola columna en ambos modos. */
       .main { grid-template-columns: 1fr !important; }
-      .main > .col:first-child,
-      .main > .col:last-child { display: none !important; }
       .main > .col { border-left: none; border-right: none; }
+
+      /* Modo MAPA (fullscreen): solo el mapa (col del medio) */
+      .main.fullscreen > .col:first-child,
+      .main.fullscreen > .col:last-child { display: none !important; }
+
+      /* Modo PANEL (no fullscreen): se ve el panel normal (col izquierda:
+         ranking/scoreboard o NewsRail) a ancho completo, scroll vertical.
+         Mapa y col derecha ocultos. */
+      .main:not(.fullscreen) > .col:nth-child(2),
+      .main:not(.fullscreen) > .col:last-child { display: none !important; }
+      .main:not(.fullscreen) > .col:first-child {
+        display: flex !important;
+        width: 100% !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: calc(72px + env(safe-area-inset-bottom));
+      }
+      .main:not(.fullscreen) > .col:first-child > * { min-width: 0; }
 
       /* Overlays del mapa más compactos */
       .map-title {
@@ -5048,7 +5062,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=9"></script>
+  <script type="text/babel" src="app.jsx?v=10"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>
