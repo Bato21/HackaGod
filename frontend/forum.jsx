@@ -31,7 +31,7 @@ function FvFilterDrawer({ filter, setFilter, onClose }) {
 
         <div className="fv-drawer-body">
           {/* Región */}
-          <div className="fvd-sec">
+          <div className="fvd-sec" data-tour="forum-filter-region">
             <div className="fvd-sec-h">
               <span>Región</span>
               {filter.region && <button className="fvd-clear-lnk" onClick={() => update({ region:null, iso3:null })}>ver todas</button>}
@@ -45,7 +45,7 @@ function FvFilterDrawer({ filter, setFilter, onClose }) {
           </div>
 
           {/* País */}
-          <div className="fvd-sec">
+          <div className="fvd-sec" data-tour="forum-filter-countries">
             <div className="fvd-sec-h">
               <span>País</span>
               {filter.iso3 && <button className="fvd-clear-lnk" onClick={() => update({ iso3:null })}>ver todos</button>}
@@ -64,7 +64,7 @@ function FvFilterDrawer({ filter, setFilter, onClose }) {
           </div>
 
           {/* Año */}
-          <div className="fvd-sec">
+          <div className="fvd-sec" data-tour="forum-filter-year">
             <div className="fvd-sec-h">
               <span>Año</span>
               {filter.year && <button className="fvd-clear-lnk" onClick={() => update({ year:null })}>ver todos</button>}
@@ -127,7 +127,7 @@ function FvNewThreadModal({ user, onClose, onCreated }) {
           </button>
         </div>
         <div className="fv-modal-body">
-          <div className="fv-mf">
+          <div className="fv-mf" data-tour="forum-new-country">
             <label htmlFor="nt-country">País</label>
             <select id="nt-country" className={`fv-mf-select${!iso3&&error?" err":""}`}
               value={iso3} onChange={e => { setIso3(e.target.value); setError(""); }}>
@@ -135,7 +135,7 @@ function FvNewThreadModal({ user, onClose, onCreated }) {
               {countries.map(c => <option key={c.iso3} value={c.iso3}>{c.name}</option>)}
             </select>
           </div>
-          <div className="fv-mf">
+          <div className="fv-mf" data-tour="forum-new-scope">
             <label>Categoría</label>
             <div className="fv-mf-scope-grid">
               {SCOPES.map(s => (
@@ -149,7 +149,7 @@ function FvNewThreadModal({ user, onClose, onCreated }) {
               ))}
             </div>
           </div>
-          <div className="fv-mf">
+          <div className="fv-mf" data-tour="forum-new-title">
             <label htmlFor="nt-title">Título</label>
             <input id="nt-title" type="text"
               className={`fv-mf-input${!title.trim()&&error?" err":""}`}
@@ -159,7 +159,7 @@ function FvNewThreadModal({ user, onClose, onCreated }) {
             />
             <span className="fv-mf-char">{title.length}/140</span>
           </div>
-          <div className="fv-mf">
+          <div className="fv-mf" data-tour="forum-new-msg">
             <label htmlFor="nt-msg">Primer mensaje <span className="fv-mf-opt">(opcional)</span></label>
             <textarea id="nt-msg" rows={3}
               className="fv-mf-textarea"
@@ -763,6 +763,37 @@ function Forum({ initialIso3, initialThreadId, user, onClose, theme, onToggleThe
       setSelectedId(threads[0].id);
     }
   }, [threads]);
+
+  // Tour: dispatch when filter drawer or new-thread modal open
+  const prevShowFilters = React.useRef(false);
+  const prevShowNewThread = React.useRef(false);
+  React.useEffect(() => {
+    if (showFilters !== prevShowFilters.current) {
+      prevShowFilters.current = showFilters;
+      if (showFilters) window.dispatchEvent(new CustomEvent("aletheia:tour:forum-filter-opened"));
+    }
+  }, [showFilters]);
+  React.useEffect(() => {
+    if (showNewThread !== prevShowNewThread.current) {
+      prevShowNewThread.current = showNewThread;
+      if (showNewThread) window.dispatchEvent(new CustomEvent("aletheia:tour:forum-new-thread-opened"));
+    }
+  }, [showNewThread]);
+  React.useEffect(() => {
+    const onClose = () => setShowFilters(false);
+    window.addEventListener("aletheia:tour:close-forum-filter", onClose);
+    return () => window.removeEventListener("aletheia:tour:close-forum-filter", onClose);
+  }, []);
+  React.useEffect(() => {
+    const onClose = () => setShowNewThread(false);
+    window.addEventListener("aletheia:tour:close-forum-new-thread", onClose);
+    return () => window.removeEventListener("aletheia:tour:close-forum-new-thread", onClose);
+  }, []);
+  React.useEffect(() => {
+    const onOpen = () => setShowNewThread(true);
+    window.addEventListener("aletheia:tour:open-forum-new-thread", onOpen);
+    return () => window.removeEventListener("aletheia:tour:open-forum-new-thread", onOpen);
+  }, []);
 
   const handleSelect = id => { setSelectedId(id); setMobileView("detail"); };
   const totalAll = React.useMemo(() => window.ForumAPI.listThreads({ sort:"recent" }).length, []);

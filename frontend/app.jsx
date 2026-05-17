@@ -2999,208 +2999,256 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
 // event: CustomEvent que App escucha para ajustar su estado antes de mostrar el paso.
 // delay: ms a esperar después de disparar el event (animaciones).
 const TOUR_STEPS = [
+  // ── Bienvenida ──
   {
-    type: "modal",
-    icon: "◆",
-    iconStyle: { fontSize: "28px", color: "#e6b840", fontStyle: "normal" },
+    type: "modal", section: "Bienvenida",
+    icon: "◆", iconStyle: { fontSize: "28px", color: "#e6b840", fontStyle: "normal" },
     title: "¿Qué es Aletheia?",
     desc: "Aletheia es una plataforma de inteligencia cívica global. Visualiza y compara el Índice de Percepción de Corrupción (CPI) de países de todo el mundo, con datos reales: líderes, gabinetes, indicadores económicos y judiciales.",
     isSummary: true,
   },
   {
-    type: "modal",
+    type: "modal", section: "Bienvenida",
     icon: "🌍",
     title: "El mapa interactivo",
     desc: "Cada país tiene un color según su puntaje CPI. Verde = más transparente, rojo = mayor corrupción percibida. Gira el globo, haz zoom y explora cada país.",
   },
+  // ── Mapa ──
   {
-    type: "spotlight",
-    selector: '[data-tour="globe"]',
-    tooltipPos: "right",
+    type: "spotlight", section: "Mapa",
+    selector: '[data-tour="globe"]', tooltipPos: "right",
     title: "🗺️  El mapa — inténtalo",
     desc: "Haz zoom con la rueda del mouse o los botones +/−. Arrastra para moverte por el mapa. Haz clic sobre cualquier país para ver su información detallada.",
   },
   {
-    type: "spotlight-action",
-    selector: '[data-tour="panel-btn"]',
-    tooltipPos: "left",
+    type: "spotlight-action", section: "Mapa",
+    selector: '[data-tour="panel-btn"]', tooltipPos: "left",
     title: "Abre el panel",
     desc: "Haz clic en el botón «Panel» para ver el ranking y los detalles de cada país.",
     actionHint: "Toca el botón resaltado ↗",
   },
+  // ── Panel ──
   {
-    type: "spotlight",
-    selector: '[data-tour="ranking"]',
-    tooltipPos: "right",
-    delay: 400,
+    type: "spotlight", section: "Panel",
+    selector: '[data-tour="ranking"]', tooltipPos: "right", delay: 400,
     title: "📊  Panel de análisis",
     desc: "Aquí encontrarás todo: el ranking completo de países, el Top 10 más corruptos y los más limpios, filtros por rango de puntuación, promedio regional y la opción de comparar dos países.",
   },
   {
-    type: "spotlight",
-    selector: '[data-tour="country-ficha"]',
-    tooltipPos: "left",
-    delay: 200,
+    type: "spotlight", section: "Panel",
+    selector: '[data-tour="country-ficha"]', tooltipPos: "left", delay: 200,
     title: "🌐  Noticias mundiales",
     desc: "Cuando no hay país seleccionado, el panel muestra noticias internacionales recientes sobre corrupción, política y gobernanza global.",
   },
+  // ── País ──
   {
-    type: "spotlight-action",
-    selector: '[data-tour="globe"]',
-    tooltipPos: "right",
+    type: "spotlight-action", section: "País",
+    selector: '[data-tour="globe"]', tooltipPos: "right",
     actionEvent: "aletheia:tour:country-selected",
     title: "🗺️  Elige un país",
     desc: "Haz clic sobre cualquier país del mapa para explorar su información detallada.",
     actionHint: "Toca cualquier país del mapa ↓",
   },
   {
-    type: "spotlight",
-    selector: '[data-tour="country-focus"]',
-    tooltipPos: "left",
-    delay: 450,
+    type: "spotlight", section: "País",
+    selector: '[data-tour="country-focus"]', tooltipPos: "left", delay: 450,
     title: "🗂️  Ficha de país",
     desc: "Puntaje CPI, posición global, evolución histórica y comparación con otro país. Usa el botón «Comparar» para contrastar con cualquier otro.",
   },
   {
-    type: "spotlight",
-    selector: '[data-tour="cf-foro-btn"]',
-    tooltipPos: "top",
-    delay: 200,
+    type: "spotlight", section: "País",
+    selector: '[data-tour="cf-foro-btn"]', tooltipPos: "top", delay: 200,
     title: "💬  Foro del país",
     desc: "Cada país tiene su propio espacio de debate ciudadano. Lo exploraremos en detalle más adelante.",
   },
   {
-    type: "spotlight-action",
-    selector: '[data-tour="expand-btn"]',
-    tooltipPos: "top",
+    type: "spotlight-action", section: "País",
+    selector: '[data-tour="expand-btn"]', tooltipPos: "top",
     actionEvent: "aletheia:tour:dashboard-opened",
     title: "📋  Expande la ficha completa",
     desc: "Haz clic en «Expandir ficha» para ver el perfil detallado: presidente, gabinete ministerial, indicadores económicos e hitos históricos del país.",
     actionHint: "Toca «Expandir ficha» ↓",
   },
   {
-    type: "spotlight",
-    selector: '[data-tour="ficha-dashboard"]',
-    tooltipPos: "left",
-    delay: 350,
+    type: "spotlight", section: "País",
+    selector: '[data-tour="ficha-dashboard"]', tooltipPos: "left", delay: 350,
     title: "📊  Perfil completo del país",
     desc: "Aquí encuentras todo: el presidente y su período, el gabinete de ministros, indicadores macro (deuda, desempleo, inflación) y los hitos políticos más relevantes del año.",
   },
   {
-    type: "spotlight",
-    selector: '[data-tour="news"]',
-    tooltipPos: "right",
-    event: "aletheia:tour:go-fullscreen",
-    delay: 480,
+    type: "spotlight", section: "País",
+    selector: '[data-tour="news"]', tooltipPos: "right",
+    event: "aletheia:tour:go-fullscreen", delay: 480,
     title: "📰  Noticias del país",
     desc: "Panel de noticias del país seleccionado, clasificadas en Corrupción, Política y Gobierno. Puedes abrir un hilo de debate en el foro desde cualquier noticia.",
   },
+  // ── Opciones ──
   {
-    type: "modal",
+    type: "modal", section: "Opciones",
     icon: "⚙️",
     title: "Personaliza tu vista",
     desc: "Cerramos la ficha del país. Ahora exploraremos las opciones del mapa: paletas de color, tamaño de etiquetas, tema de interfaz y el modo Globo 3D.",
     event: "aletheia:tour:reset-view",
   },
   {
-    type: "spotlight-action",
-    selector: '[data-tour="settings-btn"]',
-    tooltipPos: "right",
+    type: "spotlight-action", section: "Opciones",
+    selector: '[data-tour="settings-btn"]', tooltipPos: "right",
     actionEvent: "aletheia:tour:settings-opened",
     title: "⚙️  Abre la configuración",
     desc: "Haz clic en el engranaje del mapa para abrir las opciones de personalización.",
     actionHint: "Toca el engranaje ↓",
   },
   {
-    type: "spotlight-action",
-    selector: '[data-tour="settings-palette"]',
-    tooltipPos: "right",
-    actionEvent: "aletheia:tour:palette-changed",
-    delay: 300,
+    type: "spotlight-action", section: "Opciones",
+    selector: '[data-tour="settings-palette"]', tooltipPos: "right",
+    actionEvent: "aletheia:tour:palette-changed", delay: 300,
     title: "🎨  Paleta de colores",
     desc: "Cada paleta resalta distintos rangos del índice CPI. Prueba haciendo clic en cualquiera para ver el cambio en el mapa.",
     actionHint: "Toca una paleta ↓",
   },
   {
-    type: "spotlight-action",
-    selector: '[data-tour="settings-textsize"]',
-    tooltipPos: "right",
+    type: "spotlight-action", section: "Opciones",
+    selector: '[data-tour="settings-textsize"]', tooltipPos: "right",
     actionEvent: "aletheia:tour:labelscale-changed",
     title: "🔤  Tamaño de etiquetas",
     desc: "Ajusta el tamaño de las etiquetas de países sobre el mapa. Toca cualquier opción para probarla.",
     actionHint: "Toca un tamaño ↓",
   },
   {
-    type: "spotlight-action",
-    selector: '[data-tour="settings-theme"]',
-    tooltipPos: "right",
+    type: "spotlight-action", section: "Opciones",
+    selector: '[data-tour="settings-theme"]', tooltipPos: "right",
     actionEvent: "aletheia:tour:theme-changed",
     title: "🌙  Tema de la interfaz",
     desc: "Cambia entre tema oscuro, claro o corporativo. El cambio aplica a toda la interfaz.",
     actionHint: "Toca un tema ↓",
   },
   {
-    type: "spotlight-action",
-    selector: '[data-tour="settings-globe"]',
-    tooltipPos: "right",
+    type: "spotlight-action", section: "Opciones",
+    selector: '[data-tour="settings-globe"]', tooltipPos: "right",
     actionEvent: "aletheia:tour:globe-selected",
     title: "🌍  Vista Globo 3D",
     desc: "Activa el modo globo tridimensional. Arrastra para rotar el planeta y usa la rueda para hacer zoom sobre cualquier región.",
     actionHint: "Toca «Globo» ↓",
   },
+  // ── Foro ──
   {
-    type: "spotlight-action",
-    selector: '[data-tour="forum-btn"]',
-    tooltipPos: "bottom",
+    type: "spotlight-action", section: "Foro",
+    selector: '[data-tour="forum-btn"]', tooltipPos: "bottom",
     actionEvent: "aletheia:tour:forum-opened",
     title: "💬  Foro ciudadano",
     desc: "El foro es el espacio de debate de Aletheia. Cada país tiene sus propios hilos de discusión. Haz clic en «Foro» para entrar.",
     actionHint: "Toca «Foro» ↑",
   },
   {
-    type: "spotlight",
-    selector: '[data-tour="forum-threads"]',
-    tooltipPos: "right",
-    delay: 400,
+    type: "spotlight", section: "Foro",
+    selector: '[data-tour="forum-threads"]', tooltipPos: "right", delay: 400,
     title: "📋  Hilos de debate",
     desc: "Aquí están todos los debates organizados por país y categoría. Haz clic en cualquier hilo para leerlo y participar con un comentario.",
   },
   {
-    type: "spotlight",
-    selector: '[data-tour="forum-search"]',
-    tooltipPos: "bottom",
+    type: "spotlight", section: "Foro",
+    selector: '[data-tour="forum-search"]', tooltipPos: "bottom",
     title: "🔍  Buscar en el foro",
     desc: "Busca hilos por país, presidente, tema o cualquier palabra clave. Los resultados se filtran en tiempo real.",
   },
   {
-    type: "spotlight",
-    selector: '[data-tour="forum-scope-bar"]',
-    tooltipPos: "bottom",
+    type: "spotlight", section: "Foro",
+    selector: '[data-tour="forum-scope-bar"]', tooltipPos: "bottom",
     title: "🗂️  Categorías y orden",
     desc: "Filtra los hilos por categoría: Todos, Política, Corrupción o Gobierno. También puedes ordenarlos por más recientes, más activos o alfabéticamente.",
   },
+  // ── Filtros ──
   {
-    type: "spotlight",
-    selector: '[data-tour="forum-filter-btn"]',
-    tooltipPos: "bottom",
+    type: "spotlight-action", section: "Filtros",
+    selector: '[data-tour="forum-filter-btn"]', tooltipPos: "bottom",
+    actionEvent: "aletheia:tour:forum-filter-opened",
     title: "🔎  Filtros avanzados",
-    desc: "Filtra debates por región, país específico o año. Ideal cuando quieres seguir la conversación de un país en particular.",
+    desc: "Haz clic en «Filtrar» para abrir el panel de filtros. Desde aquí puedes buscar hilos por región, país o año.",
+    actionHint: "Toca «Filtrar» ↓",
   },
   {
-    type: "spotlight",
-    selector: '[data-tour="forum-new-btn"]',
-    tooltipPos: "bottom",
+    type: "spotlight", section: "Filtros",
+    selector: '[data-tour="forum-filter-region"]', tooltipPos: "right", delay: 350,
+    title: "🌎  Filtrar por Región",
+    desc: "Elige una región para ver solo los hilos de Norteamérica, Centroamérica, Caribe o Sudamérica.",
+  },
+  {
+    type: "spotlight", section: "Filtros",
+    selector: '[data-tour="forum-filter-countries"]', tooltipPos: "right",
+    title: "🏳  Filtrar por País",
+    desc: "Selecciona un país específico para ver solo sus hilos. Si ya elegiste una región, la lista se filtra automáticamente.",
+  },
+  {
+    type: "spotlight", section: "Filtros",
+    selector: '[data-tour="forum-filter-year"]', tooltipPos: "right",
+    title: "📅  Filtrar por Año",
+    desc: "Elige un año para ver los debates de ese período. Útil para seguir la evolución política de un país en el tiempo.",
+  },
+  // ── Crear hilo ──
+  {
+    type: "spotlight", section: "Crear hilo",
+    selector: '[data-tour="forum-new-btn"]', tooltipPos: "bottom",
+    event: "aletheia:tour:close-forum-filter",
+    delay: 300,
     title: "✏️  Crear un hilo",
-    desc: "¿Tienes algo que debatir? Abre un hilo sobre cualquier país eligiendo una categoría, un título y tu primer mensaje.",
+    desc: "Desde aquí puedes abrir el formulario para publicar un debate sobre cualquier país. Haz clic en «Siguiente» para ver cómo funciona.",
   },
   {
-    type: "spotlight",
-    selector: '[data-tour="chatbot"]',
-    tooltipPos: "bottom",
-    event: "aletheia:tour:close-forum",
-    delay: 350,
-    title: "🦉  Aletheia IA",
-    desc: "Asistente con acceso a todos los datos de la plataforma. Pregúntale por rankings, comparativas, evolución histórica o contexto político de cualquier país.",
+    type: "spotlight", section: "Crear hilo",
+    selector: '[data-tour="forum-new-country"]', tooltipPos: "right",
+    event: "aletheia:tour:open-forum-new-thread",
+    delay: 400,
+    title: "🏳  País del hilo",
+    desc: "Selecciona el país sobre el que quieres debatir. Cada hilo está asociado a un país específico.",
+  },
+  {
+    type: "spotlight", section: "Crear hilo",
+    selector: '[data-tour="forum-new-scope"]', tooltipPos: "right",
+    title: "🗂️  Categoría del debate",
+    desc: "Elige si el hilo es sobre el país en general, un gobierno específico, o un tema puntual como una noticia o caso.",
+  },
+  {
+    type: "spotlight", section: "Crear hilo",
+    selector: '[data-tour="forum-new-title"]', tooltipPos: "right",
+    title: "✏️  Título del hilo",
+    desc: "Escribe un título claro y descriptivo. Máximo 140 caracteres. Un buen título atrae más participación.",
+  },
+  {
+    type: "spotlight", section: "Crear hilo",
+    selector: '[data-tour="forum-new-msg"]', tooltipPos: "right",
+    title: "💬  Primer mensaje",
+    desc: "Opcional pero recomendado. Abre la conversación con tu perspectiva, datos o pregunta para el debate.",
+  },
+  // ── Metodología ──
+  {
+    type: "modal", section: "Metodología",
+    icon: "📐",
+    title: "¿Cómo se mide la corrupción?",
+    desc: "El CPI lo elabora Transparency International cada año. Combina 13 fuentes independientes — Banco Mundial, Foro Económico Mundial y otras — para puntuar cada país de 0 (altamente corrupto) a 100 (muy transparente). Aletheia visualiza estos datos desde 2017 al presente.",
+  },
+  // ── Comparar ──
+  {
+    type: "modal", section: "Comparar",
+    icon: "⚖️",
+    title: "Compara dos países",
+    desc: "Selecciona un país en el mapa o ranking para ver su ficha. Luego haz clic en un segundo país: el panel mostrará ambos puntajes CPI lado a lado con la diferencia exacta en puntos. Ideal para analizar brechas de transparencia entre vecinos o regiones.",
+  },
+  // ── Chat ──
+  {
+    type: "spotlight", section: "Chat",
+    selector: '[data-tour="chatbot"]', tooltipPos: "bottom",
+    event: "aletheia:tour:close-forum", delay: 350,
+    title: "🦉  Pregúntale a Aletheia",
+    desc: "El asistente IA tiene acceso a todos los datos de la plataforma. Pregúntale por rankings, comparativas, evolución histórica o contexto político de cualquier país.",
+  },
+  // ── Fin ──
+  {
+    type: "modal", section: "Fin",
+    icon: "🦉",
+    iconStyle: { fontSize: "44px" },
+    title: "¡Ya eres parte de Aletheia!",
+    desc: "Soy Aletheia, tu guía de inteligencia cívica. Ya conoces el mapa interactivo, el ranking de países, las fichas con datos reales, el foro ciudadano y el asistente IA. Explora, debate y contribuye a la transparencia global. ¡Bienvenido/a!",
+    isSummary: true,
   },
 ];
 
@@ -3261,16 +3309,39 @@ function useTourRect(selector, step, delay) {
   return { rect, ready };
 }
 
+function TourDots({ stepIdx }) {
+  const s = TOUR_STEPS[stepIdx];
+  const section = s && s.section;
+  if (!section) {
+    return (
+      <div className="ob-tour-dots">
+        {TOUR_STEPS.map((_, i) => (
+          <div key={i} className={`ob-tour-dot${i === stepIdx ? " active" : ""}`} />
+        ))}
+      </div>
+    );
+  }
+  const sectionIndices = TOUR_STEPS.reduce((acc, ts, i) => {
+    if (ts.section === section) acc.push(i);
+    return acc;
+  }, []);
+  const posInSection = sectionIndices.indexOf(stepIdx);
+  return (
+    <div className="ob-tour-dots">
+      <span className="ob-tour-section-lbl">{section}</span>
+      {sectionIndices.map((_, i) => (
+        <div key={i} className={`ob-tour-dot${i === posInSection ? " active" : ""}`} />
+      ))}
+    </div>
+  );
+}
+
 function TourTooltip({ step: s, stepIdx, totalSteps, animKey, onPrev, onNext, onSkip, style }) {
   const isLast = stepIdx === totalSteps - 1;
   return (
     <div className="ob-tooltip" style={style}>
       <div className="ob-tooltip-header">
-        <div className="ob-tour-dots">
-          {Array.from({ length: totalSteps }).map((_, i) => (
-            <div key={i} className={`ob-tour-dot${i === stepIdx ? " active" : ""}`} />
-          ))}
-        </div>
+        <TourDots stepIdx={stepIdx} />
         <button className="ob-tour-skip" onClick={onSkip}>Saltar</button>
       </div>
       <div key={animKey} className="ob-step-enter">
@@ -3395,11 +3466,7 @@ function TourOverlay({ onDone }) {
       <div className="ob-backdrop">
         <div className="ob-card">
           <div className="ob-tour-header">
-            <div className="ob-tour-dots">
-              {TOUR_STEPS.map((_, i) => (
-                <div key={i} className={`ob-tour-dot${i === step ? " active" : ""}`} />
-              ))}
-            </div>
+            <TourDots stepIdx={step} />
             <button className="ob-tour-skip" onClick={onDone}>Saltar</button>
           </div>
           <div key={animKey} className="ob-step-enter">
@@ -3430,10 +3497,8 @@ function TourOverlay({ onDone }) {
     return (
       <div className="ob-backdrop">
         <div className="ob-card" style={{ textAlign:"center", padding:"32px 28px" }}>
-          <div className="ob-tour-dots" style={{ justifyContent:"center", marginBottom:20 }}>
-            {TOUR_STEPS.map((_, i) => (
-              <div key={i} className={`ob-tour-dot${i === step ? " active" : ""}`} />
-            ))}
+          <div style={{ justifyContent:"center", marginBottom:20, display:"flex" }}>
+            <TourDots stepIdx={step} />
           </div>
           <div className="ob-tour-icon">{s.icon || "⏳"}</div>
           <div className="ob-tour-title" style={{ marginTop:12 }}>{s.title}</div>
@@ -3470,11 +3535,7 @@ function TourOverlay({ onDone }) {
         <div style={spotStyle} />
         <div className="ob-tooltip" style={tooltipStyle}>
           <div className="ob-tooltip-header">
-            <div className="ob-tour-dots">
-              {TOUR_STEPS.map((_, i) => (
-                <div key={i} className={`ob-tour-dot${i === step ? " active" : ""}`} />
-              ))}
-            </div>
+            <TourDots stepIdx={step} />
             <button className="ob-tour-skip" onClick={onDone}>Saltar</button>
           </div>
           <div key={animKey} className="ob-step-enter">
@@ -3485,8 +3546,8 @@ function TourOverlay({ onDone }) {
             )}
           </div>
           <button className="ob-btn-secondary" style={{ width:"100%", marginTop:4 }}
-            onClick={() => { window.dispatchEvent(new CustomEvent("aletheia:tour:open-panel")); go(step + 1); }}>
-            Abrir panel y continuar →
+            onClick={() => go(step + 1)}>
+            Omitir y continuar →
           </button>
         </div>
       </>
