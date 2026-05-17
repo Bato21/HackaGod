@@ -1303,6 +1303,21 @@ function App({ user: authUser, onLogout }) {
     return () => mq.removeEventListener("change", initIfMobile);
   }, []);
 
+  // ¿Viewport mobile? (para decidir contenido del rail, no solo CSS)
+  const [isMobile, setIsMobile] = useState(
+    () => window.matchMedia("(max-width: 760px)").matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 760px)");
+    const on = () => setIsMobile(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+
+  // Secciones colapsables del panel (mobile): filtros + ranking.
+  const [secOpen, setSecOpen] = useState({ filtros: true, ranking: true });
+  const toggleSec = (k) => setSecOpen(s => ({ ...s, [k]: !s[k] }));
+
   // Ficha país abierta (mobile): body classes para overlay full-screen
   // con pestañas Información/Noticias y para ocultar el bottom-nav.
   useEffect(() => {
@@ -1554,7 +1569,7 @@ function App({ user: authUser, onLogout }) {
         <div className={`main${mapFullscreen ? " fullscreen" : ""}`}>
           {/* Left rail */}
           <div className="col">
-            {selected ? (
+            {selected && !isMobile ? (
               <NewsRail
                 country={selected}
                 year={year}
@@ -1576,6 +1591,13 @@ function App({ user: authUser, onLogout }) {
               />
             ) : (
             <React.Fragment>
+            {/* Cerrar panel (solo mobile) → vuelve al mapa */}
+            <button className="panel-close-btn" onClick={() => setMapFullscreen(true)}>
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+                <path d="M3 3 L11 11 M11 3 L3 11"/>
+              </svg>
+              <span>Cerrar panel</span>
+            </button>
             <div className="search-wrap">
               <input
                 className="search"
@@ -1584,39 +1606,56 @@ function App({ user: authUser, onLogout }) {
                 onChange={e => setQuery(e.target.value)}
               />
             </div>
-            <div className="filter-block">
-              <div className="label">
-                <span>Filtro por rango</span>
-                <span className="mono">{filterRange[0]}–{filterRange[1]}</span>
+            <button
+              className={`sec-toggle${secOpen.filtros ? " open" : ""}`}
+              onClick={() => toggleSec("filtros")}
+            >
+              <svg className="sec-chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 4.5 L6 7.5 L9 4.5"/>
+              </svg>
+              <span>Filtros y orden</span>
+            </button>
+            <div className="sec-body" style={{ display: secOpen.filtros ? "block" : "none" }}>
+              <div className="filter-block">
+                <div className="label">
+                  <span>Filtro por rango</span>
+                  <span className="mono">{filterRange[0]}–{filterRange[1]}</span>
+                </div>
+                <div className="range-row">
+                  <span className="val">{filterRange[0]}</span>
+                  <input
+                    type="range" min="0" max="100" value={filterRange[0]}
+                    onChange={e => setFilterRange([Math.min(+e.target.value, filterRange[1]), filterRange[1]])}
+                  />
+                </div>
+                <div className="range-row">
+                  <span className="val">{filterRange[1]}</span>
+                  <input
+                    type="range" min="0" max="100" value={filterRange[1]}
+                    onChange={e => setFilterRange([filterRange[0], Math.max(+e.target.value, filterRange[0])])}
+                  />
+                </div>
               </div>
-              <div className="range-row">
-                <span className="val">{filterRange[0]}</span>
-                <input
-                  type="range" min="0" max="100" value={filterRange[0]}
-                  onChange={e => setFilterRange([Math.min(+e.target.value, filterRange[1]), filterRange[1]])}
-                />
-              </div>
-              <div className="range-row">
-                <span className="val">{filterRange[1]}</span>
-                <input
-                  type="range" min="0" max="100" value={filterRange[1]}
-                  onChange={e => setFilterRange([filterRange[0], Math.max(+e.target.value, filterRange[0])])}
-                />
+              <div className="filter-block">
+                <div className="label"><span>Orden</span></div>
+                <div className="sort-tabs">
+                  <button className={sortBy === "desc" ? "active" : ""} onClick={() => setSortBy("desc")}>+ Corruptos</button>
+                  <button className={sortBy === "asc" ? "active" : ""} onClick={() => setSortBy("asc")}>+ Limpios</button>
+                  <button className={sortBy === "name" ? "active" : ""} onClick={() => setSortBy("name")}>A–Z</button>
+                </div>
               </div>
             </div>
-            <div className="filter-block">
-              <div className="label"><span>Orden</span></div>
-              <div className="sort-tabs">
-                <button className={sortBy === "desc" ? "active" : ""} onClick={() => setSortBy("desc")}>+ Corruptos</button>
-                <button className={sortBy === "asc" ? "active" : ""} onClick={() => setSortBy("asc")}>+ Limpios</button>
-                <button className={sortBy === "name" ? "active" : ""} onClick={() => setSortBy("name")}>A–Z</button>
-              </div>
-            </div>
-            <div className="col header">
-              <h2>Ranking · {sortedList.length}</h2>
-              <span className="mono" style={{ fontSize: 10, color: "var(--text-3)" }}>{year}</span>
-            </div>
-            <div className="body">
+            <button
+              className={`sec-toggle${secOpen.ranking ? " open" : ""}`}
+              onClick={() => toggleSec("ranking")}
+            >
+              <svg className="sec-chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 4.5 L6 7.5 L9 4.5"/>
+              </svg>
+              <span>Ranking · {sortedList.length}</span>
+              <span className="mono sec-year">{year}</span>
+            </button>
+            <div className="body" style={{ display: secOpen.ranking ? "block" : "none" }}>
               <div className="ranking-list">
                 {sortedList.map((c, i) => {
                   const s = c.scores[year];
