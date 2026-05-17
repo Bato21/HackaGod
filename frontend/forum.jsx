@@ -792,7 +792,7 @@ function Forum({ initialIso3, initialThreadId, user, onClose, theme, onToggleThe
         </div>
 
         <div className="fvt-search-group">
-          <div className="fvt-search-wrap">
+          <div className="fvt-search-wrap" data-tour="forum-search">
             <svg className="fvt-search-ico" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
               <circle cx="5.5" cy="5.5" r="4"/><path d="M9 9 L13 13"/>
             </svg>
@@ -812,6 +812,7 @@ function Forum({ initialIso3, initialThreadId, user, onClose, theme, onToggleThe
           </div>
           <button
             className={`fvt-filter-btn${showFilters?" is-open":""}${activeFilterCount>0?" has-active":""}`}
+            data-tour="forum-filter-btn"
             onClick={() => setShowFilters(o=>!o)}
           >
             <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
@@ -823,7 +824,7 @@ function Forum({ initialIso3, initialThreadId, user, onClose, theme, onToggleThe
         </div>
 
         <div className="fvt-right">
-          <button className="fvt-new-btn" onClick={() => {
+          <button className="fvt-new-btn" data-tour="forum-new-btn" onClick={() => {
             if (user?.kind === 'guest') { setShowLoginWall(true); return; }
             setShowNewThread(true);
           }}>
@@ -856,7 +857,7 @@ function Forum({ initialIso3, initialThreadId, user, onClose, theme, onToggleThe
       </div>
 
       {/* ── Scope tabs + sort ── */}
-      <div className="fv-scope-bar">
+      <div className="fv-scope-bar" data-tour="forum-scope-bar">
         <div className="fv-scope-tabs">
           {SCOPE_TABS.map(s => (
             <button key={s.v}
@@ -883,7 +884,7 @@ function Forum({ initialIso3, initialThreadId, user, onClose, theme, onToggleThe
       <div className="fv-body">
 
         {/* List pane */}
-        <div className={`fv-list-pane${mobileView==="detail"?" mobile-hide":""}`}>
+        <div className={`fv-list-pane${mobileView==="detail"?" mobile-hide":""}`} data-tour="forum-threads">
           {/* Active filter chips */}
           {(filter.region || filter.iso3 || filter.year) && (
             <div className="fv-chips">

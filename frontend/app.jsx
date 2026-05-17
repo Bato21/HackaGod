@@ -1482,19 +1482,29 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
       setMapFullscreen(true); setMapSettingsOpen(false);
       mapApi.current?.reset();
     };
+    const closeForum = () => setForumOpen(null);
     window.addEventListener("aletheia:tour:open-panel",      openPanel);
     window.addEventListener("aletheia:tour:go-fullscreen",   toFullscreen);
     window.addEventListener("aletheia:tour:select-country",  selectForTour);
     window.addEventListener("aletheia:tour:reset-view",      resetView);
+    window.addEventListener("aletheia:tour:close-forum",     closeForum);
     return () => {
       window.removeEventListener("aletheia:tour:open-panel",     openPanel);
       window.removeEventListener("aletheia:tour:go-fullscreen",  toFullscreen);
       window.removeEventListener("aletheia:tour:select-country", selectForTour);
       window.removeEventListener("aletheia:tour:reset-view",     resetView);
+      window.removeEventListener("aletheia:tour:close-forum",    closeForum);
     };
   }, []);
 
   // Tour: dispara eventos cuando el usuario interactúa con opciones del mapa
+  const prevForumOpen = useRef(forumOpen);
+  useEffect(() => {
+    if (!prevForumOpen.current && forumOpen)
+      window.dispatchEvent(new CustomEvent("aletheia:tour:forum-opened"));
+    prevForumOpen.current = forumOpen;
+  }, [forumOpen]);
+
   const prevSettingsOpen = useRef(mapSettingsOpen);
   useEffect(() => {
     if (!prevSettingsOpen.current && mapSettingsOpen)
@@ -3139,16 +3149,56 @@ const TOUR_STEPS = [
     actionHint: "Toca «Globo» ↓",
   },
   {
-    type: "spotlight",
+    type: "spotlight-action",
     selector: '[data-tour="forum-btn"]',
     tooltipPos: "bottom",
+    actionEvent: "aletheia:tour:forum-opened",
     title: "💬  Foro ciudadano",
-    desc: "Hilo de debate por país. Lee, comenta y discute con otros usuarios sobre los datos, noticias y eventos de cada nación.",
+    desc: "El foro es el espacio de debate de Aletheia. Cada país tiene sus propios hilos de discusión. Haz clic en «Foro» para entrar.",
+    actionHint: "Toca «Foro» ↑",
+  },
+  {
+    type: "spotlight",
+    selector: '[data-tour="forum-threads"]',
+    tooltipPos: "right",
+    delay: 400,
+    title: "📋  Hilos de debate",
+    desc: "Aquí están todos los debates organizados por país y categoría. Haz clic en cualquier hilo para leerlo y participar con un comentario.",
+  },
+  {
+    type: "spotlight",
+    selector: '[data-tour="forum-search"]',
+    tooltipPos: "bottom",
+    title: "🔍  Buscar en el foro",
+    desc: "Busca hilos por país, presidente, tema o cualquier palabra clave. Los resultados se filtran en tiempo real.",
+  },
+  {
+    type: "spotlight",
+    selector: '[data-tour="forum-scope-bar"]',
+    tooltipPos: "bottom",
+    title: "🗂️  Categorías y orden",
+    desc: "Filtra los hilos por categoría: Todos, Política, Corrupción o Gobierno. También puedes ordenarlos por más recientes, más activos o alfabéticamente.",
+  },
+  {
+    type: "spotlight",
+    selector: '[data-tour="forum-filter-btn"]',
+    tooltipPos: "bottom",
+    title: "🔎  Filtros avanzados",
+    desc: "Filtra debates por región, país específico o año. Ideal cuando quieres seguir la conversación de un país en particular.",
+  },
+  {
+    type: "spotlight",
+    selector: '[data-tour="forum-new-btn"]',
+    tooltipPos: "bottom",
+    title: "✏️  Crear un hilo",
+    desc: "¿Tienes algo que debatir? Abre un hilo sobre cualquier país eligiendo una categoría, un título y tu primer mensaje.",
   },
   {
     type: "spotlight",
     selector: '[data-tour="chatbot"]',
     tooltipPos: "bottom",
+    event: "aletheia:tour:close-forum",
+    delay: 350,
     title: "🦉  Aletheia IA",
     desc: "Asistente con acceso a todos los datos de la plataforma. Pregúntale por rankings, comparativas, evolución histórica o contexto político de cualquier país.",
   },
