@@ -4761,8 +4761,19 @@
       .cabinet-row:nth-of-type(2) { border-top: 1px dotted var(--line) !important; }
       .cabinet-row > * { min-width: 0; }
       .cabinet-row .min, .cabinet-row .port { overflow-wrap: anywhere; }
-      .ctx-grid { grid-template-columns: 1fr 1fr !important; }
+      /* TODO en vertical: cada bloque del panel apilado en 1 columna */
+      .ctx-grid { grid-template-columns: 1fr !important; }
       .ctx-cell .vl { overflow-wrap: anywhere; }
+      .cd-pres {
+        grid-template-columns: 1fr !important;
+        justify-items: start;
+        gap: 12px !important;
+      }
+      .pres-stats { grid-template-columns: 1fr !important; }
+      .cd-headlines .cd-headline {
+        grid-template-columns: 1fr !important;
+        gap: 4px !important;
+      }
       /* Cualquier grid de tarjeta a 1–2 col máx, sin overflow horizontal */
       .cd-card { overflow: hidden; }
       .cd-card > * { min-width: 0; max-width: 100%; }
