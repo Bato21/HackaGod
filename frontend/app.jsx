@@ -1460,13 +1460,13 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
     prevSelectedId.current = selectedId;
   }, [selectedId]);
 
-  const prevDashboard = useRef(countryDashboard);
+  const prevDashMode = useRef(dashMode);
   useEffect(() => {
-    if (!prevDashboard.current && countryDashboard) {
+    if (prevDashMode.current !== "expand" && dashMode === "expand") {
       window.dispatchEvent(new CustomEvent("aletheia:tour:dashboard-opened"));
     }
-    prevDashboard.current = countryDashboard;
-  }, [countryDashboard]);
+    prevDashMode.current = dashMode;
+  }, [dashMode]);
 
   // Tour: reacciona a eventos del TourOverlay
   useEffect(() => {
@@ -2549,7 +2549,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
                     <span className="dot"></span>
                     {compareMode ? "Comparando…" : (comparedId ? "Comparar otro" : "Comparar")}
                   </button>
-                  <button className="cf-action-btn" onClick={() => setForumOpen({ iso3: c.iso3 })}>Foro</button>
+                  <button className="cf-action-btn" data-tour="cf-foro-btn" onClick={() => setForumOpen({ iso3: c.iso3 })}>Foro</button>
                   <button className="cf-action-btn primary" data-tour="expand-btn" onClick={() => { setCountryDashboard(countryFocus); setDashMode("expand"); }}>Expandir ficha</button>
                   <button className="cf-action-btn" onClick={closeCountryFocus}>Cerrar</button>
                 </div>
@@ -3004,6 +3004,14 @@ const TOUR_STEPS = [
     delay: 450,
     title: "🗂️  Ficha de país",
     desc: "Puntaje CPI, posición global, evolución histórica y comparación con otro país. Usa el botón «Comparar» para contrastar con cualquier otro.",
+  },
+  {
+    type: "spotlight",
+    selector: '[data-tour="cf-foro-btn"]',
+    tooltipPos: "top",
+    delay: 200,
+    title: "💬  Foro del país",
+    desc: "Cada país tiene su propio espacio de debate ciudadano. Lo exploraremos en detalle más adelante.",
   },
   {
     type: "spotlight-action",
