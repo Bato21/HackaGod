@@ -2900,8 +2900,8 @@ const TOUR_STEPS = [
     type: "spotlight",
     selector: '[data-tour="globe"]',
     tooltipPos: "right",
-    title: "🌍  El mapa — inténtalo",
-    desc: "Arrastra para girar el globo. Haz clic sobre cualquier país para ver su información detallada.",
+    title: "🗺️  El mapa — inténtalo",
+    desc: "Haz zoom con la rueda del mouse o los botones +/−. Arrastra para moverte por el mapa. Haz clic sobre cualquier país para ver su información detallada.",
   },
   {
     type: "spotlight",
