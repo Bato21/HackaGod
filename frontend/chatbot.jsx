@@ -215,6 +215,48 @@ function AletheiaChat({ selectedCountry }) {
     }
   };
 
+  // Resize custom via pointer events (la nativa CSS `resize: both` queda
+  // tapada por el botón enviar). Min 320×420, max 95vw×95vh.
+  const resizeRef = useRef(null); // {startX, startY, startW, startH, pointerId}
+  const [size, setSize] = useState(null); // {w, h} | null = CSS default
+
+  const onResizePointerDown = (e) => {
+    const rect = panelRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    resizeRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startW: rect.width,
+      startH: rect.height,
+      pointerId: e.pointerId,
+    };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const onResizePointerMove = (e) => {
+    const r = resizeRef.current;
+    if (!r || r.pointerId !== e.pointerId) return;
+    const dw = e.clientX - r.startX;
+    const dh = e.clientY - r.startY;
+    const minW = 320, minH = 420;
+    const maxW = window.innerWidth  * 0.95;
+    const maxH = window.innerHeight * 0.95;
+    setSize({
+      w: Math.max(minW, Math.min(maxW, r.startW + dw)),
+      h: Math.max(minH, Math.min(maxH, r.startH + dh)),
+    });
+  };
+
+  const onResizePointerUp = (e) => {
+    const r = resizeRef.current;
+    if (r && r.pointerId === e.pointerId) {
+      try { e.currentTarget.releasePointerCapture(e.pointerId); } catch (_) {}
+      resizeRef.current = null;
+    }
+  };
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
@@ -336,7 +378,10 @@ function AletheiaChat({ selectedCountry }) {
         <div
           ref={panelRef}
           className="chat-panel"
-          style={pos ? { left: pos.x, top: pos.y, right: "auto", bottom: "auto" } : undefined}
+          style={{
+            ...(pos  ? { left: pos.x, top: pos.y, right: "auto", bottom: "auto" } : {}),
+            ...(size ? { width: size.w, height: size.h } : {}),
+          }}
         >
           <div
             className="chat-header"
@@ -433,7 +478,15 @@ function AletheiaChat({ selectedCountry }) {
               CPI Transparencia Internacional · 2017–2025 · Solo fines informativos
             </div>
           </div>
-          <div className="chat-resize-grip" aria-hidden="true" />
+          <div
+            className="chat-resize-grip"
+            aria-label="Redimensionar"
+            role="separator"
+            onPointerDown={onResizePointerDown}
+            onPointerMove={onResizePointerMove}
+            onPointerUp={onResizePointerUp}
+            onPointerCancel={onResizePointerUp}
+          />
         </div>
       )}
     </>
