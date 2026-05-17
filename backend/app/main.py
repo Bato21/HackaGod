@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import __version__
 from app.config import get_settings
 from app.database import dispose_engine
-from app.routers import briefings, countries
+from app.routers import briefings, chat, countries
 
 
 @asynccontextmanager
@@ -47,6 +47,7 @@ def create_app() -> FastAPI:
     app.include_router(countries.router, prefix=settings.API_V1_PREFIX)
     app.include_router(countries.compare_router, prefix=settings.API_V1_PREFIX)
     app.include_router(briefings.router, prefix=settings.API_V1_PREFIX)
+    app.include_router(chat.router, prefix=settings.API_V1_PREFIX)
 
     @app.get("/health", tags=["meta"], summary="Liveness probe")
     async def health() -> dict[str, str]:

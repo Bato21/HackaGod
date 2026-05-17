@@ -36,6 +36,12 @@ class Settings(BaseSettings):
         description="Publishable / anon key used by the supabase-py client.",
     )
 
+    # ── Anthropic ───────────────────────────────────────────────────
+    GROQ_API_KEY: str = Field(
+        ...,
+        description="Groq API key (Llama 3.3 70B) for the chatbot endpoint.",
+    )
+
     # ── Direct Postgres (transaction pooler) ────────────────────────
     # Use the Supabase connection pooler host (port 6543) with the
     # asyncpg driver: postgresql+asyncpg://user:pass@host:6543/postgres
@@ -49,7 +55,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "AletheiaPath API"
 
     # Comma-separated list of allowed CORS origins.
-    CORS_ORIGINS: str = "http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5500"
 
     # SQLAlchemy pool tuning (kept small — the pooler does the heavy lifting).
     DB_POOL_SIZE: int = 5

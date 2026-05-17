@@ -85,7 +85,7 @@ function paletteCss(key) {
 }
 
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
-  "projection": "equalEarth",
+  "projection": "leaflet",
   "viewMode": "choropleth",
   "showLabels": false,
   "theme": "corporate",
@@ -103,6 +103,12 @@ const YEAR_FIRST  = window.YEARS[0];
 const YEAR_LATEST = window.YEARS[window.YEARS.length - 1];
 
 const GEOJSON_URL = "countries-110m.json";
+
+class ChatErrorBoundary extends React.Component {
+  constructor(p) { super(p); this.state = { err: false }; }
+  static getDerivedStateFromError() { return { err: true }; }
+  render() { return this.state.err ? null : this.props.children; }
+}
 
 // ───────────────────────────────────────────────────────────
 // Componentes
@@ -135,7 +141,7 @@ function Tooltip({ data }) {
 function MapView({
   topology, year, viewMode, showLabels,
   selectedId, comparedId,
-  onHover, onLeave, onSelect, filterRange, apiRef, onZoomChange, theme
+  onHover, onLeave, onSelect, filterRange, apiRef, onZoomChange, theme, palette
 }) {
   const containerRef  = useRef(null);
   const mapInst       = useRef(null);
@@ -377,7 +383,7 @@ function MapView({
   useEffect(() => {
     if (!geoLayer.current) return;
     geoLayer.current.setStyle(getStyle);
-  }, [year, filterRange, selectedId, comparedId, theme]);
+  }, [year, filterRange, selectedId, comparedId, theme, palette]);
 
   // ── Swap tile layer on theme change ──────────────────────────────
   useEffect(() => {
@@ -449,6 +455,305 @@ function MapView({
   }, [showLabels, americasFeatures]);
 
   return <div ref={containerRef} style={{ position: 'absolute', inset: 0 }} />;
+}
+
+
+// ── GlobeView — vista D3 ortográfica (globo 3D arrastrable) ──────────
+// Solo se monta cuando projection === "orthographic". Mapa base = Leaflet.
+function GlobeView({
+  topology, year, viewMode, showLabels,
+  selectedId, comparedId, hoveredId,
+  onHover, onLeave, onSelect, filterRange, apiRef, onZoomChange
+}) {
+  const svgRef = useRef(null);
+  const gRef = useRef(null);
+  const zoomBehaviorRef = useRef(null);
+  const [size, setSize] = useState({ w: 800, h: 600 });
+  const [rotation, setRotation] = useState([80, -10]);
+  const rotationRef = useRef(rotation);
+  useEffect(() => { rotationRef.current = rotation; }, [rotation]);
+  const pathFnRef = useRef(null);
+  const spinTimerRef = useRef(null);
+
+  // Centra [lng,lat] al frente del globo + zoom-in, movimiento fluido
+  const centerOn = React.useCallback((lng, lat) => {
+    if (lng == null || lat == null) return;
+    if (spinTimerRef.current) spinTimerRef.current.stop();
+    const start = rotationRef.current.slice();
+    let dLng = (-lng) - start[0];
+    dLng = ((dLng + 180) % 360 + 360) % 360 - 180;
+    const end = [start[0] + dLng, -lat];
+    const DUR = 1000;
+
+    // Rotación (estado React, via timer + easing suave)
+    spinTimerRef.current = d3.timer((elapsed) => {
+      const k = Math.min(1, elapsed / DUR);
+      const e = d3.easeCubicInOut(k);
+      setRotation([start[0] + (end[0] - start[0]) * e,
+                   start[1] + (end[1] - start[1]) * e]);
+      if (k >= 1) { spinTimerRef.current.stop(); spinTimerRef.current = null; }
+    });
+
+    // Zoom-in hacia el centro del globo (transform GPU sobre <g>, fluido)
+    const svgEl = svgRef.current;
+    const zoom = zoomBehaviorRef.current;
+    if (svgEl && zoom) {
+      const W = svgEl.clientWidth || svgEl.parentElement.clientWidth;
+      const H = svgEl.clientHeight || svgEl.parentElement.clientHeight;
+      const cx = W / 2, cy = H / 2, scale = 2.4;
+      const t = d3.zoomIdentity.translate(cx, cy).scale(scale).translate(-cx, -cy);
+      d3.select(svgEl).transition().duration(DUR).ease(d3.easeCubicInOut)
+        .call(zoom.transform, t);
+    }
+  }, []);
+  const centerOnRef = useRef(centerOn);
+  useEffect(() => { centerOnRef.current = centerOn; }, [centerOn]);
+
+  // Click en país: centrar + seleccionar
+  const handleCountryClick = (f) => {
+    const c = COUNTRIES_BY_ID[f.id];
+    if (c) centerOn(c.lng, c.lat);
+    onSelect(f.id);
+  };
+
+  useEffect(() => {
+    if (!svgRef.current) return;
+    const ro = new ResizeObserver(entries => {
+      for (const e of entries) {
+        const cr = e.contentRect;
+        setSize({ w: cr.width, h: cr.height });
+      }
+    });
+    ro.observe(svgRef.current.parentElement);
+    return () => ro.disconnect();
+  }, []);
+
+  // d3.zoom (solo escala con wheel; el drag rota el globo)
+  useEffect(() => {
+    if (!svgRef.current || !gRef.current) return;
+    const svg = d3.select(svgRef.current);
+    const g = d3.select(gRef.current);
+    const zoom = d3.zoom()
+      .scaleExtent([1, 14])
+      .filter((event) => event.type === "wheel")
+      .on("zoom", (event) => {
+        g.attr("transform", event.transform);
+        if (onZoomChange) onZoomChange(event.transform.k);
+      });
+    svg.call(zoom).on("dblclick.zoom", null);
+    zoomBehaviorRef.current = zoom;
+    if (apiRef) {
+      apiRef.current = {
+        zoomIn: () => svg.transition().duration(220).call(zoom.scaleBy, 1.6),
+        zoomOut: () => svg.transition().duration(220).call(zoom.scaleBy, 1 / 1.6),
+        reset: () => svg.transition().duration(380).call(zoom.transform, d3.zoomIdentity),
+        // Selección externa (chatbot/búsqueda): centra el globo en el país
+        zoomToFeature: (feature) => {
+          const c = feature && COUNTRIES_BY_ID[feature.id];
+          if (c) centerOnRef.current(c.lng, c.lat);
+        },
+        getFeatureById: (id) => ({ id }),
+      };
+    }
+    return () => { svg.on(".zoom", null); };
+  }, [apiRef, onZoomChange]);
+
+  // Drag para rotar el globo
+  useEffect(() => {
+    if (!svgRef.current) return;
+    const svg = d3.select(svgRef.current);
+    let startRot = null, startPos = null, moved = false;
+    const onDown = (event) => {
+      if (event.button !== 0) return;
+      startRot = [rotationRef.current[0], rotationRef.current[1]];
+      startPos = [event.clientX, event.clientY];
+      moved = false;
+    };
+    const onMove = (event) => {
+      if (!startPos) return;
+      const dx = event.clientX - startPos[0];
+      const dy = event.clientY - startPos[1];
+      if (!moved && Math.hypot(dx, dy) < 3) return;
+      if (!moved) { moved = true; svg.classed("dragging", true); }
+      const k = 0.35;
+      setRotation([
+        startRot[0] + dx * k,
+        Math.max(-89, Math.min(89, startRot[1] - dy * k)),
+      ]);
+    };
+    const onUp = () => {
+      startPos = null; startRot = null;
+      if (moved) svg.classed("dragging", false);
+      moved = false;
+    };
+    svgRef.current.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      svgRef.current && svgRef.current.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, []);
+
+  const { allFeatures, americasFeatures, projectionFn, pathFn, graticule, sphere } = useMemo(() => {
+    if (!topology) return {};
+    const all = topojson.feature(topology, topology.objects.countries).features;
+    const americas = all.filter(f => COUNTRIES_BY_ID[f.id]);
+    const proj = d3.geoOrthographic()
+      .rotate([rotation[0], rotation[1], 0])
+      .clipAngle(90)
+      .translate([size.w / 2, size.h / 2])
+      .scale(Math.min(size.w, size.h) * 0.45);
+    const pf = d3.geoPath(proj);
+    return {
+      allFeatures: all, americasFeatures: americas,
+      projectionFn: proj, pathFn: pf,
+      graticule: d3.geoGraticule10(), sphere: { type: "Sphere" },
+    };
+  }, [topology, size, rotation]);
+
+  if (!topology || !pathFn) return null;
+  pathFnRef.current = pathFn;
+
+  const handleEnter = (e, f) => {
+    const country = COUNTRIES_BY_ID[f.id];
+    if (!country) return;
+    const yi = window.YEARS.indexOf(year);
+    const prev = yi > 0 ? country.scores[window.YEARS[yi - 1]] : null;
+    onHover({ country, year, delta: prev != null ? country.scores[year] - prev : null,
+              x: e.clientX, y: e.clientY });
+  };
+  const isDimmed = (id) => {
+    const c = COUNTRIES_BY_ID[id];
+    if (!c) return false;
+    const s = c.scores[year];
+    return s < filterRange[0] || s > filterRange[1];
+  };
+
+  return (
+    <svg ref={svgRef} viewBox={`0 0 ${size.w} ${size.h}`} preserveAspectRatio="none"
+         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+      <g ref={gRef}>
+        <path d={pathFn(sphere)} className="sphere" />
+        <path d={pathFn(graticule)} className="graticule" />
+        <g>
+          {allFeatures.map((f, i) => {
+            if (COUNTRIES_BY_ID[f.id]) return null;
+            const d = pathFn(f);
+            return d ? <path key={`o-${f.id ?? i}`} d={d} className="country-path outside" /> : null;
+          })}
+        </g>
+        {viewMode === "choropleth" && (
+          <g>
+            {americasFeatures.map(f => {
+              const country = COUNTRIES_BY_ID[f.id];
+              const d = pathFn(f);
+              if (!d) return null;
+              const dim = isDimmed(f.id);
+              return (
+                <path
+                  key={f.id}
+                  d={d}
+                  className={`country-path${dim ? " dim" : ""}${selectedId === f.id ? " selected" : ""}${comparedId === f.id ? " compared" : ""}`}
+                  style={{ fill: colorFor(country.scores[year]) }}
+                  onMouseMove={(e) => handleEnter(e, f)}
+                  onMouseLeave={onLeave}
+                  onClick={() => handleCountryClick(f)}
+                />
+              );
+            })}
+          </g>
+        )}
+        {viewMode === "bubbles" && (
+          <>
+            <g>
+              {americasFeatures.map(f => {
+                const d = pathFn(f);
+                return d ? <path key={f.id} d={d} className="country-path" /> : null;
+              })}
+            </g>
+            <g>
+              {americasFeatures.map(f => {
+                const country = COUNTRIES_BY_ID[f.id];
+                const pt = projectionFn([country.lng, country.lat]);
+                if (!pt) return null;
+                const score = country.scores[year];
+                return (
+                  <circle
+                    key={f.id} cx={pt[0]} cy={pt[1]} r={4 + (score / 100) * 22}
+                    className="country-bubble"
+                    style={{ fill: colorFor(score) }}
+                    opacity={isDimmed(f.id) ? 0.15 : 0.85}
+                    stroke={selectedId === f.id ? "var(--accent)" : comparedId === f.id ? "var(--accent-2)" : null}
+                    strokeWidth={(selectedId === f.id || comparedId === f.id) ? 2 : 1}
+                    onMouseMove={(e) => handleEnter(e, f)}
+                    onMouseLeave={onLeave}
+                    onClick={() => handleCountryClick(f)}
+                  />
+                );
+              })}
+            </g>
+          </>
+        )}
+        {/* Nombres de países (español) — como en Leaflet, todos los visibles */}
+        <g>
+          {allFeatures.map(f => {
+            const name = (window.COUNTRY_NAMES_ES || {})[String(f.id)] ||
+                         (COUNTRIES_BY_ID[f.id] && COUNTRIES_BY_ID[f.id].name);
+            if (!name) return null;
+            const c = COUNTRIES_BY_ID[f.id];
+            let lat, lng;
+            if (c) { lat = c.lat; lng = c.lng; }
+            else {
+              try {
+                const coords = f.geometry.type === 'Polygon'
+                  ? f.geometry.coordinates[0]
+                  : f.geometry.coordinates.reduce((a, b) => a[0].length >= b[0].length ? a : b)[0];
+                lat = coords.reduce((s, p) => s + p[1], 0) / coords.length;
+                lng = coords.reduce((s, p) => s + p[0], 0) / coords.length;
+              } catch (_) { return null; }
+            }
+            const rot = projectionFn.rotate();
+            // ocultar países en la cara trasera del globo
+            if (d3.geoDistance([lng, lat], [-rot[0], -rot[1]]) > Math.PI / 2) return null;
+            const pt = projectionFn([lng, lat]);
+            if (!pt) return null;
+            const isAmericas = !!c;
+            return (
+              <text
+                key={`name-${f.id}`}
+                x={pt[0]}
+                y={pt[1] + 3}
+                className={isAmericas ? "country-label" : "country-label outside-label"}
+                opacity={isAmericas ? (isDimmed(f.id) ? 0.35 : 0.95) : 0.5}
+              >
+                {name}
+              </text>
+            );
+          })}
+        </g>
+        {/* ISO3 extra cuando showLabels activo */}
+        {showLabels && (
+          <g>
+            {americasFeatures.map(f => {
+              const country = COUNTRIES_BY_ID[f.id];
+              const pt = projectionFn([country.lng, country.lat]);
+              if (!pt) return null;
+              const rot = projectionFn.rotate();
+              if (d3.geoDistance([country.lng, country.lat], [-rot[0], -rot[1]]) > Math.PI / 2) return null;
+              return (
+                <text key={`iso-${f.id}`} x={pt[0]} y={pt[1] + 14} className="country-label"
+                      opacity={isDimmed(f.id) ? 0.3 : 0.7} style={{ fontSize: 8 }}>
+                  {country.iso3}
+                </text>
+              );
+            })}
+          </g>
+        )}
+      </g>
+    </svg>
+  );
 }
 
 
@@ -546,8 +851,14 @@ function App({ user: authUser, onLogout }) {
     return () => document.removeEventListener("mousedown", onDoc);
   }, [userMenuOpen]);
 
-  // ── Tweaks
-  const [tweaks, setTweak] = (window.useTweaks || ((d) => [d, () => {}]))(TWEAK_DEFAULTS);
+  // ── Tweaks — self-contained, no dependency on window.useTweaks load order
+  const [tweaks, setTweakValues] = useState(TWEAK_DEFAULTS);
+  const setTweak = React.useCallback((keyOrEdits, val) => {
+    const edits = (typeof keyOrEdits === "object" && keyOrEdits !== null)
+      ? keyOrEdits : { [keyOrEdits]: val };
+    setTweakValues(prev => ({ ...prev, ...edits }));
+    window.dispatchEvent(new CustomEvent("tweakchange", { detail: edits }));
+  }, []);
   // Palette activa para colorFor() (módulo-scope, actualizado en render)
   ACTIVE_PALETTE = tweaks.palette || "editorial";
 
@@ -750,6 +1061,24 @@ function App({ user: authUser, onLogout }) {
     setCompareMode(false);
     mapApi.current?.reset();
   };
+
+  // Chatbot → map: escucha evento de selección de país por iso3.
+  // Usa ref para llamar siempre el handleSelect actual (evita closure stale)
+  // y funciona en ambos modos: Leaflet (MapView) y Globo (GlobeView).
+  const handleSelectRef = useRef(handleSelect);
+  handleSelectRef.current = handleSelect;
+  React.useEffect(() => {
+    const handler = (e) => {
+      const iso3 = e.detail?.iso3;
+      if (!iso3) return;
+      const country = window.COUNTRIES.find(
+        c => c.iso3 === String(iso3).trim().toUpperCase()
+      );
+      if (country) handleSelectRef.current(country.id);
+    };
+    window.addEventListener("aletheia:select-country", handler);
+    return () => window.removeEventListener("aletheia:select-country", handler);
+  }, []);
 
   const selected = selectedId ? COUNTRIES_BY_ID[selectedId] : null;
   const compared = comparedId ? COUNTRIES_BY_ID[comparedId] : null;
@@ -967,13 +1296,31 @@ function App({ user: authUser, onLogout }) {
             <div className="map-wrap">
               <div className="map-frame">
                 {!topology && <div className="loading">Cargando geometría</div>}
-                {topology && (
+                {topology && tweaks.projection === "orthographic" && (
+                  <GlobeView
+                    topology={topology}
+                    year={year}
+                    viewMode={tweaks.viewMode}
+                    showLabels={tweaks.showLabels}
+                    selectedId={selectedId}
+                    comparedId={comparedId}
+                    hoveredId={hoverData?.country?.id}
+                    filterRange={filterRange}
+                    onHover={setHoverData}
+                    onLeave={() => setHoverData(null)}
+                    onSelect={handleSelect}
+                    apiRef={mapApi}
+                    onZoomChange={setZoomLevel}
+                  />
+                )}
+                {topology && tweaks.projection !== "orthographic" && (
                   <MapView
                     topology={topology}
                     year={year}
                     viewMode={tweaks.viewMode}
                     showLabels={tweaks.showLabels}
                     theme={tweaks.theme}
+                    palette={tweaks.palette}
                     selectedId={selectedId}
                     comparedId={comparedId}
                     hoveredId={hoverData?.country?.id}
@@ -1073,16 +1420,12 @@ function App({ user: authUser, onLogout }) {
                         </div>
                       </div>
                       <div className="mp-section">
-                        <div className="mp-lbl">Proyección</div>
-                        <div className="mp-seg cols-3">
+                        <div className="mp-lbl">Vista</div>
+                        <div className="mp-seg cols-2">
                           <button
-                            className={tweaks.projection === "equalEarth" ? "active" : ""}
-                            onClick={() => setTweak("projection", "equalEarth")}
-                          >Equal&nbsp;Earth</button>
-                          <button
-                            className={tweaks.projection === "mercator" ? "active" : ""}
-                            onClick={() => setTweak("projection", "mercator")}
-                          >Mercator</button>
+                            className={tweaks.projection !== "orthographic" ? "active" : ""}
+                            onClick={() => setTweak("projection", "leaflet")}
+                          >Mapa</button>
                           <button
                             className={tweaks.projection === "orthographic" ? "active" : ""}
                             onClick={() => setTweak("projection", "orthographic")}
@@ -1800,13 +2143,12 @@ function App({ user: authUser, onLogout }) {
             ]}
           />
           <window.TweakSelect
-            label="Proyección"
-            value={tweaks.projection}
+            label="Vista"
+            value={tweaks.projection === "orthographic" ? "orthographic" : "leaflet"}
             onChange={(v) => setTweak("projection", v)}
             options={[
-              { value: "equalEarth", label: "Equal Earth" },
-              { value: "mercator", label: "Mercator" },
-              { value: "orthographic", label: "Ortográfica (globo)" },
+              { value: "leaflet", label: "Mapa" },
+              { value: "orthographic", label: "Globo 3D" },
             ]}
           />
           <window.TweakToggle
@@ -1826,6 +2168,15 @@ function App({ user: authUser, onLogout }) {
           />
         </window.TweakSection>
       </window.TweaksPanel>
+
+      {/* Chatbot flotante — aislado en error boundary para no afectar el mapa */}
+      {window.AletheiaChat && (
+        <ChatErrorBoundary>
+          <window.AletheiaChat selectedCountry={
+            countryFocus ? (window.COUNTRIES || []).find(c => c.id === countryFocus || c.id === String(countryFocus)) || null : null
+          } />
+        </ChatErrorBoundary>
+      )}
     </>
   );
 }
