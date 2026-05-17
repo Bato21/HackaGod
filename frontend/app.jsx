@@ -1452,6 +1452,14 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
     prevFullscreen.current = mapFullscreen;
   }, [mapFullscreen]);
 
+  const prevSelectedId = useRef(selectedId);
+  useEffect(() => {
+    if (!prevSelectedId.current && selectedId) {
+      window.dispatchEvent(new CustomEvent("aletheia:tour:country-selected"));
+    }
+    prevSelectedId.current = selectedId;
+  }, [selectedId]);
+
   // Tour: reacciona a eventos del TourOverlay
   useEffect(() => {
     const openPanel  = () => setMapFullscreen(false);
@@ -2973,10 +2981,18 @@ const TOUR_STEPS = [
     desc: "Cuando no hay país seleccionado, el panel muestra noticias internacionales recientes sobre corrupción, política y gobernanza global.",
   },
   {
+    type: "spotlight-action",
+    selector: '[data-tour="globe"]',
+    tooltipPos: "right",
+    actionEvent: "aletheia:tour:country-selected",
+    title: "🇨🇴  Selecciona un país",
+    desc: "Haz clic sobre Colombia en el mapa para explorar su ficha detallada.",
+    actionHint: "Toca Colombia en el mapa ↓",
+  },
+  {
     type: "spotlight",
     selector: '[data-tour="country-ficha"]',
     tooltipPos: "left",
-    event: "aletheia:tour:select-country",
     delay: 350,
     title: "🗂️  Ficha de país",
     desc: "Presidente actual, gabinete ministerial, indicadores económicos y datos judiciales. Todo con fuentes verificadas.",
@@ -3164,13 +3180,14 @@ function TourOverlay({ onDone }) {
     }
   }, [step, s.event]);
 
-  // spotlight-action: auto-advance when App fires aletheia:tour:action-done
+  // spotlight-action: auto-advance when App fires the action event
   useEffect(() => {
     if (s.type !== "spotlight-action") return;
+    const evName = s.actionEvent || "aletheia:tour:action-done";
     const handler = () => go(step + 1);
-    window.addEventListener("aletheia:tour:action-done", handler);
-    return () => window.removeEventListener("aletheia:tour:action-done", handler);
-  }, [step, s.type]);
+    window.addEventListener(evName, handler);
+    return () => window.removeEventListener(evName, handler);
+  }, [step, s.type, s.actionEvent]);
 
   const isMobileView = window.innerWidth < 760;
   const isAction = s.type === "spotlight-action";
