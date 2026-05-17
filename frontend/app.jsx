@@ -1858,6 +1858,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
                 </div>
               </div>
             </div>
+            <div data-tour="ranking-list">
             <button
               className={`sec-toggle${secOpen.ranking ? " open" : ""}`}
               onClick={() => toggleSec("ranking")}
@@ -1891,6 +1892,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
                 })}
               </div>
             </div>
+            </div>{/* /data-tour="ranking-list" */}
 
             {/* Top 10 más corruptos */}
             <button
@@ -2958,11 +2960,19 @@ const TOUR_STEPS = [
   },
   {
     type: "spotlight",
-    selector: '[data-tour="ranking"]',
+    selector: '[data-tour="ranking-list"]',
     tooltipPos: "right",
-    delay: 200,
+    delay: 400,
     title: "📊  Ranking de países",
     desc: "Lista todos los países ordenados por CPI. Busca, filtra por rango de puntuación o compara dos países simultáneamente.",
+  },
+  {
+    type: "spotlight",
+    selector: '[data-tour="country-ficha"]',
+    tooltipPos: "left",
+    delay: 200,
+    title: "🌐  Noticias mundiales",
+    desc: "Cuando no hay país seleccionado, el panel muestra noticias internacionales recientes sobre corrupción, política y gobernanza global.",
   },
   {
     type: "spotlight",
