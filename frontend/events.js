@@ -477,6 +477,34 @@
       }
     } catch (_) {}
 
+    // ── Indicadores numéricos REALES (Excel → Supabase → INDICATORS) ──
+    // Reemplazan los proxy PRNG. Son indicadores proxy comparativos
+    // calculados (ver Metodología), no cifras oficiales.
+    try {
+      const ind = window.INDICATORS
+        && window.INDICATORS[country.iso3]
+        && window.INDICATORS[country.iso3][year];
+      if (ind) {
+        const mk = (label, v) => v == null ? null : { label, value: v, unit: "" };
+        const real = [
+          mk("Casos abiertos",        ind.casos_abiertos),
+          mk("Imputaciones",          ind.imputaciones),
+          mk("Sentencias firmes",     ind.sentencias_firmes),
+          mk("Allanamientos",         ind.allanamientos),
+          mk("Reportes UIF",          ind.reportes_uif),
+          mk("Acceso info. neg.",     ind.acceso_negado),
+          mk("Casos corrupción",      ind.casos_corrupcion),
+        ].filter(Boolean);
+        if (real.length) {
+          detail.indicators = real;
+          detail.realIndicators = true;
+          detail.real = true;
+          detail.indicatorsSource = ind.fuente_indicadores || null;
+          detail.cabinetCriterio = ind.criterio_gabinete || null;
+        }
+      }
+    } catch (_) {}
+
     return detail;
   };
 

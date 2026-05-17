@@ -686,55 +686,94 @@ function GlobeView({
     if (!svgRef.current) return;
     const svg = d3.select(svgRef.current);
     let startRot = null, startPos = null, moved = false;
+    let rafId = null, pending = null;
+
+    const flush = () => {
+      rafId = null;
+      if (!pending) return;
+      setRotation(pending);
+      pending = null;
+    };
+    let captured = false;
     const onDown = (event) => {
-      if (event.button !== 0) return;
+      if (event.button !== 0 && event.pointerType === "mouse") return;
       startRot = [rotationRef.current[0], rotationRef.current[1]];
       startPos = [event.clientX, event.clientY];
       moved = false;
+      // NO capturar aquí: robaría el click del país (tap = select).
     };
     const onMove = (event) => {
       if (!startPos) return;
       const dx = event.clientX - startPos[0];
       const dy = event.clientY - startPos[1];
       if (!moved && Math.hypot(dx, dy) < 3) return;
-      if (!moved) { moved = true; svg.classed("dragging", true); }
+      if (!moved) {
+        moved = true;
+        svg.classed("dragging", true);
+        // Capturar solo cuando ES un drag real → el tap simple sigue
+        // generando click en el <path> y selecciona el país.
+        try { svgRef.current.setPointerCapture(event.pointerId); captured = true; } catch (_) {}
+      }
       const k = 0.35;
-      setRotation([
+      // Coalesce: guarda el último valor y aplica 1 vez por frame (fluido).
+      pending = [
         startRot[0] + dx * k,
         Math.max(-89, Math.min(89, startRot[1] - dy * k)),
-      ]);
+      ];
+      if (rafId == null) rafId = requestAnimationFrame(flush);
     };
-    const onUp = () => {
+    const onUp = (event) => {
+      if (rafId != null) { cancelAnimationFrame(rafId); rafId = null; }
+      if (pending) { setRotation(pending); pending = null; }
       startPos = null; startRot = null;
       if (moved) svg.classed("dragging", false);
       moved = false;
+      if (captured) {
+        try { svgRef.current.releasePointerCapture(event.pointerId); } catch (_) {}
+        captured = false;
+      }
     };
-    svgRef.current.addEventListener("pointerdown", onDown);
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
+    const el = svgRef.current;
+    el.addEventListener("pointerdown", onDown);
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointercancel", onUp);
     return () => {
-      svgRef.current && svgRef.current.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
+      if (rafId != null) cancelAnimationFrame(rafId);
+      el.removeEventListener("pointerdown", onDown);
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointercancel", onUp);
     };
   }, []);
 
-  const { allFeatures, americasFeatures, projectionFn, pathFn, graticule, sphere } = useMemo(() => {
-    if (!topology) return {};
+  // Geometría: SOLO depende de topology (caro: no recomputar al rotar).
+  const geo = useMemo(() => {
+    if (!topology) return null;
     const all = topojson.feature(topology, topology.objects.countries).features;
-    const americas = all.filter(f => COUNTRIES_BY_ID[f.id]);
+    return {
+      all,
+      americas: all.filter(f => COUNTRIES_BY_ID[f.id]),
+      graticule: d3.geoGraticule10(),
+      sphere: { type: "Sphere" },
+    };
+  }, [topology]);
+
+  // Proyección/path: depende de tamaño y rotación (barato vs rebuild geo).
+  const { projectionFn, pathFn } = useMemo(() => {
+    if (!geo) return {};
     const proj = d3.geoOrthographic()
       .rotate([rotation[0], rotation[1], 0])
       .clipAngle(90)
       .translate([size.w / 2, size.h / 2])
       .scale(Math.min(size.w, size.h) * 0.45);
-    const pf = d3.geoPath(proj);
-    return {
-      allFeatures: all, americasFeatures: americas,
-      projectionFn: proj, pathFn: pf,
-      graticule: d3.geoGraticule10(), sphere: { type: "Sphere" },
-    };
-  }, [topology, size, rotation]);
+    return { projectionFn: proj, pathFn: d3.geoPath(proj) };
+  }, [geo, size, rotation]);
+
+  const allFeatures      = geo?.all;
+  const americasFeatures = geo?.americas;
+  const graticule        = geo?.graticule;
+  const sphere           = geo?.sphere;
 
   if (!topology || !pathFn) return null;
   pathFnRef.current = pathFn;
@@ -759,7 +798,7 @@ function GlobeView({
       {/* Fondo estilo login: gradiente navy (sin animación) */}
       <div className="globe-stage-bg" />
       <svg ref={svgRef} viewBox={`0 0 ${size.w} ${size.h}`} preserveAspectRatio="none"
-         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1 }}>
+         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1, touchAction: 'none', cursor: 'grab' }}>
       <defs>
         <radialGradient id="globeWater" cx="0.4" cy="0.34" r="0.9">
           <stop offset="0%"   stopColor="#1c5470" />
@@ -1201,6 +1240,24 @@ function App({ user: authUser, onLogout }) {
     return list;
   }, [query, sortBy, year]);
 
+  // Tops del panel: 10 más corruptos, 10 más limpios, promedio por región.
+  const panelTops = useMemo(() => {
+    const all = window.COUNTRIES.slice();
+    const byScore = all.slice().sort((a, b) => b.scores[year] - a.scores[year]);
+    const topCorrupt = byScore.slice(0, 10);
+    const topClean = byScore.slice().reverse().slice(0, 10);
+    const reg = {};
+    all.forEach(c => {
+      (reg[c.region] ||= { sum: 0, n: 0 });
+      reg[c.region].sum += c.scores[year];
+      reg[c.region].n += 1;
+    });
+    const regional = Object.entries(reg)
+      .map(([region, { sum, n }]) => ({ region, avg: sum / n, n }))
+      .sort((a, b) => b.avg - a.avg);
+    return { topCorrupt, topClean, regional };
+  }, [year]);
+
   // Regional averages
   const regionAvgs = useMemo(() => {
     const groups = {};
@@ -1297,20 +1354,48 @@ function App({ user: authUser, onLogout }) {
     return () => document.body.classList.remove("forum-open");
   }, [forumOpen]);
 
-  // En mobile el layout es siempre mapa full + overlays (no la vista de
-  // 3 columnas). Si quedó en !mapFullscreen el mapa se colapsa y los taps
-  // no llegan. Forzar fullscreen en pantallas ≤760px (y al rotar/resize).
+  // Mobile arranca en mapa full (los taps de país abren la ficha-overlay).
+  // El botón "Panel" alterna a la vista de panel (1 columna scrolleable).
+  // Solo se fuerza fullscreen UNA vez al entrar en viewport mobile, no en
+  // cada render, para que el toggle del botón siga funcionando.
+  const didMobileInit = useRef(false);
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 760px)");
-    const apply = () => { if (mq.matches) setMapFullscreen(true); };
-    apply();
-    mq.addEventListener("change", apply);
-    window.addEventListener("resize", apply);
-    return () => {
-      mq.removeEventListener("change", apply);
-      window.removeEventListener("resize", apply);
+    const initIfMobile = () => {
+      if (mq.matches && !didMobileInit.current) {
+        didMobileInit.current = true;
+        setMapFullscreen(true);
+      }
+      if (!mq.matches) didMobileInit.current = false;
     };
+    initIfMobile();
+    mq.addEventListener("change", initIfMobile);
+    return () => mq.removeEventListener("change", initIfMobile);
   }, []);
+
+  // ¿Viewport mobile? (para decidir contenido del rail, no solo CSS)
+  const [isMobile, setIsMobile] = useState(
+    () => window.matchMedia("(max-width: 760px)").matches
+  );
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 760px)");
+    const on = () => setIsMobile(mq.matches);
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+
+  // Secciones colapsables del panel (mobile): filtros + ranking.
+  // Acordeón: una sola sección abierta a la vez; la abierta ocupa todo
+  // el panel y scrollea internamente. Click en la abierta la colapsa.
+  const [openSec, setOpenSec] = useState("ranking");
+  const toggleSec = (k) => setOpenSec(cur => (cur === k ? null : k));
+  const secOpen = {
+    filtros:    openSec === "filtros",
+    ranking:    openSec === "ranking",
+    topCorrupt: openSec === "topCorrupt",
+    topClean:   openSec === "topClean",
+    regional:   openSec === "regional",
+  };
 
   // Ficha país abierta (mobile): body classes para overlay full-screen
   // con pestañas Información/Noticias y para ocultar el bottom-nav.
@@ -1563,7 +1648,7 @@ function App({ user: authUser, onLogout }) {
         <div className={`main${mapFullscreen ? " fullscreen" : ""}`}>
           {/* Left rail */}
           <div className="col">
-            {selected ? (
+            {selected && !isMobile ? (
               <NewsRail
                 country={selected}
                 year={year}
@@ -1585,6 +1670,13 @@ function App({ user: authUser, onLogout }) {
               />
             ) : (
             <React.Fragment>
+            {/* Cerrar panel (solo mobile) → vuelve al mapa */}
+            <button className="panel-close-btn" onClick={() => setMapFullscreen(true)}>
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+                <path d="M3 3 L11 11 M11 3 L3 11"/>
+              </svg>
+              <span>Cerrar panel</span>
+            </button>
             <div className="search-wrap">
               <input
                 className="search"
@@ -1593,39 +1685,56 @@ function App({ user: authUser, onLogout }) {
                 onChange={e => setQuery(e.target.value)}
               />
             </div>
-            <div className="filter-block">
-              <div className="label">
-                <span>Filtro por rango</span>
-                <span className="mono">{filterRange[0]}–{filterRange[1]}</span>
+            <button
+              className={`sec-toggle${secOpen.filtros ? " open" : ""}`}
+              onClick={() => toggleSec("filtros")}
+            >
+              <svg className="sec-chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 4.5 L6 7.5 L9 4.5"/>
+              </svg>
+              <span>Filtros y orden</span>
+            </button>
+            <div className="sec-body" style={{ display: secOpen.filtros ? "block" : "none" }}>
+              <div className="filter-block">
+                <div className="label">
+                  <span>Filtro por rango</span>
+                  <span className="mono">{filterRange[0]}–{filterRange[1]}</span>
+                </div>
+                <div className="range-row">
+                  <span className="val">{filterRange[0]}</span>
+                  <input
+                    type="range" min="0" max="100" value={filterRange[0]}
+                    onChange={e => setFilterRange([Math.min(+e.target.value, filterRange[1]), filterRange[1]])}
+                  />
+                </div>
+                <div className="range-row">
+                  <span className="val">{filterRange[1]}</span>
+                  <input
+                    type="range" min="0" max="100" value={filterRange[1]}
+                    onChange={e => setFilterRange([filterRange[0], Math.max(+e.target.value, filterRange[0])])}
+                  />
+                </div>
               </div>
-              <div className="range-row">
-                <span className="val">{filterRange[0]}</span>
-                <input
-                  type="range" min="0" max="100" value={filterRange[0]}
-                  onChange={e => setFilterRange([Math.min(+e.target.value, filterRange[1]), filterRange[1]])}
-                />
-              </div>
-              <div className="range-row">
-                <span className="val">{filterRange[1]}</span>
-                <input
-                  type="range" min="0" max="100" value={filterRange[1]}
-                  onChange={e => setFilterRange([filterRange[0], Math.max(+e.target.value, filterRange[0])])}
-                />
+              <div className="filter-block">
+                <div className="label"><span>Orden</span></div>
+                <div className="sort-tabs">
+                  <button className={sortBy === "desc" ? "active" : ""} onClick={() => setSortBy("desc")}>+ Corruptos</button>
+                  <button className={sortBy === "asc" ? "active" : ""} onClick={() => setSortBy("asc")}>+ Limpios</button>
+                  <button className={sortBy === "name" ? "active" : ""} onClick={() => setSortBy("name")}>A–Z</button>
+                </div>
               </div>
             </div>
-            <div className="filter-block">
-              <div className="label"><span>Orden</span></div>
-              <div className="sort-tabs">
-                <button className={sortBy === "desc" ? "active" : ""} onClick={() => setSortBy("desc")}>+ Corruptos</button>
-                <button className={sortBy === "asc" ? "active" : ""} onClick={() => setSortBy("asc")}>+ Limpios</button>
-                <button className={sortBy === "name" ? "active" : ""} onClick={() => setSortBy("name")}>A–Z</button>
-              </div>
-            </div>
-            <div className="col header">
-              <h2>Ranking · {sortedList.length}</h2>
-              <span className="mono" style={{ fontSize: 10, color: "var(--text-3)" }}>{year}</span>
-            </div>
-            <div className="body">
+            <button
+              className={`sec-toggle${secOpen.ranking ? " open" : ""}`}
+              onClick={() => toggleSec("ranking")}
+            >
+              <svg className="sec-chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 4.5 L6 7.5 L9 4.5"/>
+              </svg>
+              <span>Ranking · {sortedList.length}</span>
+              <span className="mono sec-year">{year}</span>
+            </button>
+            <div className="body" style={{ display: secOpen.ranking ? "block" : "none" }}>
               <div className="ranking-list">
                 {sortedList.map((c, i) => {
                   const s = c.scores[year];
@@ -1646,6 +1755,84 @@ function App({ user: authUser, onLogout }) {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* Top 10 más corruptos */}
+            <button
+              className={`sec-toggle${secOpen.topCorrupt ? " open" : ""}`}
+              onClick={() => toggleSec("topCorrupt")}
+            >
+              <svg className="sec-chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 4.5 L6 7.5 L9 4.5"/>
+              </svg>
+              <span>Top 10 más corruptos</span>
+              <span className="mono sec-year">{year}</span>
+            </button>
+            <div className="body" style={{ display: secOpen.topCorrupt ? "block" : "none" }}>
+              <div className="ranking-list">
+                {panelTops.topCorrupt.map((c, i) => {
+                  const s = c.scores[year];
+                  return (
+                    <div key={c.id} className={`rank-row${selectedId === c.id ? " selected" : ""}`} onClick={() => handleSelect(c.id)}>
+                      <span className="pos">{String(i + 1).padStart(2, "0")}</span>
+                      <span className="name">{c.name}</span>
+                      <span className="chip" style={{ background: colorFor(s) }}></span>
+                      <span className="score">{s.toFixed(1)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Top 10 más limpios */}
+            <button
+              className={`sec-toggle${secOpen.topClean ? " open" : ""}`}
+              onClick={() => toggleSec("topClean")}
+            >
+              <svg className="sec-chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 4.5 L6 7.5 L9 4.5"/>
+              </svg>
+              <span>Top 10 más limpios</span>
+              <span className="mono sec-year">{year}</span>
+            </button>
+            <div className="body" style={{ display: secOpen.topClean ? "block" : "none" }}>
+              <div className="ranking-list">
+                {panelTops.topClean.map((c, i) => {
+                  const s = c.scores[year];
+                  return (
+                    <div key={c.id} className={`rank-row${selectedId === c.id ? " selected" : ""}`} onClick={() => handleSelect(c.id)}>
+                      <span className="pos">{String(i + 1).padStart(2, "0")}</span>
+                      <span className="name">{c.name}</span>
+                      <span className="chip" style={{ background: colorFor(s) }}></span>
+                      <span className="score">{s.toFixed(1)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Promedio regional */}
+            <button
+              className={`sec-toggle${secOpen.regional ? " open" : ""}`}
+              onClick={() => toggleSec("regional")}
+            >
+              <svg className="sec-chev" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 4.5 L6 7.5 L9 4.5"/>
+              </svg>
+              <span>Promedio regional</span>
+              <span className="mono sec-year">{year}</span>
+            </button>
+            <div className="body" style={{ display: secOpen.regional ? "block" : "none" }}>
+              <div className="ranking-list">
+                {panelTops.regional.map((r, i) => (
+                  <div key={r.region} className="rank-row">
+                    <span className="pos">{String(i + 1).padStart(2, "0")}</span>
+                    <span className="name">{r.region} <span className="mono" style={{ color: "var(--text-3)", fontSize: 10 }}>· {r.n}</span></span>
+                    <span className="chip" style={{ background: colorFor(r.avg) }}></span>
+                    <span className="score">{r.avg.toFixed(1)}</span>
+                  </div>
+                ))}
               </div>
             </div>
             </React.Fragment>
@@ -2323,6 +2510,58 @@ function App({ user: authUser, onLogout }) {
               Proyección por defecto: Equal Earth. Escala cromática secuencial verde→rojo
               para reforzar la dirección semántica del indicador.
             </p>
+
+            {window.METHODOLOGY && (() => {
+              const M = window.METHODOLOGY;
+              const Table = ({ rows }) => {
+                if (!rows || !rows.length) return null;
+                const [head, ...body] = rows;
+                return (
+                  <div className="meth-table-wrap">
+                    <table className="meth-table">
+                      <thead><tr>{head.map((h, i) => <th key={i}>{h}</th>)}</tr></thead>
+                      <tbody>
+                        {body.map((r, ri) => (
+                          <tr key={ri}>
+                            {r.map((c, ci) => (
+                              <td key={ci}>
+                                {/^https?:\/\//.test(String(c))
+                                  ? <a href={c} target="_blank" rel="noopener noreferrer">{c}</a>
+                                  : c}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              };
+              return (
+                <>
+                  <div className="nh">Fuentes y criterios por variable</div>
+                  <p style={{ fontSize: 12, color: "var(--text-2)" }}>
+                    Aprobación, pobreza, homicidios, PIB, postura y presidente provienen
+                    de fuentes públicas verificables. El gabinete usa CIA World Leaders
+                    y fuentes oficiales; cuando no hay verificación se marca
+                    «Sin dato respaldado».
+                  </p>
+                  <Table rows={M.fuentes} />
+                  <div className="nh">Indicadores numéricos (proxy)</div>
+                  <p style={{ fontSize: 12, color: "var(--bad)" }}>
+                    Los indicadores judiciales/anticorrupción son <strong>proxy
+                    comparativos calculados</strong> desde variables de la base
+                    (PIB, pobreza, homicidios, aprobación y palabras clave de los
+                    hitos). <strong>No son cifras oficiales</strong>; sirven para
+                    comparar intensidad relativa entre país-año.
+                  </p>
+                  <Table rows={M.guia_indicadores} />
+                  <div className="nh">Cobertura del gabinete</div>
+                  <Table rows={M.cobertura_gabinete} />
+                </>
+              );
+            })()}
+
             <button className="notes-close" onClick={() => setShowNotes(false)}>Entendido</button>
           </div>
         </div>
@@ -2487,7 +2726,12 @@ function App({ user: authUser, onLogout }) {
 
                 {/* Indicadores */}
                 <div className="cd-card">
-                  <div className="cd-card-h"><span>Indicadores asociados</span><span style={{ fontSize: 9, color: "var(--text-3)" }}>ILUSTRATIVOS</span></div>
+                  <div className="cd-card-h">
+                    <span>Indicadores asociados</span>
+                    <span style={{ fontSize: 9, color: detail.realIndicators ? "var(--good)" : "var(--text-3)" }}>
+                      {detail.realIndicators ? "DATOS REALES" : "ILUSTRATIVOS"}
+                    </span>
+                  </div>
                   <div className="ctx-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
                     {detail.indicators.map((ind, i) => (
                       <div key={i} className="ctx-cell">
@@ -2496,6 +2740,11 @@ function App({ user: authUser, onLogout }) {
                       </div>
                     ))}
                   </div>
+                  {detail.realIndicators && detail.indicatorsSource && (
+                    <div style={{ fontSize: 9.5, color: "var(--text-3)", marginTop: 8, lineHeight: 1.4 }}>
+                      {detail.indicatorsSource}
+                    </div>
+                  )}
                 </div>
 
                 {/* Cronología extendida */}

@@ -156,6 +156,39 @@
     body.forum-open .mobile-nav { display: none !important; }
     /* Barra de pestañas de ficha: solo mobile */
     .ficha-tabs { display: none; }
+
+    /* Secciones colapsables del panel (ranking/filtros) */
+    .sec-toggle {
+      display: flex; align-items: center; gap: 8px;
+      width: 100%;
+      background: var(--bg-2);
+      border: none;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 12px; font-weight: 600;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      padding: 12px 16px;
+      cursor: pointer;
+      text-align: left;
+    }
+    .sec-toggle .sec-chev {
+      width: 12px; height: 12px; flex-shrink: 0;
+      transition: transform .18s ease;
+      transform: rotate(-90deg);
+      color: var(--accent);
+    }
+    .sec-toggle.open .sec-chev { transform: rotate(0deg); }
+    .sec-toggle .sec-year {
+      margin-left: auto; font-size: 10px;
+      color: var(--text-3); font-weight: 400;
+      text-transform: none;
+    }
+    .sec-toggle:hover { background: var(--bg-3); }
+
+    /* Botón cerrar panel: solo mobile (el bloque @media lo muestra) */
+    .panel-close-btn { display: none; }
     /* Desktop: el dashboard montado por tap (modo auto) NO debe abrir el
        modal; solo el botón "Expandir ficha" (dashMode='expand') lo abre.
        En mobile el bloque @media reaparece con la pestaña Información. */
@@ -426,6 +459,10 @@
       cursor: grab;
     }
     .map-frame svg.dragging { cursor: grabbing; }
+    /* Al rotar el globo: sin labels ni transiciones → mucho más fluido,
+       sobre todo en mobile (menos nodos que repintar por frame). */
+    svg.dragging .country-label { display: none; }
+    svg.dragging path { transition: none !important; }
     .map-frame svg .country-path,
     .map-frame svg .country-bubble {
       vector-effect: non-scaling-stroke;
@@ -2719,6 +2756,25 @@
       padding: 28px 32px;
       box-shadow: var(--shadow);
     }
+    .meth-table-wrap { overflow-x: auto; margin: 6px 0 14px; }
+    .meth-table {
+      width: 100%; border-collapse: collapse; font-size: 11px;
+      color: var(--text-2);
+    }
+    .meth-table th, .meth-table td {
+      border: 1px solid var(--line); padding: 6px 8px;
+      text-align: left; vertical-align: top;
+    }
+    .meth-table th {
+      background: var(--bg-2); color: var(--text);
+      font-weight: 600; position: sticky; top: 0;
+    }
+    .meth-table td { max-width: 320px; overflow-wrap: anywhere; }
+    .meth-table a { color: var(--accent-2); word-break: break-all; }
+    @media (max-width: 760px) {
+      .meth-table { font-size: 10px; }
+      .meth-table td { max-width: 180px; }
+    }
     .notes-card h3 {
       font-family: var(--editorial);
             font-size: 24px;
@@ -4580,9 +4636,9 @@
       /* Mobile: fuera timeline y controles de zoom (pinch con dedos) */
       .timeline { display: none !important; }
       .map-zoom-controls { display: none !important; }
-      /* Gear/configuración SE MANTIENE. Solo fuera el toggle fullscreen:
-         en mobile el mapa es siempre full y ese toggle rompía el layout. */
-      .map-fs-toggle { display: none !important; }
+      /* Fuera el tooltip de país: en mobile solo se enfoca el país */
+      .tooltip { display: none !important; }
+      /* Gear/configuración + botón Panel SE MANTIENEN en mobile. */
       /* Fuera el titular "¿Dónde se siente la corrupción…" — tapa el mapa */
       .map-title { display: none !important; }
 
@@ -4805,11 +4861,57 @@
         max-width: 90vw;
       }
 
-      /* Main: una sola columna (mapa) */
+      /* Main: una sola columna en ambos modos. */
       .main { grid-template-columns: 1fr !important; }
-      .main > .col:first-child,
-      .main > .col:last-child { display: none !important; }
       .main > .col { border-left: none; border-right: none; }
+
+      /* Modo MAPA (fullscreen): solo el mapa (col del medio) */
+      .main.fullscreen > .col:first-child,
+      .main.fullscreen > .col:last-child { display: none !important; }
+
+      /* Modo PANEL (no fullscreen): se ve el panel normal (col izquierda:
+         ranking/scoreboard o NewsRail) a ancho completo, scroll vertical.
+         Mapa y col derecha ocultos. */
+      .main:not(.fullscreen) > .col:nth-child(2),
+      .main:not(.fullscreen) > .col:last-child { display: none !important; }
+      .main:not(.fullscreen) > .col:first-child {
+        display: flex !important;
+        flex-direction: column;
+        width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+      }
+      .main:not(.fullscreen) > .col:first-child > * { min-width: 0; }
+      /* Headers/búsqueda/cerrar: altura fija */
+      .main:not(.fullscreen) .panel-close-btn,
+      .main:not(.fullscreen) .search-wrap,
+      .main:not(.fullscreen) .sec-toggle { flex: 0 0 auto; }
+      /* Sección abierta: ocupa el resto y scrollea por dentro (la carta) */
+      .main:not(.fullscreen) .sec-body,
+      .main:not(.fullscreen) .body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: calc(72px + env(safe-area-inset-bottom));
+      }
+
+      /* Botón cerrar panel (mobile): sticky arriba del panel */
+      .panel-close-btn {
+        display: flex !important;
+        align-items: center; gap: 8px;
+        position: sticky; top: 0; z-index: 5;
+        width: 100%;
+        background: var(--bg-2);
+        border: none; border-bottom: 1px solid var(--line);
+        color: var(--text-2);
+        font-family: var(--sans); font-size: 12px; font-weight: 600;
+        letter-spacing: 0.04em;
+        padding: 14px 16px;
+        cursor: pointer;
+      }
+      .panel-close-btn svg { width: 14px; height: 14px; flex-shrink: 0; }
+      .panel-close-btn:active { color: var(--accent); }
 
       /* Overlays del mapa más compactos */
       .map-title {
@@ -5092,6 +5194,8 @@
   <script src="presidents-override.js"></script>
   <script src="cabinet-override.js"></script>
   <script src="milestones-override.js"></script>
+  <script src="indicators-override.js"></script>
+  <script src="methodology-data.js"></script>
   <script src="world-data.js"></script>
   <script src="events.js"></script>
   <script src="forum.js"></script>
@@ -5105,7 +5209,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=9"></script>
+  <script type="text/babel" src="app.jsx?v=16"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>
