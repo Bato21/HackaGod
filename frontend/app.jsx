@@ -801,9 +801,9 @@ function GlobeView({
          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1, touchAction: 'none', cursor: 'grab' }}>
       <defs>
         <radialGradient id="globeWater" cx="0.4" cy="0.34" r="0.9">
-          <stop offset="0%"   stopColor="#1c5470" />
-          <stop offset="55%"  stopColor="#123b52" />
-          <stop offset="100%" stopColor="#081d2c" />
+          <stop offset="0%"   stopColor="#2a8ab5" />
+          <stop offset="55%"  stopColor="#1a6080" />
+          <stop offset="100%" stopColor="#0d3550" />
         </radialGradient>
         <pattern id="globeMesh" width="13" height="13" patternUnits="userSpaceOnUse">
           <path d="M13 0 H0 V13" fill="none"

@@ -548,13 +548,13 @@
        tenues — forzado en cualquier tema. */
     .map-frame .globe-stage-bg ~ svg .sphere {
       fill: url(#globeWater);
-      stroke: rgba(120, 200, 230, 0.45);
+      stroke: rgba(120, 210, 245, 0.60);
       stroke-width: 0.6px;
     }
     html[data-theme="corporate"] .map-frame .globe-stage-bg ~ svg .sphere,
     html[data-theme="light"] .map-frame .globe-stage-bg ~ svg .sphere {
       fill: url(#globeWater);
-      stroke: rgba(120, 200, 230, 0.45);
+      stroke: rgba(120, 210, 245, 0.60);
     }
     /* Malla técnica sobre el agua */
     .map-frame .globe-stage-bg ~ svg .sphere-mesh {
@@ -624,10 +624,11 @@
       max-width: 320px !important;
     }
     .map-legend .lt {
-      font-size: 10px;
-      letter-spacing: 0.12em;
-      color: var(--text-3);
+      font-size: 12px;
+      letter-spacing: 0.10em;
+      color: #fff;
       text-transform: uppercase;
+      font-weight: 700;
       margin-bottom: 8px;
     }
     .legend-bar {
@@ -647,7 +648,7 @@
     .legend-foot {
       font-size: 10px;
       color: var(--text-3);
-      margin-top: 8px;
+      margin-top: 16px;
       line-height: 1.4;
     }
 
@@ -1538,7 +1539,7 @@
       z-index: 1;
       width: 420px;
       flex-shrink: 0;
-      background: #ffffff;
+      background: #fdfaf3;
       border-radius: 20px;
       box-shadow:
         0 32px 80px rgba(7,18,33,0.55),
@@ -1553,7 +1554,7 @@
       font-size: 10px;
       letter-spacing: 0.16em;
       text-transform: uppercase;
-      color: #0ea5e9;
+      color: #c8921e;
       margin-bottom: 8px;
     }
     .auth-form .af-title {
@@ -1562,13 +1563,13 @@
       font-weight: 500;
       letter-spacing: -0.02em;
       line-height: 1.05;
-      color: #0d1b2a;
+      color: #0e0b18;
       margin: 0 0 28px;
     }
     .auth-tabs {
       display: flex;
-      background: #f4f6fb;
-      border: 1px solid #d4dded;
+      background: #ece8de;
+      border: 1px solid #d8d3c4;
       padding: 3px;
       border-radius: 8px;
       margin-bottom: 22px;
@@ -1577,7 +1578,7 @@
       flex: 1;
       background: transparent;
       border: none;
-      color: #2d4163;
+      color: #0e0b18;
       padding: 8px 10px;
       font-size: 11.5px;
       font-family: var(--sans);
@@ -1587,7 +1588,7 @@
       transition: all .15s;
     }
     .auth-tabs button.active {
-      background: linear-gradient(135deg, #0ea5e9, #7c3aed);
+      background: linear-gradient(135deg, #c8921e, #a07018);
       color: #fff;
     }
     .auth-field {
@@ -1600,12 +1601,12 @@
       font-size: 10px;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: #6b7fa3;
+      color: #6a6480;
     }
     .auth-field input {
-      background: #f4f6fb;
-      border: 1px solid #bec9de;
-      color: #0d1b2a;
+      background: #f5f1e8;
+      border: 1px solid #d8d3c4;
+      color: #0e0b18;
       font-family: var(--sans);
       padding: 11px 12px;
       font-size: 13px;
@@ -1614,23 +1615,23 @@
       transition: border-color .12s, box-shadow .12s;
     }
     .auth-field input:focus {
-      border-color: #0ea5e9;
-      box-shadow: 0 0 0 3px rgba(14,165,233,0.14);
+      border-color: #c8921e;
+      box-shadow: 0 0 0 3px rgba(200,146,30,0.18);
     }
     .auth-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 11px;
-      color: #2d4163;
+      color: #0e0b18;
       margin-bottom: 18px;
     }
     .auth-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-    .auth-row a { color: #0ea5e9; text-decoration: none; }
+    .auth-row a { color: #c8921e; text-decoration: none; }
     .auth-row a:hover { text-decoration: underline; }
     .auth-submit {
       width: 100%;
-      background: linear-gradient(135deg, #0ea5e9, #7c3aed);
+      background: linear-gradient(135deg, #c8921e, #a07018);
       color: #fff;
       border: none;
       padding: 13px 14px;
@@ -1671,8 +1672,8 @@
     .auth-guest {
       width: 100%;
       background: transparent;
-      border: 1px dashed #bec9de;
-      color: #2d4163;
+      border: 1px dashed #d8d3c4;
+      color: #6a6480;
       padding: 11px 14px;
       font-family: var(--sans);
       font-size: 12px;
@@ -1682,7 +1683,7 @@
       border-radius: 8px;
       transition: all .15s;
     }
-    .auth-guest:hover { border-style: solid; border-color: #0ea5e9; color: #0d1b2a; }
+    .auth-guest:hover { border-style: solid; border-color: #c8921e; color: #0e0b18; }
     .auth-foot {
       font-size: 10px;
       color: #6b7fa3;
@@ -1692,6 +1693,9 @@
       line-height: 1.5;
     }
     .auth-foot .mono { color: #2d4163; }
+
+    /* Mobile brand header (hidden on desktop) */
+    .auth-mobile-brand { display: none; }
 
     /* User chip in topbar */
     .user-chip {
@@ -3136,8 +3140,8 @@
       border-image: linear-gradient(to right, #0ea5e9, #7c3aed, #0d9488) 1;
     }
     html[data-theme="corporate"] .timeline .year-display {
-      color: #38bdf8;
-      text-shadow: 0 0 20px rgba(56,189,248,0.3);
+      color: #ffffff;
+      text-shadow: 0 0 20px rgba(255,255,255,0.2);
     }
     html[data-theme="corporate"] .timeline .tick .lb { color: var(--navy-muted); }
     html[data-theme="corporate"] .timeline .tick.active .lb { color: #38bdf8; }
@@ -3147,10 +3151,13 @@
       box-shadow: 0 0 0 4px rgba(14,165,233,0.25);
     }
     html[data-theme="corporate"] .play-btn {
-      background: var(--navy-3); border-color: #0ea5e9; color: #38bdf8;
+      background: rgba(230,184,64,0.12);
+      border-color: #e6b840;
+      color: #e6b840;
     }
     html[data-theme="corporate"] .play-btn:hover {
-      background: #0ea5e9; color: #fff;
+      background: #e6b840;
+      color: #0e0c13;
     }
     html[data-theme="corporate"] .timeline-track .axis { background: var(--navy-3); }
 
@@ -3186,6 +3193,8 @@
     html[data-theme="corporate"] .map-legend {
       border-left: 3px solid #059669;
     }
+    html[data-theme="corporate"] .map-legend .lt,
+    html[data-theme="light"] .map-legend .lt { color: #fff; font-weight: 700; font-size: 12px; }
     html[data-theme="corporate"] .map-title .h {
       color: #0d1b2a;
       text-shadow: 0 1px 3px rgba(255,255,255,0.6);
@@ -3314,14 +3323,20 @@
 
     /* ── Forum topbar ── */
     html[data-theme="corporate"] .fv-topbar {
-      background: linear-gradient(135deg, #0b1829 0%, #0f2440 55%, #0b1829 100%);
-      border-bottom: 2px solid transparent;
-      border-image: linear-gradient(to right, #0ea5e9, #7c3aed, #0d9488) 1;
+      background: linear-gradient(135deg, #0e0c13 0%, #151220 55%, #0e0c13 100%);
+      border-bottom: 1px solid rgba(230,184,64,0.2);
+      border-image: none;
     }
-    html[data-theme="corporate"] .fvt-logo,
-    html[data-theme="corporate"] .fvt-slash,
-    html[data-theme="corporate"] .fvt-name { color: var(--navy-text); }
-    html[data-theme="corporate"] .fvt-logo::before { color: #38bdf8; }
+    html[data-theme="corporate"] .fvt-logo {
+      font-family: "Cinzel", serif;
+      font-weight: 700;
+      font-size: 17px;
+      color: #e6b840;
+      letter-spacing: 0.04em;
+    }
+    html[data-theme="corporate"] .fvt-logo::before { color: #e6b840; }
+    html[data-theme="corporate"] .fvt-slash { color: rgba(230,184,64,0.35); }
+    html[data-theme="corporate"] .fvt-name { color: var(--navy-muted); font-weight: 400; }
     html[data-theme="corporate"] .fvt-live { color: var(--navy-muted); border-color: var(--navy-3); }
     html[data-theme="corporate"] .fvt-search-input {
       background: rgba(255,255,255,0.08); border-color: var(--navy-3);
@@ -4104,6 +4119,8 @@
       color: #f5f1e8;
       letter-spacing: 0.02em;
     }
+    .chat-title-ia { color: var(--accent-2); font-weight: 700; }
+    html[data-theme="corporate"] .chat-title-ia { color: #e6b840; font-weight: 700; }
     .chat-header-sub {
       font-size: 11px;
       color: rgba(230, 184, 64, 0.7);
@@ -4579,11 +4596,12 @@
       box-shadow: 0 0 0 4px rgba(200,146,30,0.20);
     }
     html[data-theme="corporate"] .play-btn {
-      background: #c8921e;
-      box-shadow: 0 3px 14px rgba(200,146,30,0.45);
+      background: rgba(230,184,64,0.12);
+      border-color: #e6b840;
+      color: #e6b840;
     }
-    html[data-theme="corporate"] .play-btn:hover { background: #e6b840; }
-    html[data-theme="corporate"] .timeline .year-display { color: #0e0c13; }
+    html[data-theme="corporate"] .play-btn:hover { background: #e6b840; color: #0e0c13; }
+    html[data-theme="corporate"] .timeline .year-display { color: #ffffff; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
     html[data-theme="corporate"] .map-zoom-btn:hover { color: #c8921e; border-color: rgba(200,146,30,0.5); background: rgba(200,146,30,0.12); }
 
     /* ══════════════════════════════════════════════════════════════════
@@ -5056,6 +5074,24 @@
          display:none aquí GANA al base .auth-hero{display:flex} (línea 1441)
          porque va después en el source con misma especificidad. */
       .auth-hero { display: none !important; }
+      .auth-mobile-brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        align-self: flex-start;
+      }
+      .auth-mobile-brand .amb-logo-mark {
+        color: #38bdf8;
+        font-size: 14px;
+      }
+      .auth-mobile-brand .amb-name {
+        font-family: "Cinzel", serif;
+        font-size: 22px;
+        font-weight: 700;
+        color: #eef4fc;
+        letter-spacing: 0.05em;
+      }
       .auth-stage {
         padding: 16px;
         gap: 0;
@@ -5160,6 +5196,31 @@
       .topbar-center { padding: 0; }
       .nf-header { min-height: 60px; padding: 8px 14px; }
       .nf-country { font-size: 18px; }
+    }
+
+    /* ── Horizontal phone (landscape) ─────────────────────────── */
+    @media (max-height: 500px) and (orientation: landscape) {
+      .auth-stage {
+        padding: 16px 32px;
+        gap: 32px;
+        flex-direction: row;
+        align-items: center;
+      }
+      .auth-hero {
+        min-height: 0;
+        max-height: 100%;
+      }
+      .auth-hero .ah-headline h2 { font-size: 28px; }
+      .auth-hero .ah-headline p { display: none; }
+      .auth-hero .ah-stats { padding-top: 12px; gap: 20px; }
+      .auth-form { max-height: calc(100vh - 32px); padding: 24px 28px; }
+      .auth-form .af-title { font-size: 22px; margin-bottom: 16px; }
+      .auth-mobile-brand { display: none; }
+
+      /* App layout: compress timeline in landscape */
+      .app { grid-template-rows: 48px 1fr 60px; }
+      .timeline { padding: 8px 16px 8px; }
+      .timeline .year-display { font-size: 22px; }
     }
   </style>
 

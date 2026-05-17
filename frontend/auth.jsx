@@ -136,6 +136,12 @@ function AuthScreen({ onAuth }) {
   const [error, setError] = React.useState("");
   const [remember, setRemember] = React.useState(true);
   const [submitting, setSubmitting] = React.useState(false);
+  const stageRef = React.useRef(null);
+
+  const triggerExit = (cb) => {
+    if (stageRef.current) stageRef.current.classList.add("exiting");
+    setTimeout(cb, 860);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -147,7 +153,7 @@ function AuthScreen({ onAuth }) {
         ? await window.AuthAPI.login(email, password)
         : await window.AuthAPI.register(name, email, password);
       if (!result.ok) { setError(result.error); return; }
-      onAuth(result.user);
+      triggerExit(() => onAuth(result.user));
     } catch (err) {
       setError("Error de conexión. Reintenta.");
     } finally {
@@ -157,13 +163,13 @@ function AuthScreen({ onAuth }) {
 
   const handleGuest = () => {
     const user = window.AuthAPI.asGuest();
-    onAuth(user);
+    triggerExit(() => onAuth(user));
   };
 
   const AnimSplitText = window.AnimSplitText;
 
   return (
-    <div className="auth-stage">
+    <div className="auth-stage" ref={stageRef}>
       {window.WorldMapBg && <window.WorldMapBg />}
       <div className="auth-hero">
         <div className="ah-brand">
@@ -205,6 +211,11 @@ function AuthScreen({ onAuth }) {
           </div>
         </div>
         <div className="ah-foot">© Aletheia · Datos ficticios con fines demostrativos</div>
+      </div>
+
+      <div className="auth-mobile-brand">
+        <span className="amb-logo-mark">◆</span>
+        <span className="amb-name">Aletheia</span>
       </div>
 
       <div className="auth-form">

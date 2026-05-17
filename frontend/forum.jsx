@@ -331,7 +331,7 @@ function FvThreadCard({ thread, selected, onSelect }) {
 }
 
 // ── Post (with inline reply + nested children) ───────────────────────
-function FvPost({ post, user, likedMap, onLike, onSubmitReply, depth, replies }) {
+function FvPost({ post, user, likedMap, onLike, onSubmitReply, onGuestClick, depth, replies }) {
   const [showReplyBox, setShowReplyBox] = React.useState(false);
   const [replyText, setReplyText]       = React.useState("");
   const [collapsed, setCollapsed]       = React.useState(false);
@@ -392,7 +392,10 @@ function FvPost({ post, user, likedMap, onLike, onSubmitReply, depth, replies })
             <>
               <div className="fv-text">{post.text}</div>
               <div className="fv-actions">
-                <button className={`fv-like${isLiked?" liked":""}`} onClick={() => onLike(post.id)}>
+                <button className={`fv-like${isLiked?" liked":""}`} onClick={() => {
+                  if (user?.kind === 'guest') { onGuestClick && onGuestClick(); return; }
+                  onLike(post.id);
+                }}>
                   <svg viewBox="0 0 14 14" fill={isLiked?"currentColor":"none"} stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round">
                     <path d="M7 12 L1.8 7 a3 3 0 0 1 4.2-4.2 L7 3.6 L8 2.8 a3 3 0 0 1 4.2 4.2Z" />
                   </svg>
@@ -400,7 +403,10 @@ function FvPost({ post, user, likedMap, onLike, onSubmitReply, depth, replies })
                 </button>
                 <button
                   className={`fv-reply-btn${showReplyBox?" active":""}`}
-                  onClick={() => setShowReplyBox(o => !o)}
+                  onClick={() => {
+                    if (user?.kind === 'guest') { onGuestClick && onGuestClick(); return; }
+                    setShowReplyBox(o => !o);
+                  }}
                 >
                   <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M5 3 L1 7 L5 11 M1 7 L9 7 a4 4 0 0 1 4 4 v0.5" />
@@ -467,6 +473,7 @@ function FvPost({ post, user, likedMap, onLike, onSubmitReply, depth, replies })
               likedMap={likedMap}
               onLike={onLike}
               onSubmitReply={onSubmitReply}
+              onGuestClick={onGuestClick}
               depth={d + 1}
               replies={r.replies || []}
             />
@@ -492,7 +499,7 @@ function buildPostTree(posts) {
   return roots;
 }
 
-function FvThreadDetail({ threadId, user, onMobileBack, onThreadCreated }) {
+function FvThreadDetail({ threadId, user, onMobileBack, onGuestAction, onThreadCreated }) {
   const [bundle, setBundle]   = React.useState(null);
   const [draft, setDraft]     = React.useState("");
   const [liked, setLiked]     = React.useState(() => {
@@ -612,6 +619,7 @@ function FvThreadDetail({ threadId, user, onMobileBack, onThreadCreated }) {
             likedMap={liked}
             onLike={toggleLike}
             onSubmitReply={onSubmitReply}
+            onGuestClick={onGuestAction}
             depth={0}
             replies={p.replies || []}
           />
@@ -619,33 +627,75 @@ function FvThreadDetail({ threadId, user, onMobileBack, onThreadCreated }) {
       </div>
 
       {/* Composer — nuevo post raíz */}
-      <div className="fvd-composer">
-        <div className={`fvd-composer-av${user?.kind==="guest"?" guest":""}`}>
-          {user?.kind==="guest" ? "?" : (user?.name?.[0]||"?").toUpperCase()}
+      {user?.kind === 'guest' ? (
+        <div className="fvd-guest-wall">
+          <span>Solo puedes leer el foro como invitado.</span>
+          <button onClick={() => onGuestAction && onGuestAction()}>Inicia sesión →</button>
         </div>
-        <div className="fvd-composer-inner">
-          <textarea
-            ref={textareaRef}
-            placeholder={`Añade un comentario en ${thread.country}…`}
-            value={draft}
-            onChange={e => setDraft(e.target.value)}
-            onKeyDown={onKeyDown}
-            rows={2}
-          />
-          <div className="fvd-composer-bar">
-            <span className="fvd-composer-hint">
-              {user?.kind==="guest" ? "Como invitado · " : ""}⌘+Enter para publicar
-            </span>
-            <button className="fvd-send" onClick={send} disabled={!draft.trim()}>
-              Comentar
-              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2 7 L12 7 M8 3 L12 7 L8 11" />
-              </svg>
-            </button>
+      ) : (
+        <div className="fvd-composer">
+          <div className="fvd-composer-av">
+            {(user?.name?.[0]||"?").toUpperCase()}
+          </div>
+          <div className="fvd-composer-inner">
+            <textarea
+              ref={textareaRef}
+              placeholder={`Añade un comentario en ${thread.country}…`}
+              value={draft}
+              onChange={e => setDraft(e.target.value)}
+              onKeyDown={onKeyDown}
+              rows={2}
+            />
+            <div className="fvd-composer-bar">
+              <span className="fvd-composer-hint">⌘+Enter para publicar</span>
+              <button className="fvd-send" onClick={send} disabled={!draft.trim()}>
+                Comentar
+                <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 7 L12 7 M8 3 L12 7 L8 11" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
+  );
+}
+
+// ── Login Wall Modal ────────────────────────────────────────────────
+function FvLoginWall({ onClose, onLogin }) {
+  return (
+    <>
+      <div className="fv-modal-backdrop" onClick={onClose} />
+      <div className="fv-modal fv-login-wall" role="dialog" aria-modal="true">
+        <div className="fv-modal-head">
+          <div className="fv-modal-title">Acceso requerido</div>
+          <button className="fv-modal-x" onClick={onClose}>
+            <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+              <path d="M2 2 L10 10 M10 2 L2 10" />
+            </svg>
+          </button>
+        </div>
+        <div className="fv-modal-body" style={{ textAlign: 'center', padding: '32px 24px' }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>◆</div>
+          <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: 'var(--text)' }}>
+            Crea una cuenta para participar
+          </div>
+          <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6, marginBottom: 24 }}>
+            Como invitado puedes explorar el foro, pero necesitas una cuenta para crear hilos, comentar y dar likes.
+          </div>
+        </div>
+        <div className="fv-modal-foot">
+          <button className="fv-modal-cancel" onClick={onClose}>Seguir explorando</button>
+          <button className="fv-modal-submit" onClick={onLogin}>
+            Iniciar sesión / Registrarse
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2 7 L12 7 M8 3 L12 7 L8 11" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -661,6 +711,7 @@ function Forum({ initialIso3, initialThreadId, user, onClose, theme, onToggleThe
   const [selectedId, setSelectedId] = React.useState(null);
   const [showFilters, setShowFilters]     = React.useState(false);
   const [showNewThread, setShowNewThread] = React.useState(false);
+  const [showLoginWall, setShowLoginWall] = React.useState(false);
   const [mobileView, setMobileView]       = React.useState("list");
 
   const activeFilterCount = [filter.region, filter.iso3, filter.year].filter(Boolean).length;
@@ -772,7 +823,10 @@ function Forum({ initialIso3, initialThreadId, user, onClose, theme, onToggleThe
         </div>
 
         <div className="fvt-right">
-          <button className="fvt-new-btn" onClick={() => setShowNewThread(true)}>
+          <button className="fvt-new-btn" onClick={() => {
+            if (user?.kind === 'guest') { setShowLoginWall(true); return; }
+            setShowNewThread(true);
+          }}>
             <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
               <path d="M7 2 L7 12 M2 7 L12 7"/>
             </svg>
@@ -879,6 +933,7 @@ function Forum({ initialIso3, initialThreadId, user, onClose, theme, onToggleThe
             threadId={selectedId}
             user={user}
             onMobileBack={mobileView==="detail" ? ()=>setMobileView("list") : null}
+            onGuestAction={() => setShowLoginWall(true)}
             onThreadCreated={id => {
               refresh();
               if (id) { setSelectedId(id); setMobileView("detail"); }
@@ -900,6 +955,19 @@ function Forum({ initialIso3, initialThreadId, user, onClose, theme, onToggleThe
           onCreated={id => {
             refresh();
             if (id) { setSelectedId(id); setMobileView("detail"); }
+          }}
+        />
+      )}
+
+      {/* Login Wall */}
+      {showLoginWall && (
+        <FvLoginWall
+          onClose={() => setShowLoginWall(false)}
+          onLogin={() => {
+            setShowLoginWall(false);
+            onClose();
+            window.AuthAPI.logout();
+            window.location.reload();
           }}
         />
       )}
