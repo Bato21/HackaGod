@@ -4580,6 +4580,9 @@
       /* Mobile: fuera timeline y controles de zoom (pinch con dedos) */
       .timeline { display: none !important; }
       .map-zoom-controls { display: none !important; }
+      /* Fuera gear + toggle fullscreen: en mobile el mapa es siempre full
+         y el toggle rompía el layout (3-col) colapsando el mapa */
+      .map-actions { display: none !important; }
       /* Fuera el titular "¿Dónde se siente la corrupción…" — tapa el mapa */
       .map-title { display: none !important; }
 
@@ -5045,7 +5048,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=7"></script>
+  <script type="text/babel" src="app.jsx?v=8"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>

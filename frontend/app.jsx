@@ -1284,6 +1284,21 @@ function App({ user: authUser, onLogout }) {
     return () => document.body.classList.remove("forum-open");
   }, [forumOpen]);
 
+  // En mobile el layout es siempre mapa full + overlays (no la vista de
+  // 3 columnas). Si quedó en !mapFullscreen el mapa se colapsa y los taps
+  // no llegan. Forzar fullscreen en pantallas ≤760px (y al rotar/resize).
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 760px)");
+    const apply = () => { if (mq.matches) setMapFullscreen(true); };
+    apply();
+    mq.addEventListener("change", apply);
+    window.addEventListener("resize", apply);
+    return () => {
+      mq.removeEventListener("change", apply);
+      window.removeEventListener("resize", apply);
+    };
+  }, []);
+
   // Ficha país abierta (mobile): body classes para overlay full-screen
   // con pestañas Información/Noticias y para ocultar el bottom-nav.
   useEffect(() => {
