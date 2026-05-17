@@ -945,7 +945,13 @@ function NewsRail({ country, year, onBack, onDiscuss }) {
         </div>
       </div>
       <div className="news-rail-body">
-        {CATS.map(cat => {
+        {CATS.every(cat => !(news[cat.key] || []).length) ? (
+          <div style={{ padding: "32px 20px", textAlign: "center", color: "var(--text-3)", fontSize: 12, lineHeight: 1.7 }}>
+            <div style={{ fontSize: 22, marginBottom: 10 }}>○</div>
+            No hay noticias verificadas para <strong style={{ color: "var(--text-2)" }}>{country.name}</strong>.
+            <br/>El relato real del año está en los <strong style={{ color: "var(--text-2)" }}>hitos</strong> de la ficha (Información).
+          </div>
+        ) : CATS.map(cat => {
           const items = news[cat.key] || [];
           return (
             <div key={cat.key} className={`news-section ${cat.key}`}>
@@ -2409,46 +2415,27 @@ function App({ user: authUser, onLogout }) {
                     <Sparkline country={c} year={year} onYearChange={setYear} />
                   </div>
 
-                  <div className="cf-block">
-                    <div className="cb-lbl"><span>Indicadores asociados</span><span style={{ color: "var(--text-3)", fontSize: 9 }}>ILUSTRATIVOS</span></div>
-                    <div className="cf-indicators">
-                      {data.indicators.map((ind, i) => (
-                        <div key={i} className="cf-indicator">
-                          <div className="ind-lb">{ind.label}</div>
-                          <div className="ind-val">
-                            {ind.value}<span className="ind-unit">{ind.unit}</span>
+                  {data.indicators.length > 0 && (
+                    <div className="cf-block">
+                      <div className="cb-lbl"><span>Indicadores asociados</span><span style={{ color: "var(--good)", fontSize: 9 }}>DATOS REALES (proxy)</span></div>
+                      <div className="cf-indicators">
+                        {data.indicators.map((ind, i) => (
+                          <div key={i} className="cf-indicator">
+                            <div className="ind-lb">{ind.label}</div>
+                            <div className="ind-val">
+                              {ind.value}<span className="ind-unit">{ind.unit}</span>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
-                  </div>
-
-                  <div className="cf-block">
-                    <div className="cb-lbl"><span>Acontecimientos del año</span><span className="mono" style={{ color: "var(--text-3)" }}>{year}</span></div>
-                    {data.events.map((ev, i) => (
-                      <div key={i} className="cf-event">
-                        <div>
-                          <div className="ev-date">{ev.date}</div>
-                          <div className="ev-sector">{ev.sector}</div>
-                        </div>
-                        <div className="ev-text">{ev.text}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="cf-block">
-                    <div className="cb-lbl"><span>Titulares de prensa</span><span className="mono" style={{ color: "var(--text-3)" }}>{year}</span></div>
-                    {data.headlines.map((h, i) => (
-                      <div key={i} className="cf-headline">
-                        <div className="hl-src">{h.source}</div>
-                        <div className="hl-text">«{h.text}»</div>
-                      </div>
-                    ))}
-                  </div>
+                  )}
                 </div>
 
                 <div className="cf-disclaimer">
-                  <span className="mono">DATOS·ILUSTRATIVOS</span> — acontecimientos, titulares e indicadores son ejemplos generados con plantillas determinísticas para demostrar el formato. No corresponden a hechos reales.
+                  <span className="mono">DATOS RESPALDADOS</span> — la ficha completa
+                  (presidente, gabinete, indicadores e hitos del año) está en «Expandir
+                  ficha». Solo se muestran bloques con dato verificado. Ver Metodología.
                 </div>
                 <div className="cf-actions">
                   <button
@@ -2597,64 +2584,64 @@ function App({ user: authUser, onLogout }) {
               </div>
 
               <div className="cd-body">
-                {/* Presidente */}
-                <div className="cd-card">
-                  <div className="cd-card-h">
-                    <span>Presidencia</span>
-                    <span className="mono">{detail.real ? `Líder en ${year}` : `${detail.president.periodStart}–${detail.president.periodEnd}`}</span>
-                  </div>
-                  <div className="cd-pres">
-                    <div className="avatar">{presInitials}</div>
-                    <div>
-                      <div className="pres-name">{detail.president.name}</div>
-                      <div className="pres-meta">
-                        <span className="badge">{detail.president.party.short}</span>
-                        {detail.president.party.name} · <em>{detail.president.party.tone}</em>
-                      </div>
+                {/* Presidente — solo si hay dato real */}
+                {detail.realPresident && (
+                  <div className="cd-card">
+                    <div className="cd-card-h">
+                      <span>Presidencia</span>
+                      <span className="mono">Líder en {year}</span>
                     </div>
-                  </div>
-                  <div className="pres-stats">
-                    <div className="pres-stat">
-                      <div className="lb">Aprobación ciudadana</div>
-                      <div className="vl">{detail.president.approval}%</div>
-                      <div className="bar"><i style={{ width: `${detail.president.approval}%`, background: detail.president.approval > 50 ? "var(--good)" : "var(--warn)" }}></i></div>
-                    </div>
-                    <div className="pres-stat">
-                      <div className="lb">Apoyo legislativo</div>
-                      <div className="vl">{detail.president.support}%</div>
-                      <div className="bar"><i style={{ width: `${detail.president.support}%`, background: detail.president.support > 50 ? "var(--good)" : "var(--warn)" }}></i></div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Gabinete */}
-                <div className="cd-card">
-                  <div className="cd-card-h">
-                    <span>Gabinete · {year}</span>
-                    <span className="mono" style={{ color: detail.realCabinet ? "var(--good)" : "var(--text-3)" }}>{detail.realCabinet ? "● datos reales" : "● sin datos respaldados"}</span>
-                  </div>
-                  <div className="cabinet-grid">
-                    {detail.cabinet.map((m, i) => (
-                      <div key={i} className={`cabinet-row${m.risk ? " at-risk" : ""}${m.noData ? " no-data" : ""}`}>
-                        <span className="port">
-                          {m.color && <span style={{ display: "inline-block", width: 7, height: 7, borderRadius: "50%", background: m.color, marginRight: 6, verticalAlign: "middle" }} />}
-                          {m.portfolio}
-                        </span>
-                        {m.noData ? (
-                          <span className="min" style={{ color: "var(--text-3)", fontStyle: "italic" }}>
-                            {m.message}
-                          </span>
-                        ) : (
-                          <span className="min">
-                            {m.name}
-                            <span className="stance">{m.risk ? "imputación pendiente" : m.stance}</span>
-                          </span>
+                    <div className="cd-pres">
+                      <div className="avatar">{presInitials}</div>
+                      <div>
+                        <div className="pres-name">{detail.president.name}</div>
+                        {detail.president.stance && (
+                          <div className="pres-meta">
+                            <em>{detail.president.stance}</em>
+                          </div>
                         )}
-                        <span className="risk"></span>
                       </div>
-                    ))}
+                    </div>
+                    {detail.president.approval != null && (
+                      <div className="pres-stats">
+                        <div className="pres-stat">
+                          <div className="lb">Aprobación del gobierno</div>
+                          <div className="vl">{detail.president.approval}%</div>
+                          <div className="bar"><i style={{ width: `${detail.president.approval}%`, background: detail.president.approval > 50 ? "var(--good)" : "var(--warn)" }}></i></div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
+
+                {/* Gabinete — solo carteras con dato real */}
+                {detail.realCabinet && (() => {
+                  const real = detail.cabinet.filter(m => !m.noData);
+                  if (!real.length) return null;
+                  return (
+                    <div className="cd-card">
+                      <div className="cd-card-h">
+                        <span>Gabinete · {year}</span>
+                        <span className="mono" style={{ color: "var(--good)" }}>● datos reales</span>
+                      </div>
+                      <div className="cabinet-grid">
+                        {real.map((m, i) => (
+                          <div key={i} className="cabinet-row">
+                            <span className="port">
+                              {m.color && <span style={{ display: "inline-block", width: 7, height: 7, borderRadius: "50%", background: m.color, marginRight: 6, verticalAlign: "middle" }} />}
+                              {m.portfolio}
+                            </span>
+                            <span className="min">
+                              {m.name}
+                              {m.stance && m.stance !== "—" && <span className="stance">{m.stance}</span>}
+                            </span>
+                            <span className="risk"></span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Hitos del año */}
                 {detail.milestones && detail.milestones.length > 0 && (
@@ -2671,31 +2658,35 @@ function App({ user: authUser, onLogout }) {
                   </div>
                 )}
 
-                {/* Contexto macro */}
-                <div className="cd-card span-2">
-                  <div className="cd-card-h">
-                    <span>Contexto macro · {year}</span>
-                    <span style={{ fontSize: 9, color: detail.real ? "var(--good)" : "var(--text-3)" }}>{detail.real ? "DATOS REALES" : "ILUSTRATIVO"}</span>
+                {/* Contexto macro — solo métricas reales (sin inflación: nunca real) */}
+                {(detail.contextReal.gdp || detail.contextReal.poverty || detail.contextReal.homicide) && (
+                  <div className="cd-card span-2">
+                    <div className="cd-card-h">
+                      <span>Contexto macro · {year}</span>
+                      <span style={{ fontSize: 9, color: "var(--good)" }}>DATOS REALES</span>
+                    </div>
+                    <div className="ctx-grid">
+                      {detail.contextReal.gdp && (
+                        <div className="ctx-cell">
+                          <div className="lb">Crecimiento PIB</div>
+                          <div className="vl">{detail.context.gdp}<span className="un">%</span></div>
+                        </div>
+                      )}
+                      {detail.contextReal.poverty && (
+                        <div className="ctx-cell">
+                          <div className="lb">Pobreza</div>
+                          <div className="vl">{detail.context.poverty}<span className="un">%</span></div>
+                        </div>
+                      )}
+                      {detail.contextReal.homicide && (
+                        <div className="ctx-cell">
+                          <div className="lb">Homicidios c/100k</div>
+                          <div className="vl">{detail.context.homicide}</div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="ctx-grid">
-                    <div className="ctx-cell">
-                      <div className="lb">Inflación anual</div>
-                      <div className="vl">{detail.context.inflation}<span className="un">%</span></div>
-                    </div>
-                    <div className="ctx-cell">
-                      <div className="lb">Crecimiento PIB</div>
-                      <div className="vl">{detail.context.gdp}<span className="un">%</span></div>
-                    </div>
-                    <div className="ctx-cell">
-                      <div className="lb">Pobreza</div>
-                      <div className="vl">{detail.context.poverty}<span className="un">%</span></div>
-                    </div>
-                    <div className="ctx-cell">
-                      <div className="lb">Homicidios c/100k</div>
-                      <div className="vl">{detail.context.homicide}</div>
-                    </div>
-                  </div>
-                </div>
+                )}
 
                 {/* Tendencia */}
                 <div className="cd-card">
@@ -2711,69 +2702,40 @@ function App({ user: authUser, onLogout }) {
                   </div>
                 </div>
 
-                {/* Indicadores */}
-                <div className="cd-card">
-                  <div className="cd-card-h">
-                    <span>Indicadores asociados</span>
-                    <span style={{ fontSize: 9, color: detail.realIndicators ? "var(--good)" : "var(--text-3)" }}>
-                      {detail.realIndicators ? "DATOS REALES" : "ILUSTRATIVOS"}
-                    </span>
-                  </div>
-                  <div className="ctx-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
-                    {detail.indicators.map((ind, i) => (
-                      <div key={i} className="ctx-cell">
-                        <div className="lb">{ind.label}</div>
-                        <div className="vl">{ind.value}<span className="un">{ind.unit}</span></div>
-                      </div>
-                    ))}
-                  </div>
-                  {detail.realIndicators && detail.indicatorsSource && (
-                    <div style={{ fontSize: 9.5, color: "var(--text-3)", marginTop: 8, lineHeight: 1.4 }}>
-                      {detail.indicatorsSource}
+                {/* Indicadores — solo si son reales (proxy calculado) */}
+                {detail.realIndicators && detail.indicators.length > 0 && (
+                  <div className="cd-card">
+                    <div className="cd-card-h">
+                      <span>Indicadores asociados</span>
+                      <span style={{ fontSize: 9, color: "var(--good)" }}>DATOS REALES (proxy)</span>
                     </div>
-                  )}
-                </div>
-
-                {/* Cronología extendida */}
-                <div className="cd-card">
-                  <div className="cd-card-h">
-                    <span>Cronología · {year}</span>
-                    <span className="mono" style={{ color: "var(--text-3)" }}>{detail.events.length} hitos</span>
-                  </div>
-                  <div className="cd-timeline">
-                    {detail.events.map((ev, i) => (
-                      <div key={i} className="tl-item">
-                        <span className="tl-date">{ev.date}</span>
-                        <span className="tl-sector">{ev.sector}</span>
-                        <div className="tl-text">{ev.text}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Titulares */}
-                <div className="cd-card cd-headlines">
-                  <div className="cd-card-h"><span>Titulares de prensa</span><span className="mono" style={{ color: "var(--text-3)" }}>{year}</span></div>
-                  {detail.headlines.map((h, i) => (
-                    <div key={i} className="cd-headline">
-                      <span className="hl-src">{h.source}</span>
-                      <span className="hl-text">«{h.text}»</span>
+                    <div className="ctx-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
+                      {detail.indicators.map((ind, i) => (
+                        <div key={i} className="ctx-cell">
+                          <div className="lb">{ind.label}</div>
+                          <div className="vl">{ind.value}<span className="un">{ind.unit}</span></div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                    {detail.indicatorsSource && (
+                      <div style={{ fontSize: 9.5, color: "var(--text-3)", marginTop: 8, lineHeight: 1.4 }}>
+                        {detail.indicatorsSource}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 <div className="cd-card span-2" style={{ background: "var(--bg-2)", borderStyle: "dashed" }}>
                   <div style={{ fontSize: 11, color: "var(--text-2)", lineHeight: 1.6 }}>
-                    {detail.real ? (
-                      <>
-                        <strong style={{ color: "var(--text)" }}>Fuentes:</strong> presidente/líder, aprobación de gobierno, pobreza, homicidios y crecimiento del PIB son <span className="mono" style={{ color: "var(--good)" }}>datos reales</span> (Banco Mundial, Cadem/Gallup/Executive Approval, DPI 2023){detail.realCabinet ? "; gabinete: titulares reales por cartera, color = postura del gobierno" : ""}{detail.gdpComment ? ` · PIB: ${detail.gdpComment}` : ""}. {detail.realCabinet ? "Partido, titulares e inflación" : "Gabinete, partido, titulares e inflación"} siguen siendo <span className="mono" style={{ color: "var(--bad)" }}>ilustrativos</span>.
-                      </>
-                    ) : (
-                      <>
-                        <strong style={{ color: "var(--text)" }}>Aviso:</strong> esta ficha es <em>periodismo de datos ilustrativo</em>.
-                        Nombres de presidente, gabinete, partidos, indicadores y titulares son <span className="mono" style={{ color: "var(--bad)" }}>ficticios</span> y se generan de forma determinística a partir de las iniciales del país y el año. No corresponden a personas reales.
-                      </>
-                    )}
+                    <strong style={{ color: "var(--text)" }}>Fuentes:</strong> presidente/líder,
+                    aprobación de gobierno, pobreza, homicidios y crecimiento del PIB son
+                    <span className="mono" style={{ color: "var(--good)" }}> datos reales</span>{" "}
+                    (Banco Mundial, Cadem/Gallup/Executive Approval, DPI 2023). Gabinete:
+                    titulares reales por cartera (CIA World Leaders), color = postura del
+                    gobierno. Indicadores judiciales: proxy comparativo calculado, no cifra
+                    oficial. Hitos: generados desde los datos reales del país-año.
+                    {detail.gdpComment ? ` PIB: ${detail.gdpComment}.` : ""}{" "}
+                    Solo se muestran bloques con dato respaldado. Ver Metodología.
                   </div>
                 </div>
               </div>

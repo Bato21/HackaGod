@@ -346,14 +346,24 @@
 
   // ── COUNTRY_DATA (ficha lateral) ────────────────────────────────────
   window.COUNTRY_DATA = function(country, year) {
-    const seed = hash(country.iso3 + ":data") ^ (year * 2654435761);
-    const r = mulberry32(seed >>> 0);
-    const score = country.scores[year];
-    return {
-      indicators: generateIndicators(r, score, 4),
-      events: generateEvents(r, country, year, score, 4),
-      headlines: generateHeadlines(r, country, year, score, 3),
-    };
+    // Indicadores reales si existen (mismo origen que el dashboard);
+    // eventos/titulares PRNG NO se devuelven (sin fuente real).
+    let indicators = [];
+    try {
+      const ind = window.INDICATORS
+        && window.INDICATORS[country.iso3]
+        && window.INDICATORS[country.iso3][year];
+      if (ind) {
+        const mk = (label, v) => v == null ? null : { label, value: v, unit: "" };
+        indicators = [
+          mk("Casos abiertos",    ind.casos_abiertos),
+          mk("Imputaciones",      ind.imputaciones),
+          mk("Sentencias firmes", ind.sentencias_firmes),
+          mk("Allanamientos",     ind.allanamientos),
+        ].filter(Boolean);
+      }
+    } catch (_) {}
+    return { indicators, events: [], headlines: [] };
   };
 
   // ── COUNTRY_DETAIL (dashboard fullscreen) ───────────────────────────
@@ -414,6 +424,9 @@
       events: generateEvents(r, country, year, score, 8),
       headlines: generateHeadlines(r, country, year, score, 4),
       real: false,
+      // Flags de realidad por bloque — el front oculta lo no-real.
+      realPresident: false,
+      contextReal: { gdp: false, poverty: false, homicide: false },
     };
 
     // ── Superponer datos REALES (Excel → Supabase → localStorage) ──
@@ -423,17 +436,41 @@
         && window.PRESIDENT_YEAR[country.iso3]
         && window.PRESIDENT_YEAR[country.iso3][year];
       if (py) {
-        if (py.president) { detail.president.name = py.president; detail.real = true; }
-        if (py.approval != null) { detail.president.approval = Math.round(py.approval); detail.real = true; }
-        if (py.political_stance) {
-          detail.president.stance = py.political_stance;
-          detail.president.party = { short: "·", name: "Postura política", tone: py.political_stance };
+        if (py.president) {
+          detail.president.name = py.president;
+          detail.realPresident = true;
           detail.real = true;
         }
-        if (py.poverty_pct != null) { detail.context.poverty = py.poverty_pct; detail.real = true; }
-        if (py.homicide_rate != null) { detail.context.homicide = py.homicide_rate; detail.real = true; }
-        if (py.gdp_growth != null) { detail.context.gdp = py.gdp_growth; detail.real = true; }
+        // approval real solo si hay número; si no, queda null (no se muestra)
+        detail.president.approval = (py.approval != null) ? Math.round(py.approval) : null;
+        detail.president.support = null; // 'apoyo' nunca es dato real → fuera
+        if (py.political_stance) {
+          detail.president.stance = py.political_stance;
+          detail.real = true;
+        } else {
+          detail.president.stance = null;
+        }
+        detail.president.party = null;          // partido es PRNG → fuera
+        detail.president.periodReal = false;    // período es calculado, no real
+        detail.context.poverty  = (py.poverty_pct  != null) ? py.poverty_pct  : null;
+        detail.context.homicide = (py.homicide_rate != null) ? py.homicide_rate : null;
+        detail.context.gdp      = (py.gdp_growth    != null) ? py.gdp_growth    : null;
+        detail.context.inflation = null; // inflación nunca es dato real → fuera
+        detail.contextReal = {
+          gdp:      py.gdp_growth    != null,
+          poverty:  py.poverty_pct   != null,
+          homicide: py.homicide_rate != null,
+        };
+        if (py.poverty_pct  != null || py.homicide_rate != null || py.gdp_growth != null) detail.real = true;
         if (py.gdp_comment) detail.gdpComment = py.gdp_comment;
+      } else {
+        // Sin registro real para este país-año: no inventar nada.
+        detail.president.approval = null;
+        detail.president.support  = null;
+        detail.president.stance   = null;
+        detail.president.party    = null;
+        detail.context = { gdp: null, poverty: null, homicide: null, inflation: null };
+        detail.contextReal = { gdp: false, poverty: false, homicide: false };
       }
     } catch (_) {}
 
@@ -504,6 +541,12 @@
         }
       }
     } catch (_) {}
+
+    // Cronología y titulares PRNG NO tienen fuente real → se vacían.
+    // El relato real del año son los hitos (detail.milestones).
+    if (!detail.realIndicators) detail.indicators = [];
+    detail.events = [];
+    detail.headlines = [];
 
     return detail;
   };
@@ -582,6 +625,13 @@
   }
 
   window.COUNTRY_NEWS = function(country, year) {
+    // Sin fuente de noticias reales: no se fabrican titulares.
+    // El relato real del año vive en los hitos (pestaña Información).
+    const empty = {};
+    NEWS_CATEGORIES.forEach(cat => { empty[cat.key] = []; });
+    return empty;
+
+    /* eslint-disable no-unreachable */
     const seed = hash(country.iso3 + ":news") ^ (year * 0x12345789);
     const r = mulberry32(seed >>> 0);
     const score = country.scores[year];
