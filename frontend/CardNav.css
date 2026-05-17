@@ -159,3 +159,12 @@
   opacity: 1;
   transform: translate(2px, -2px);
 }
+
+/* Responsive — CardNav en mobile */
+@media (max-width: 760px) {
+  .cn-nav { min-width: 0; width: min(320px, 92vw); }
+  .cn-cards { grid-template-columns: 1fr 1fr; height: auto; }
+  .cn-card { padding: 10px 11px 8px; }
+  .cn-card-label { font-size: 12px; margin-bottom: 8px; }
+  .cn-card-link { font-size: 10px; }
+}

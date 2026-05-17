@@ -955,10 +955,14 @@
   .fv-body { grid-template-columns: 1fr; }
   .fv-list-pane.mobile-hide { display: none; }
   .fv-detail-pane.mobile-hide { display: none; }
-  .fv-topbar { gap: 10px; padding: 0 14px; }
-  .fvt-brand { gap: 6px; }
+  .fv-topbar { gap: 8px; padding: 0 12px; flex-wrap: wrap; min-height: 56px; }
+  .fvt-brand { gap: 6px; flex-shrink: 0; }
+  .fvt-name { font-size: 14px; }
   .fvt-live { display: none; }
   .fvt-close-btn span { display: none; }
+  .fvt-search-group { flex: 1 1 100%; order: 3; min-width: 0; }
+  .fvt-search-wrap { flex: 1 1 auto; min-width: 0; }
+  .fvt-filter-btn span { display: none; }
   .fvd-mobile-back { display: flex; }
   .fvd-head { padding: 16px 18px 14px; }
   .fvd-body { padding: 14px 18px; }

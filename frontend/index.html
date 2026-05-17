@@ -4518,6 +4518,269 @@
     html[data-theme="corporate"] .play-btn:hover { background: #e6b840; }
     html[data-theme="corporate"] .timeline .year-display { color: #0e0c13; }
     html[data-theme="corporate"] .map-zoom-btn:hover { color: #c8921e; border-color: rgba(200,146,30,0.5); background: rgba(200,146,30,0.12); }
+
+    /* ══════════════════════════════════════════════════════════════════
+       RESPONSIVE — tablet & mobile
+       Mantener el desktop ≥1101px sin cambios.
+    ══════════════════════════════════════════════════════════════════ */
+
+    /* ── Tablet (≤1100px) ─────────────────────────────────────── */
+    @media (max-width: 1100px) {
+      .main {
+        grid-template-columns: 240px 1fr 0;
+      }
+      .main > .col:last-child { display: none; }
+      .country-focus { width: min(440px, 100%); }
+      .country-search .cs-input { width: 130px; }
+      .country-search .cs-input:focus { width: 180px; }
+      .topbar-center { left: auto; right: 24px; transform: translateY(-50%); }
+      .ask-aletheia-btn { padding: 7px 12px; font-size: 11px; }
+    }
+
+    /* ── Mobile (≤760px) ──────────────────────────────────────── */
+    @media (max-width: 760px) {
+      html, body { overflow-x: hidden; }
+
+      /* Anular el zoom/label-scale en mobile para que el viewport sea real */
+      .app {
+        zoom: 1 !important;
+        height: 100vh !important;
+        height: 100dvh !important;
+        width: 100vw !important;
+        grid-template-rows: auto 1fr 60px;
+      }
+
+      /* Topbar: dos filas (brand+meta arriba, PillNav debajo) */
+      .topbar {
+        flex-wrap: wrap;
+        padding: 8px 12px;
+        row-gap: 6px;
+        align-items: center;
+        min-height: auto;
+      }
+      .topbar .brand { gap: 8px; flex: 1 1 auto; min-width: 0; }
+      .brand .logo { font-size: 18px; gap: 6px; }
+      .brand .logo svg { width: 22px; height: 22px; }
+      .brand .tagline { display: none; }
+
+      .topbar .meta { gap: 8px; flex-shrink: 0; }
+      .user-chip { padding: 4px 6px; }
+      .user-chip .uc-name { display: none; }
+      .user-chip .uc-tag { display: none; }
+      .user-chip .uc-avatar { margin: 0; }
+
+      /* PillNav baja a una segunda fila, ocupa todo el ancho y scrollea horiz */
+      .topbar-center {
+        position: static !important;
+        transform: none !important;
+        order: 3;
+        flex-basis: 100%;
+        width: 100%;
+        justify-content: flex-start;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        gap: 8px;
+        padding: 2px 0 4px;
+        scrollbar-width: none;
+      }
+      .topbar-center::-webkit-scrollbar { display: none; }
+      .ask-aletheia-btn { display: none; }
+
+      /* Country search: compacta y dropdown ancho */
+      .country-search { margin-left: 0; }
+      .country-search .cs-input { width: 120px; }
+      .country-search .cs-input:focus { width: 160px; }
+      .country-search .cs-dropdown {
+        min-width: min(280px, 90vw);
+        max-width: 90vw;
+      }
+
+      /* Main: una sola columna (mapa) */
+      .main { grid-template-columns: 1fr !important; }
+      .main > .col:first-child,
+      .main > .col:last-child { display: none !important; }
+      .main > .col { border-left: none; border-right: none; }
+
+      /* Overlays del mapa más compactos */
+      .map-title {
+        right: 12px !important;
+        left: auto !important;
+        top: 12px !important;
+        max-width: 55vw !important;
+      }
+      .map-title .h { font-size: 18px; }
+      .map-title .sub { font-size: 10px; max-width: 100%; }
+      .map-legend {
+        left: 12px;
+        top: 12px;
+        min-width: 0;
+        max-width: 150px;
+        padding: 8px 10px;
+      }
+      .map-legend .lt { font-size: 9px; }
+      .legend-bar { height: 6px; }
+      .legend-scale { font-size: 9px; }
+      .legend-foot { display: none; }
+      .map-stats {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        gap: 10px;
+        padding: 8px 10px;
+        flex-wrap: wrap;
+      }
+
+      /* Country focus / news focus en pantalla completa */
+      .country-focus {
+        width: 100% !important;
+        border-left: none;
+      }
+      .news-focus {
+        width: 100% !important;
+        border-right: none;
+      }
+      .nf-header { padding: 14px 16px 12px; min-height: 80px; }
+      .nf-country { font-size: 22px; }
+
+      /* Timeline: scroll horizontal para los años */
+      .timeline {
+        padding: 8px 12px;
+        gap: 10px;
+        min-height: 56px;
+      }
+      .timeline-track {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      .timeline-track::-webkit-scrollbar { display: none; }
+      .timeline-track .ticks {
+        min-width: 460px;
+      }
+      .timeline .year-display {
+        font-size: 22px;
+        min-width: 56px;
+      }
+      .play-btn { width: 28px; height: 28px; flex-shrink: 0; }
+
+      /* Dropdowns del topbar */
+      .notif-panel {
+        right: -8px;
+        min-width: min(320px, calc(100vw - 24px));
+        max-width: calc(100vw - 24px);
+      }
+      .user-menu {
+        right: 0;
+        min-width: 200px;
+      }
+
+      /* Chat panel: casi pantalla completa */
+      .chat-panel {
+        width: calc(100vw - 16px) !important;
+        right: 8px !important;
+        left: 8px !important;
+        bottom: 72px !important;
+        height: calc(100vh - 160px) !important;
+        max-height: none !important;
+        max-width: none !important;
+        min-width: 0 !important;
+        min-height: 0 !important;
+        border-radius: 10px;
+      }
+      .chat-panel--docked {
+        width: 100% !important;
+        max-width: 100% !important;
+        top: auto !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 60px !important;
+        height: 60vh !important;
+        border-right: none !important;
+      }
+      .chat-fab {
+        right: 12px !important;
+        bottom: 72px !important;
+      }
+      .chat-fab-label { display: none; }
+
+      /* Tweaks panel (esquina inferior derecha) */
+      .twk-panel {
+        right: 8px !important;
+        bottom: 72px !important;
+        width: calc(100vw - 16px) !important;
+        max-width: 320px !important;
+      }
+
+      /* Compare hint banner */
+      .compare-hint {
+        left: 8px !important;
+        right: 8px !important;
+        bottom: 72px !important;
+        top: auto !important;
+        transform: none !important;
+        padding: 10px 12px;
+        font-size: 12px;
+        width: auto;
+        max-width: none;
+      }
+
+      /* Perfil: stack vertical */
+      .pp-grid { grid-template-columns: 1fr; }
+      .pp-card {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+        padding: 16px 18px;
+      }
+      .pp-card:last-child { border-bottom: none; }
+      .pp-nav { padding: 0 14px; gap: 8px; height: 52px; }
+      .pp-nav-title { display: none; }
+      .pp-nav-left { gap: 10px; }
+      .pp-nav-right { gap: 6px; }
+      .pp-btn { padding: 6px 12px; font-size: 11px; }
+      .pp-banner { height: 100px; }
+
+      /* Auth (login) — el form ocupa toda la pantalla */
+      .auth-stage { padding: 16px; gap: 0; }
+      .auth-form {
+        width: 100%;
+        max-width: 380px;
+        padding: 28px 22px 24px;
+        max-height: calc(100vh - 32px);
+        border-radius: 16px;
+      }
+      .auth-form .af-title { font-size: 26px; margin-bottom: 20px; }
+    }
+
+    /* ── Smartphone chico (≤420px) ────────────────────────────── */
+    @media (max-width: 420px) {
+      .brand .logo { font-size: 16px; }
+      .brand .logo svg { width: 20px; height: 20px; }
+      .country-search .cs-input { width: 90px; padding: 6px 10px 6px 24px; }
+      .country-search .cs-input:focus { width: 140px; }
+      .country-search .cs-icon { width: 12px; height: 12px; left: 8px; }
+      .topbar-center .pn-pill {
+        font-size: 9.5px;
+        padding: 0 10px;
+        letter-spacing: 0.06em;
+      }
+      .timeline .year-display { font-size: 18px; min-width: 44px; }
+      .map-title .h { font-size: 16px; }
+      .map-legend { max-width: 130px; padding: 6px 8px; }
+    }
+
+    /* ── Landscape compacto en mobile ─────────────────────────── */
+    @media (max-width: 900px) and (orientation: landscape) and (max-height: 500px) {
+      .chat-panel {
+        height: calc(100vh - 110px) !important;
+        bottom: 60px !important;
+      }
+      .topbar { padding: 4px 12px; }
+      .topbar-center { padding: 0; }
+      .nf-header { min-height: 60px; padding: 8px 14px; }
+      .nf-country { font-size: 18px; }
+    }
   </style>
 
   <script type="application/json" id="speaker-notes">[]</script>
