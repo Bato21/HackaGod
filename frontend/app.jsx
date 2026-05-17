@@ -3239,19 +3239,21 @@ function WelcomeModal({ user, onClose }) {
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
+function shouldShowWelcome(user) {
+  if (!user) return false;
+  if (user.kind === "guest") return true;
+  try { return !localStorage.getItem("aletheia.onboarded"); } catch (_) { return true; }
+}
+
 function Root() {
   const [authUser, setAuthUser] = useState(() => window.AuthAPI?.current() || null);
-  const [showWelcome, setShowWelcome] = useState(false);
+  // Show welcome for: any guest (always), registered user who hasn't seen it,
+  // AND for existing sessions already loaded on page refresh.
+  const [showWelcome, setShowWelcome] = useState(() => shouldShowWelcome(window.AuthAPI?.current()));
 
   const handleAuth = useCallback((user) => {
     setAuthUser(user);
-    try {
-      // Guests always see the welcome modal; registered users only on first login
-      const seen = localStorage.getItem("aletheia.onboarded");
-      if (user.kind === "guest" || !seen) setShowWelcome(true);
-    } catch (_) {
-      setShowWelcome(true);
-    }
+    setShowWelcome(shouldShowWelcome(user));
   }, []);
 
   if (!authUser) {
