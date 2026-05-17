@@ -1077,6 +1077,10 @@ function App({ user: authUser, onLogout }) {
   // Mobile: ficha de país y noticias se muestran como un solo overlay con
   // pestañas. 'info' = ficha, 'news' = noticias. Default 'info'.
   const [mobileFichaTab, setMobileFichaTab] = useState("info");
+  // Cómo se abrió el dashboard: 'auto' (al tocar país, es la ficha mobile)
+  // o 'expand' (botón Expandir ficha en desktop). En desktop el modo 'auto'
+  // se oculta vía CSS para no abrir el modal en cada click.
+  const [dashMode, setDashMode] = useState(null);
   const [compareMode, setCompareMode] = useState(false);
   const [forumOpen, setForumOpen] = useState(null); // null | { iso3?, threadId?, _global? }
   const [profileOpen, setProfileOpen] = useState(false);
@@ -1151,7 +1155,7 @@ function App({ user: authUser, onLogout }) {
     const onKey = (e) => {
       if (e.key === "Escape") {
         if (compareMode) { setCompareMode(false); return; }
-        if (countryDashboard) { setCountryDashboard(null); return; }
+        if (countryDashboard) { setCountryDashboard(null); setDashMode(null); return; }
         if (countryFocus) { closeCountryFocus(); return; }
         if (mapSettingsOpen) { setMapSettingsOpen(false); return; }
         if (mapFullscreen) setMapFullscreen(false);
@@ -1234,11 +1238,11 @@ function App({ user: authUser, onLogout }) {
     setComparedId(null);
     setCountryFocus(id);
     setMobileFichaTab("info"); // mobile: abrir siempre en la ficha primero
-    // Mobile: la pestaña Información usa el dashboard completo (presidente,
-    // gabinete, etc.) en vez del panel básico → abrirlo al tocar el país.
-    if (window.matchMedia("(max-width: 760px)").matches) {
-      setCountryDashboard(id);
-    }
+    // La pestaña Información (mobile) usa el dashboard completo (presidente,
+    // gabinete, etc.). Se monta siempre; en desktop el modo 'auto' queda
+    // oculto por CSS (no abre el modal en cada click).
+    setCountryDashboard(id);
+    setDashMode("auto");
     setTimeout(() => {
       const feat = mapApi.current?.getFeatureById?.(id);
       if (feat) mapApi.current?.zoomToFeature(feat, true);
@@ -1251,6 +1255,7 @@ function App({ user: authUser, onLogout }) {
     setComparedId(null);
     setCompareMode(false);
     setCountryDashboard(null); // mobile: cierra también el dashboard de la ficha
+    setDashMode(null);
     mapApi.current?.reset();
   };
 
@@ -1286,10 +1291,15 @@ function App({ user: authUser, onLogout }) {
     document.body.classList.toggle("ficha-open", open);
     document.body.classList.toggle("ficha-tab-info", open && mobileFichaTab === "info");
     document.body.classList.toggle("ficha-tab-news", open && mobileFichaTab === "news");
+    // dash-auto: dashboard montado por tap (no por "Expandir ficha").
+    // Desktop usa esta clase para ocultar el modal auto.
+    document.body.classList.toggle("dash-auto", dashMode === "auto");
     return () => {
-      document.body.classList.remove("ficha-open", "ficha-tab-info", "ficha-tab-news");
+      document.body.classList.remove(
+        "ficha-open", "ficha-tab-info", "ficha-tab-news", "dash-auto"
+      );
     };
-  }, [countryFocus, mobileFichaTab]);
+  }, [countryFocus, mobileFichaTab, dashMode]);
 
   const selected = selectedId ? COUNTRIES_BY_ID[selectedId] : null;
   const compared = comparedId ? COUNTRIES_BY_ID[comparedId] : null;
@@ -2248,7 +2258,7 @@ function App({ user: authUser, onLogout }) {
                     {compareMode ? "Comparando…" : (comparedId ? "Comparar otro" : "Comparar")}
                   </button>
                   <button className="cf-action-btn" onClick={() => setForumOpen({ iso3: c.iso3 })}>Foro</button>
-                  <button className="cf-action-btn primary" onClick={() => setCountryDashboard(countryFocus)}>Expandir ficha</button>
+                  <button className="cf-action-btn primary" onClick={() => { setCountryDashboard(countryFocus); setDashMode("expand"); }}>Expandir ficha</button>
                   <button className="cf-action-btn" onClick={closeCountryFocus}>Cerrar</button>
                 </div>
               </>
@@ -2300,7 +2310,7 @@ function App({ user: authUser, onLogout }) {
         const initials = c.name.split(" ").filter(Boolean).slice(0,2).map(w => w[0]).join("").toUpperCase();
         const presInitials = detail.president.name.split(" ").map(w => w[0]).join("").slice(0, 2);
         return (
-          <div className="cd-backdrop" onClick={() => setCountryDashboard(null)}>
+          <div className="cd-backdrop" onClick={() => { setCountryDashboard(null); setDashMode(null); }}>
             <div className="cd-shell" onClick={e => e.stopPropagation()}>
               <div className="cd-head">
                 <div>
@@ -2327,7 +2337,7 @@ function App({ user: authUser, onLogout }) {
                       if (i < window.YEARS.length - 1) setYear(window.YEARS[i + 1]);
                     }}>{year + 1} →</button>
                     <button className="cd-btn cd-btn--foro" onClick={() => setForumOpen({ iso3: c.iso3 })}>Foro</button>
-                    <button className="cd-btn primary cd-btn--close" onClick={() => setCountryDashboard(null)}>Cerrar (Esc)</button>
+                    <button className="cd-btn primary cd-btn--close" onClick={() => { setCountryDashboard(null); setDashMode(null); }}>Cerrar (Esc)</button>
                   </div>
                 </div>
               </div>

@@ -156,6 +156,10 @@
     body.forum-open .mobile-nav { display: none !important; }
     /* Barra de pestañas de ficha: solo mobile */
     .ficha-tabs { display: none; }
+    /* Desktop: el dashboard montado por tap (modo auto) NO debe abrir el
+       modal; solo el botón "Expandir ficha" (dashMode='expand') lo abre.
+       En mobile el bloque @media reaparece con la pestaña Información. */
+    body.dash-auto .cd-backdrop { display: none; }
     .topbar .brand {
       display: flex;
       align-items: baseline;
@@ -5041,7 +5045,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=6"></script>
+  <script type="text/babel" src="app.jsx?v=7"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>
