@@ -783,7 +783,24 @@ function App({ user: authUser, onLogout }) {
         {/* Topbar */}
         <div className="topbar" style={{ position: 'relative' }}>
           <div className="brand">
-            <div className="logo">Aletheia</div>
+            <div className="logo">
+              {/* Aletheia owl — Athena's owl, Greek truth symbol */}
+              <svg width="26" height="26" viewBox="0 0 32 32" fill="none" style={{ flexShrink: 0, marginRight: 2 }}>
+                <path d="M16 4 L22 6 L26 12 L26 22 L20 27 L12 27 L6 22 L6 12 L10 6 Z" stroke="#e6b840" strokeWidth="1.2" fill="rgba(230,184,64,0.08)"/>
+                <circle cx="12" cy="13" r="3.5" stroke="#e6b840" strokeWidth="1.1" fill="rgba(230,184,64,0.10)"/>
+                <circle cx="12" cy="13" r="1.7" fill="#e6b840" opacity="0.95"/>
+                <circle cx="12" cy="13" r="0.8" fill="#0e0c13"/>
+                <circle cx="20" cy="13" r="3.5" stroke="#e6b840" strokeWidth="1.1" fill="rgba(230,184,64,0.10)"/>
+                <circle cx="20" cy="13" r="1.7" fill="#e6b840" opacity="0.95"/>
+                <circle cx="20" cy="13" r="0.8" fill="#0e0c13"/>
+                <path d="M14.5 15.5 L16 18 L17.5 15.5" stroke="#e6b840" strokeWidth="1" strokeLinejoin="round" fill="rgba(230,184,64,0.35)"/>
+                <path d="M11 5.5 L9 2.5 M21 5.5 L23 2.5" stroke="#e6b840" strokeWidth="1" strokeLinecap="round"/>
+                <path d="M6 16 L3.5 13.5 L6 20" stroke="#e6b840" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M26 16 L28.5 13.5 L26 20" stroke="#e6b840" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 27 L10 30 M16 27 L16 30 M20 27 L22 30" stroke="#e6b840" strokeWidth="0.9" strokeLinecap="round"/>
+              </svg>
+              Aletheia
+            </div>
             <div className="tagline">Índice ilustrativo · América · 2015–2024</div>
           </div>
 
@@ -1489,19 +1506,21 @@ function App({ user: authUser, onLogout }) {
 
             {/* Center — silhouette + score overlay */}
             <div className="cd-center" style={{ '--cd-score-color': scoreColor }}>
+              {/* Country name pulled to center — top of area */}
+              <div className="cd-center-title">{c.name}</div>
               <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, minHeight: 0 }}>
                 {feat && feat.geometry && (
                   <svg
                     className="cd-center-sil"
                     viewBox="0 0 320 320"
-                    style={{ overflow: 'visible', width: '90%', height: 'auto', maxWidth: 400, maxHeight: '52vh', display: 'block' }}
+                    style={{ overflow: 'visible', width: '90%', height: 'auto', maxWidth: 400, maxHeight: '50vh', display: 'block' }}
                   >
                     <path
                       d={geoToPath(feat.geometry, 320, 320)}
                       fill={scoreColor}
-                      fillOpacity={0.22}
+                      fillOpacity={0.45}
                       stroke={scoreColor}
-                      strokeWidth={1.0}
+                      strokeWidth={1.2}
                       strokeLinejoin="round"
                     />
                   </svg>
@@ -1512,7 +1531,7 @@ function App({ user: authUser, onLogout }) {
                   <div className="cd-center-denom">/ 100</div>
                 </div>
               </div>
-              <div className="cd-center-name">{c.name.toUpperCase()} · #{rank} DE {window.COUNTRIES.length}</div>
+              <div className="cd-center-name">#{rank} DE {window.COUNTRIES.length} · {c.region}</div>
             </div>
 
             {/* Left panel — Country stats */}
@@ -1538,14 +1557,14 @@ function App({ user: authUser, onLogout }) {
                 <div style={{ height:4, background:'linear-gradient(to right, #4aad88 0%, #e6b840 50%, #c94545 100%)', borderRadius:2, position:'relative' }}>
                   <div style={{ position:'absolute', top:-4, left:`${scorePct}%`, transform:'translateX(-50%)', width:3, height:12, background:'#fff', borderRadius:2, boxShadow:'0 0 6px rgba(255,255,255,0.8)' }} />
                 </div>
-                <div style={{ display:'flex', justifyContent:'space-between', fontFamily:'var(--mono)', fontSize:7.5, color:'rgba(237,233,224,0.3)', marginTop:5 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', fontFamily:'var(--mono)', fontSize:7.5, color:'rgba(237,233,224,0.55)', marginTop:5 }}>
                   <span>0 limpio</span><span>50</span><span>100 corrupto</span>
                 </div>
               </div>
 
               {/* Sparkline */}
               <div style={{ padding:'0 22px 16px' }}>
-                <div style={{ fontFamily:'var(--mono)', fontSize:7.5, letterSpacing:'0.18em', color:'rgba(230,184,64,0.6)', textTransform:'uppercase', marginBottom:8 }}>TENDENCIA 2015–2024</div>
+                <div style={{ fontFamily:'var(--mono)', fontSize:7.5, letterSpacing:'0.18em', color:'rgba(230,184,64,0.85)', textTransform:'uppercase', marginBottom:8 }}>TENDENCIA 2015–2024</div>
                 <svg viewBox="0 0 240 48" width="100%" height={48} style={{ overflow:'visible' }}>
                   <polyline
                     points={(window.YEARS||[]).map((y, i) => `${(i/9)*240},${48-(c.scores[y]/100)*40}`).join(' ')}
@@ -1564,7 +1583,7 @@ function App({ user: authUser, onLogout }) {
 
               {/* Indicators */}
               <div style={{ flex:1, overflowY:'auto', padding:'0 22px 16px' }}>
-                <div style={{ fontFamily:'var(--mono)', fontSize:7.5, letterSpacing:'0.18em', color:'rgba(230,184,64,0.6)', textTransform:'uppercase', marginBottom:10 }}>INDICADORES</div>
+                <div style={{ fontFamily:'var(--mono)', fontSize:7.5, letterSpacing:'0.18em', color:'rgba(230,184,64,0.85)', textTransform:'uppercase', marginBottom:10 }}>INDICADORES</div>
                 {(data.indicators || []).map((ind, i) => (
                   <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'8px 0', borderBottom:'1px solid rgba(237,233,224,0.06)' }}>
                     <span style={{ fontFamily:'var(--mono)', fontSize:8.5, letterSpacing:'0.08em', color:'rgba(237,233,224,0.45)', textTransform:'uppercase' }}>{ind.label}</span>
@@ -1621,11 +1640,11 @@ function App({ user: authUser, onLogout }) {
                     </div>
                   ))}
                   {(data.headlines||[]).length > 0 && (
-                    <div style={{ fontFamily:'var(--mono)', fontSize:7.5, letterSpacing:'0.18em', color:'rgba(230,184,64,0.6)', textTransform:'uppercase', margin:'20px 0 10px' }}>TITULARES DE PRENSA</div>
+                    <div style={{ fontFamily:'var(--mono)', fontSize:7.5, letterSpacing:'0.18em', color:'rgba(230,184,64,0.85)', textTransform:'uppercase', margin:'20px 0 10px' }}>TITULARES DE PRENSA</div>
                   )}
                   {(data.headlines || []).slice(0, 3).map((h, i) => (
                     <div key={i} style={{ padding:'10px 0', borderBottom:'1px solid rgba(237,233,224,0.06)' }}>
-                      <div style={{ fontFamily:'var(--mono)', fontSize:7.5, color:'rgba(237,233,224,0.3)', letterSpacing:'0.08em', marginBottom:4 }}>{h.source}</div>
+                      <div style={{ fontFamily:'var(--mono)', fontSize:7.5, color:'rgba(237,233,224,0.60)', letterSpacing:'0.08em', marginBottom:4 }}>{h.source}</div>
                       <div style={{ fontFamily:'var(--sans)', fontSize:12, color:'rgba(237,233,224,0.75)', lineHeight:1.55, fontStyle:'italic' }}>«{h.text}»</div>
                     </div>
                   ))}
@@ -1658,7 +1677,7 @@ function App({ user: authUser, onLogout }) {
               )}
 
               <div style={{ padding:'10px 22px', borderTop:'1px solid rgba(237,233,224,0.06)', flexShrink:0 }}>
-                <div style={{ fontFamily:'var(--mono)', fontSize:8, color:'rgba(237,233,224,0.2)', lineHeight:1.5, letterSpacing:'0.04em' }}>
+                <div style={{ fontFamily:'var(--mono)', fontSize:8, color:'rgba(237,233,224,0.45)', lineHeight:1.5, letterSpacing:'0.04em' }}>
                   DATOS ILUSTRATIVOS — no corresponden a hechos reales.
                 </div>
               </div>

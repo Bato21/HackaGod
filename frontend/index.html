@@ -6,7 +6,7 @@
   <title>Aletheia</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Montserrat:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link href="forum.css" rel="stylesheet" />
   <link href="CardNav.css" rel="stylesheet" />
@@ -18,9 +18,9 @@
       --bg-3: #1d1a2d;
       --line:   #252234;
       --line-2: #302c42;
-      --text:   #ede9e0;
-      --text-2: #a8a3b8;
-      --text-3: #605c74;
+      --text:   #f0ece2;
+      --text-2: #b8b3c8;
+      --text-3: #8a8598;
       --accent:   #e6b840;
       --accent-2: #7db3d2;
       --good: #10b981;
@@ -29,7 +29,7 @@
       --shadow: 0 12px 40px rgba(0,0,0,0.5);
       --mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
       --sans: "Montserrat", -apple-system, system-ui, sans-serif;
-      --editorial: "Montserrat", Georgia, serif;
+      --editorial: "Cinzel", Georgia, serif;
       /* Panel header — dark mode */
       --ph-bg: linear-gradient(160deg, #0d1117 0%, #161b27 55%, #1e3040 100%);
       --ph-border: rgba(56,189,248,0.2);
@@ -76,9 +76,9 @@
       --bg-3: #ece8de;
       --line:   #d8d3c4;
       --line-2: #c6c1b2;
-      --text:   #14101e;
-      --text-2: #3a3454;
-      --text-3: #7a7490;
+      --text:   #0e0b18;
+      --text-2: #2a2442;
+      --text-3: #6a6480;
       --accent:   #c8921e;
       --accent-2: #4a8aaa;
       --good: #2e8a66;
@@ -149,22 +149,22 @@
     }
     .topbar .brand {
       display: flex;
-      align-items: baseline;
+      align-items: center;
       gap: 14px;
     }
     .brand .logo {
       font-family: var(--editorial);
-            font-weight: 500;
-      font-size: 22px;
-      letter-spacing: -0.02em;
+      font-weight: 600;
+      font-size: 20px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
       color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
     .brand .logo::before {
-      content: "◆";
-      font-size: 10px;
-      color: var(--accent);
-      margin-right: 8px;
-      vertical-align: middle;
+      content: none;
     }
     .brand .tagline {
       font-size: 11px;
@@ -3054,7 +3054,6 @@
       border-image: linear-gradient(to right, #e6b840, #f0c840, #e6b840) 1;
     }
     html[data-theme="corporate"] .brand .logo { color: var(--navy-text); }
-    html[data-theme="corporate"] .brand .logo::before { color: #e6b840; }
     html[data-theme="corporate"] .brand .tagline { color: var(--navy-muted); }
     html[data-theme="corporate"] .topbar .meta { color: var(--navy-muted); }
     html[data-theme="corporate"] .topbar .meta .pill {
@@ -4014,10 +4013,10 @@
       box-shadow: 0 4px 28px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.07);
     }
 
-    /* ── cd-blur: adapt to light theme ───────────────────────── */
+    /* ── cd-blur: always dark so silhouette has contrast ─────── */
     html[data-theme="light"] .cd-blur,
     html[data-theme="corporate"] .cd-blur {
-      background: rgba(245,244,239,0.5);
+      background: rgba(6,5,12,0.78);
     }
 
     /* ── Map stats: always dark glass on any theme ──────────── */
@@ -4087,7 +4086,7 @@
     .cd-blur {
       position: absolute;
       inset: 0;
-      background: rgba(14,12,19,0.55);
+      background: rgba(6,5,12,0.82);
       cursor: pointer;
     }
 
@@ -4115,12 +4114,27 @@
       transform: scale(1.06);
     }
 
-    /* Left panel */
+    /* Left panel — force dark-mode CSS vars regardless of theme */
+    .cd-left, .cd-right {
+      --text:   #f0ece2;
+      --text-2: #b8b3c8;
+      --text-3: #8a8598;
+      --line:   #252234;
+      --line-2: #302c42;
+      --accent: #e6b840;
+      --accent-2: #7db3d2;
+      --good:   #10b981;
+      --bad:    #dc2626;
+      --warn:   #f97316;
+      --bg:     #0e0c13;
+      --bg-2:   #151220;
+      --bg-3:   #1d1a2d;
+    }
     .cd-left {
       position: absolute;
       left: 0; top: 0; bottom: 0;
       width: 380px;
-      background: rgba(14,12,19,0.94);
+      background: rgba(14,12,19,0.96);
       border-right: 1px solid rgba(230,184,64,0.15);
       backdrop-filter: blur(28px);
       -webkit-backdrop-filter: blur(28px);
@@ -4140,7 +4154,7 @@
       position: absolute;
       right: 0; top: 0; bottom: 0;
       width: 380px;
-      background: rgba(14,12,19,0.94);
+      background: rgba(14,12,19,0.96);
       border-left: 1px solid rgba(230,184,64,0.15);
       backdrop-filter: blur(28px);
       -webkit-backdrop-filter: blur(28px);
@@ -4168,9 +4182,24 @@
       z-index: 2;
       gap: 0;
       padding: 24px;
+      background: radial-gradient(ellipse 60% 55% at 50% 50%, rgba(0,0,0,0.55) 0%, transparent 75%);
+    }
+    .cd-center-title {
+      font-family: var(--editorial);
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      color: rgba(240,236,226,0.95);
+      text-align: center;
+      text-transform: uppercase;
+      text-shadow: 0 2px 24px rgba(0,0,0,0.9), 0 0 40px rgba(0,0,0,0.7);
+      animation: cd-sil-in .35s cubic-bezier(.4,0,.2,1) both;
+      flex-shrink: 0;
+      margin-bottom: 4px;
+      line-height: 1.1;
     }
     .cd-center-sil {
-      filter: drop-shadow(0 0 40px var(--cd-score-color, #e6b840));
+      filter: drop-shadow(0 0 50px var(--cd-score-color, #e6b840));
       animation: cd-sil-in .5s cubic-bezier(.4,0,.2,1) both;
       flex-shrink: 0;
     }
@@ -4192,19 +4221,20 @@
     .cd-center-denom {
       font-family: var(--mono);
       font-size: 18px;
-      color: rgba(237,233,224,0.3);
+      color: rgba(237,233,224,0.55);
       letter-spacing: 0.14em;
       margin-top: -6px;
       animation: cd-sil-in .5s .15s cubic-bezier(.4,0,.2,1) both;
     }
     .cd-center-name {
       font-family: var(--mono);
-      font-size: 10px;
-      letter-spacing: 0.28em;
+      font-size: 10.5px;
+      letter-spacing: 0.22em;
       text-transform: uppercase;
-      color: rgba(237,233,224,0.4);
-      margin-top: 8px;
+      color: rgba(237,233,224,0.65);
+      margin-top: 10px;
       animation: cd-sil-in .5s .2s cubic-bezier(.4,0,.2,1) both;
+      text-shadow: 0 1px 8px rgba(0,0,0,0.8);
     }
 
     /* Panel header */
@@ -4234,7 +4264,7 @@
       font-family: var(--mono);
       font-size: 8.5px;
       letter-spacing: 0.1em;
-      color: rgba(237,233,224,0.35);
+      color: rgba(237,233,224,0.60);
       text-transform: uppercase;
       margin-top: 5px;
     }
