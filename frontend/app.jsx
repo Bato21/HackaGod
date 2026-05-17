@@ -1967,7 +1967,7 @@ function App({ user: authUser, onLogout }) {
                 <div className="cd-card">
                   <div className="cd-card-h">
                     <span>Presidencia</span>
-                    <span className="mono">{detail.president.periodStart}–{detail.president.periodEnd}</span>
+                    <span className="mono">{detail.real ? `Líder en ${year}` : `${detail.president.periodStart}–${detail.president.periodEnd}`}</span>
                   </div>
                   <div className="cd-pres">
                     <div className="avatar">{presInitials}</div>
@@ -2017,7 +2017,7 @@ function App({ user: authUser, onLogout }) {
                 <div className="cd-card span-2">
                   <div className="cd-card-h">
                     <span>Contexto macro · {year}</span>
-                    <span style={{ fontSize: 9, color: "var(--text-3)" }}>ILUSTRATIVO</span>
+                    <span style={{ fontSize: 9, color: detail.real ? "var(--good)" : "var(--text-3)" }}>{detail.real ? "DATOS REALES" : "ILUSTRATIVO"}</span>
                   </div>
                   <div className="ctx-grid">
                     <div className="ctx-cell">
@@ -2096,8 +2096,16 @@ function App({ user: authUser, onLogout }) {
 
                 <div className="cd-card span-2" style={{ background: "var(--bg-2)", borderStyle: "dashed" }}>
                   <div style={{ fontSize: 11, color: "var(--text-2)", lineHeight: 1.6 }}>
-                    <strong style={{ color: "var(--text)" }}>Aviso:</strong> esta ficha es <em>periodismo de datos ilustrativo</em>.
-                    Nombres de presidente, gabinete, partidos, indicadores y titulares son <span className="mono" style={{ color: "var(--bad)" }}>ficticios</span> y se generan de forma determinística a partir de las iniciales del país y el año. No corresponden a personas reales.
+                    {detail.real ? (
+                      <>
+                        <strong style={{ color: "var(--text)" }}>Fuentes:</strong> presidente/líder, aprobación de gobierno, pobreza, homicidios y crecimiento del PIB son <span className="mono" style={{ color: "var(--good)" }}>datos reales</span> (Banco Mundial, Cadem/Gallup/Executive Approval, DPI 2023){detail.gdpComment ? ` · PIB: ${detail.gdpComment}` : ""}. Gabinete, partido, titulares e inflación siguen siendo <span className="mono" style={{ color: "var(--bad)" }}>ilustrativos</span>.
+                      </>
+                    ) : (
+                      <>
+                        <strong style={{ color: "var(--text)" }}>Aviso:</strong> esta ficha es <em>periodismo de datos ilustrativo</em>.
+                        Nombres de presidente, gabinete, partidos, indicadores y titulares son <span className="mono" style={{ color: "var(--bad)" }}>ficticios</span> y se generan de forma determinística a partir de las iniciales del país y el año. No corresponden a personas reales.
+                      </>
+                    )}
                   </div>
                 </div>
               </div>

@@ -401,7 +401,7 @@
       homicide: rfloat(ctxR, 0.8 + (1 - stable) * 2, 8 + (1 - stable) * 28, 1),
     };
 
-    return {
+    const detail = {
       president: {
         name: presName,
         periodStart, periodEnd,
@@ -413,7 +413,31 @@
       indicators: generateIndicators(r, score, 6),
       events: generateEvents(r, country, year, score, 8),
       headlines: generateHeadlines(r, country, year, score, 4),
+      real: false,
     };
+
+    // ── Superponer datos REALES (Excel → Supabase → localStorage) ──
+    // window.PRESIDENT_YEAR[iso3][year] lo expone presidents-override.js.
+    try {
+      const py = window.PRESIDENT_YEAR
+        && window.PRESIDENT_YEAR[country.iso3]
+        && window.PRESIDENT_YEAR[country.iso3][year];
+      if (py) {
+        if (py.president) { detail.president.name = py.president; detail.real = true; }
+        if (py.approval != null) { detail.president.approval = Math.round(py.approval); detail.real = true; }
+        if (py.political_stance) {
+          detail.president.stance = py.political_stance;
+          detail.president.party = { short: "·", name: "Postura política", tone: py.political_stance };
+          detail.real = true;
+        }
+        if (py.poverty_pct != null) { detail.context.poverty = py.poverty_pct; detail.real = true; }
+        if (py.homicide_rate != null) { detail.context.homicide = py.homicide_rate; detail.real = true; }
+        if (py.gdp_growth != null) { detail.context.gdp = py.gdp_growth; detail.real = true; }
+        if (py.gdp_comment) detail.gdpComment = py.gdp_comment;
+      }
+    } catch (_) {}
+
+    return detail;
   };
 
   // ── COUNTRY_NEWS (panel de noticias del país en la rail izquierda) ──

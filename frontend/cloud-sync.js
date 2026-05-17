@@ -384,6 +384,28 @@
     }
   }
 
+  async function hydratePresidents() {
+    if (!window.COUNTRIES || !window.COUNTRIES.length) return false;
+    try {
+      // RPC: 1 fila/país {iso3, data:{year:{president,approval,...}}} — ~184 filas,
+      // bajo el límite 1000 de PostgREST.
+      var yearFirst = window.YEARS ? window.YEARS[0] : 2017;
+      var r = await sb.rpc("get_president_year", { min_year: yearFirst });
+      if (r.error || !r.data || !r.data.length) return false;
+
+      window.PRESIDENT_YEAR = window.PRESIDENT_YEAR || {};
+      var cache = {};
+      r.data.forEach(function (row) {
+        var iso = row.iso3.trim();
+        cache[iso] = row.data;
+        window.PRESIDENT_YEAR[iso] = row.data;
+      });
+      lsSet("aletheia.presidents", cache);
+      window.dispatchEvent(new CustomEvent("aletheia:presidents:loaded", { detail: { count: r.data.length } }));
+      return true;
+    } catch (_) { return false; }
+  }
+
   // ── 6. Boot ────────────────────────────────────────────────────────
   async function hydrateAll() {
     var u   = currentUser();
@@ -391,6 +413,7 @@
     var results = await Promise.all([
       hydrateForum(),
       hydrateCPI(),
+      hydratePresidents(),
       uid ? hydrateProfile(uid, u.email) : Promise.resolve(false),
       uid ? hydrateStars(uid, u.email)   : Promise.resolve(false),
     ]);
