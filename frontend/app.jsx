@@ -1333,11 +1333,17 @@ function App({ user: authUser, onLogout }) {
   }, []);
 
   // Secciones colapsables del panel (mobile): filtros + ranking.
-  const [secOpen, setSecOpen] = useState({
-    filtros: true, ranking: true,
-    topCorrupt: true, topClean: false, regional: false,
-  });
-  const toggleSec = (k) => setSecOpen(s => ({ ...s, [k]: !s[k] }));
+  // Acordeón: una sola sección abierta a la vez; la abierta ocupa todo
+  // el panel y scrollea internamente. Click en la abierta la colapsa.
+  const [openSec, setOpenSec] = useState("ranking");
+  const toggleSec = (k) => setOpenSec(cur => (cur === k ? null : k));
+  const secOpen = {
+    filtros:    openSec === "filtros",
+    ranking:    openSec === "ranking",
+    topCorrupt: openSec === "topCorrupt",
+    topClean:   openSec === "topClean",
+    regional:   openSec === "regional",
+  };
 
   // Ficha país abierta (mobile): body classes para overlay full-screen
   // con pestañas Información/Noticias y para ocultar el bottom-nav.

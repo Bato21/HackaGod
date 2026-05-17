@@ -4851,12 +4851,25 @@
       .main:not(.fullscreen) > .col:last-child { display: none !important; }
       .main:not(.fullscreen) > .col:first-child {
         display: flex !important;
+        flex-direction: column;
         width: 100% !important;
+        height: 100% !important;
+        overflow: hidden !important;
+      }
+      .main:not(.fullscreen) > .col:first-child > * { min-width: 0; }
+      /* Headers/búsqueda/cerrar: altura fija */
+      .main:not(.fullscreen) .panel-close-btn,
+      .main:not(.fullscreen) .search-wrap,
+      .main:not(.fullscreen) .sec-toggle { flex: 0 0 auto; }
+      /* Sección abierta: ocupa el resto y scrollea por dentro (la carta) */
+      .main:not(.fullscreen) .sec-body,
+      .main:not(.fullscreen) .body {
+        flex: 1 1 auto;
+        min-height: 0;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch;
         padding-bottom: calc(72px + env(safe-area-inset-bottom));
       }
-      .main:not(.fullscreen) > .col:first-child > * { min-width: 0; }
 
       /* Botón cerrar panel (mobile): sticky arriba del panel */
       .panel-close-btn {
@@ -5112,7 +5125,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=12"></script>
+  <script type="text/babel" src="app.jsx?v=13"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>
