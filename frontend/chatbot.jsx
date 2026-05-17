@@ -173,9 +173,11 @@ function AletheiaChat({ selectedCountry }) {
   const panelRef  = useRef(null);
   const dragRef   = useRef(null); // {offsetX, offsetY}
 
-  // Drag handlers — only on header, ignore button clicks
-  const onHeaderMouseDown = (e) => {
-    if (e.target.closest("button")) return; // don't drag when clicking close
+  // Drag via pointer events — captura pointer al header para que el drag
+  // siga funcionando aunque el mouse salga del panel. Clamp deja al menos
+  // 40px del header visible en cualquier borde para poder recuperarlo.
+  const onHeaderPointerDown = (e) => {
+    if (e.target.closest("button")) return; // close button no debe arrastrar
     const rect = panelRef.current?.getBoundingClientRect();
     if (!rect) return;
     dragRef.current = {
@@ -183,31 +185,35 @@ function AletheiaChat({ selectedCountry }) {
       offsetY: e.clientY - rect.top,
       w: rect.width,
       h: rect.height,
+      pointerId: e.pointerId,
     };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (_) {}
     e.preventDefault();
   };
 
-  useEffect(() => {
-    const onMove = (e) => {
-      const d = dragRef.current;
-      if (!d) return;
-      const x = e.clientX - d.offsetX;
-      const y = e.clientY - d.offsetY;
-      const maxX = window.innerWidth  - d.w;
-      const maxY = window.innerHeight - d.h;
-      setPos({
-        x: Math.max(0, Math.min(maxX, x)),
-        y: Math.max(0, Math.min(maxY, y)),
-      });
-    };
-    const onUp = () => { dragRef.current = null; };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-    };
-  }, []);
+  const onHeaderPointerMove = (e) => {
+    const d = dragRef.current;
+    if (!d || d.pointerId !== e.pointerId) return;
+    const x = e.clientX - d.offsetX;
+    const y = e.clientY - d.offsetY;
+    const SAFE = 40; // pixeles del header que siempre quedan en pantalla
+    const minX = -d.w + SAFE;
+    const maxX = window.innerWidth - SAFE;
+    const minY = 0;
+    const maxY = window.innerHeight - SAFE;
+    setPos({
+      x: Math.max(minX, Math.min(maxX, x)),
+      y: Math.max(minY, Math.min(maxY, y)),
+    });
+  };
+
+  const onHeaderPointerUp = (e) => {
+    const d = dragRef.current;
+    if (d && d.pointerId === e.pointerId) {
+      try { e.currentTarget.releasePointerCapture(e.pointerId); } catch (_) {}
+      dragRef.current = null;
+    }
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -332,7 +338,13 @@ function AletheiaChat({ selectedCountry }) {
           className="chat-panel"
           style={pos ? { left: pos.x, top: pos.y, right: "auto", bottom: "auto" } : undefined}
         >
-          <div className="chat-header" onMouseDown={onHeaderMouseDown}>
+          <div
+            className="chat-header"
+            onPointerDown={onHeaderPointerDown}
+            onPointerMove={onHeaderPointerMove}
+            onPointerUp={onHeaderPointerUp}
+            onPointerCancel={onHeaderPointerUp}
+          >
             <div className="chat-header-left">
               <div className="chat-header-avatar"><OwlLogo size={24} /></div>
               <div>
