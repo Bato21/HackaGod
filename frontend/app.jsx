@@ -2459,94 +2459,49 @@ function App({ user: authUser, onLogout }) {
       {showNotes && (
         <div className="notes-modal" onClick={() => setShowNotes(false)}>
           <div className="notes-card" onClick={e => e.stopPropagation()}>
-            <h3>Nota metodológica</h3>
+            <h3>¿De dónde salen estos datos?</h3>
             <p>
-              <strong>Aletheia</strong> es una pieza de <em>periodismo de datos ilustrativo</em>.
-              Las cifras presentadas <strong>no son oficiales</strong> ni provienen de un organismo
-              de medición. Se construyeron como demostración del formato visual y de las
-              interacciones de comparación.
-            </p>
-            <div className="nh">Métrica</div>
-            <p>
-              Cada país recibe un valor entre <span className="mono">0</span> y <span className="mono">100</span>,
-              donde <span className="mono">0</span> representa una percepción de país muy limpio y
-              <span className="mono"> 100</span> una percepción de país muy corrupto. La escala es
-              <em> inversa</em> al CPI de Transparencia Internacional.
-            </p>
-            <div className="nh">Cobertura</div>
-            <p>
-              Se incluyen 29 países del continente americano agrupados en cuatro regiones:
-              Norteamérica, Centroamérica, Caribe y Sudamérica. La serie temporal cubre 2015–2024.
-            </p>
-            <div className="nh">Diseño</div>
-            <p>
-              Geometría base: <span className="mono">world-atlas / Natural Earth</span>.
-              Proyección por defecto: Equal Earth. Escala cromática secuencial verde→rojo
-              para reforzar la dirección semántica del indicador.
+              <strong>Aletheia</strong> reúne en un solo mapa información pública
+              sobre corrupción y gobernanza. Cada cifra que ves <strong>tiene una
+              fuente verificable</strong>. Cuando no hay dato confiable para un
+              país-año, <strong>no inventamos nada</strong>: simplemente no se muestra.
             </p>
 
-            {window.METHODOLOGY && (() => {
-              const M = window.METHODOLOGY;
-              const Table = ({ rows }) => {
-                if (!rows || !rows.length) return null;
-                const [head, ...body] = rows;
-                return (
-                  <div className="meth-table-wrap">
-                    <table className="meth-table">
-                      <thead><tr>{head.map((h, i) => <th key={i}>{h}</th>)}</tr></thead>
-                      <tbody>
-                        {body.map((r, ri) => (
-                          <tr key={ri}>
-                            {r.map((c, ci) => (
-                              <td key={ci}>
-                                {/^https?:\/\//.test(String(c))
-                                  ? <a href={c} target="_blank" rel="noopener noreferrer">{c}</a>
-                                  : c}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                );
-              };
-              return (
-                <>
-                  <div className="nh">Fuentes y criterios por variable</div>
-                  <p style={{ fontSize: 12, color: "var(--text-2)" }}>
-                    Aprobación, pobreza, homicidios, PIB, postura y presidente provienen
-                    de fuentes públicas verificables. El gabinete usa CIA World Leaders
-                    y fuentes oficiales; cuando no hay verificación se marca
-                    «Sin dato respaldado».
-                  </p>
-                  <Table rows={M.fuentes} />
-                  <div className="nh">Indicadores numéricos (proxy)</div>
-                  <p style={{ fontSize: 12, color: "var(--bad)" }}>
-                    Los indicadores judiciales/anticorrupción son <strong>proxy
-                    comparativos calculados</strong> desde variables de la base
-                    (PIB, pobreza, homicidios, aprobación y palabras clave de los
-                    hitos). <strong>No son cifras oficiales</strong>; sirven para
-                    comparar intensidad relativa entre país-año.
-                  </p>
-                  <Table rows={M.guia_indicadores} />
-                  <div className="nh">Cobertura del gabinete</div>
-                  <Table rows={M.cobertura_gabinete} />
-                  {M.guia_inflacion && M.guia_inflacion.length > 0 && (
-                    <>
-                      <div className="nh">Inflación anual (%)</div>
-                      <p style={{ fontSize: 12, color: "var(--text-2)" }}>
-                        Variación anual del IPC, fuente World Bank / IMF vía
-                        Our World in Data (FP.CPI.TOTL.ZG). País-año sin dato
-                        público comparable queda en blanco (no se estima).
-                      </p>
-                      <Table rows={M.guia_inflacion} />
-                      <Table rows={M.cobertura_inflacion} />
-                    </>
-                  )}
-                </>
-              );
-            })()}
+            <div className="nh">El puntaje 0–100</div>
+            <p>
+              Es el índice CPI de <strong>Transparencia Internacional</strong>, pero
+              invertido para leerlo intuitivo: <span className="mono">0</span> = país
+              percibido muy limpio, <span className="mono">100</span> = muy corrupto.
+              Verde es mejor, rojo es peor.
+            </p>
+
+            <div className="nh">Datos verificados</div>
+            <ul className="meth-src">
+              <li><b>Puntaje de corrupción</b> — Transparencia Internacional (CPI).</li>
+              <li><b>Presidente / líder</b> — listas públicas de jefes de Estado y gobierno.</li>
+              <li><b>Aprobación del gobierno</b> — Cadem, Gallup y Executive Approval Project.</li>
+              <li><b>Pobreza, homicidios, crecimiento del PIB</b> — Banco Mundial.</li>
+              <li><b>Inflación anual</b> — Banco Mundial / FMI (vía Our World in Data).</li>
+              <li><b>Gabinete (6 ministerios)</b> — CIA World Leaders y fuentes oficiales de gobierno.</li>
+              <li><b>Postura política</b> — Database of Political Institutions (BID).</li>
+            </ul>
+            <p style={{ fontSize: 12, color: "var(--text-3)" }}>
+              Si un ministerio o cifra no está en una fuente confiable, se deja
+              vacío en vez de rellenar con un nombre o número falso.
+            </p>
+
+            <div className="nh">Indicadores judiciales: léelos con cuidado</div>
+            <p style={{ fontSize: 12.5, color: "var(--text-2)" }}>
+              Reportes UIF, sentencias, allanamientos, casos abiertos, etc. son
+              un <strong>estimado comparativo</strong>, no un conteo oficial de
+              tribunales. Sirven para comparar la <em>intensidad</em> de actividad
+              institucional entre años y países, no como cifra legal exacta.
+            </p>
+
+            <p style={{ fontSize: 11, color: "var(--text-3)", marginTop: 14 }}>
+              Cobertura: ~180 países, 2017–2025. Última actualización de datos:
+              mayo 2026.
+            </p>
 
             <button className="notes-close" onClick={() => setShowNotes(false)}>Entendido</button>
           </div>
