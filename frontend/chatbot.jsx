@@ -417,20 +417,10 @@ function AletheiaChat({ selectedCountry }) {
         <div
           ref={panelRef}
           className={`chat-panel${docked ? " chat-panel--docked" : ""}${docked && leftTab === "news" ? " chat-panel--hidden" : ""}`}
-          style={docked
-            ? {
-                position: "fixed",
-                top: 56, left: 0, right: "auto", bottom: "auto",
-                width: 380,
-                height: "calc(100vh - 132px)", // 56 topbar + 76 timeline
-                minWidth: 0, minHeight: 0, maxWidth: 380, maxHeight: "none",
-                borderRadius: 0,
-              }
-            : {
-                ...(pos  ? { left: pos.x, top: pos.y, right: "auto", bottom: "auto" } : {}),
-                ...(size ? { width: size.w, height: size.h } : {}),
-              }
-          }
+          style={!docked ? {
+            ...(pos  ? { left: pos.x, top: pos.y, right: "auto", bottom: "auto" } : {}),
+            ...(size ? { width: size.w, height: size.h } : {}),
+          } : undefined}
         >
           {/* Tab toggle visible solo en modo docked */}
           {docked && (
