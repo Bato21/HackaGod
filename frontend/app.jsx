@@ -1718,7 +1718,7 @@ function App({ user: authUser, onLogout }) {
                   </button>
                   {mapFullscreen ? (
                     <button
-                      className="map-action-btn expanded"
+                      className="map-action-btn expanded map-fs-toggle"
                       onClick={() => setMapFullscreen(false)}
                       title="Abrir panel principal"
                       aria-label="Abrir panel principal"
@@ -1734,7 +1734,7 @@ function App({ user: authUser, onLogout }) {
                     </button>
                   ) : (
                     <button
-                      className="map-action-btn"
+                      className="map-action-btn map-fs-toggle"
                       onClick={() => setMapFullscreen(true)}
                       title="Pantalla completa"
                       aria-label="Pantalla completa"
