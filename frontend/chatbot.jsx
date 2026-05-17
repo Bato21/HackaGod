@@ -117,19 +117,38 @@ function MarkdownText({ text }) {
   }
 }
 
+// Owl SVG — matches the Aletheia brand logo in the topbar
+function OwlLogo({ size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" style={{ flexShrink: 0 }}>
+      <path d="M16 4 L22 6 L26 12 L26 22 L20 27 L12 27 L6 22 L6 12 L10 6 Z" stroke="#e6b840" strokeWidth="1.2" fill="rgba(230,184,64,0.08)"/>
+      <circle cx="12" cy="13" r="3.5" stroke="#e6b840" strokeWidth="1.1" fill="rgba(230,184,64,0.10)"/>
+      <circle cx="12" cy="13" r="1.7" fill="#e6b840" opacity="0.95"/>
+      <circle cx="12" cy="13" r="0.8" fill="#0e0c13"/>
+      <circle cx="20" cy="13" r="3.5" stroke="#e6b840" strokeWidth="1.1" fill="rgba(230,184,64,0.10)"/>
+      <circle cx="20" cy="13" r="1.7" fill="#e6b840" opacity="0.95"/>
+      <circle cx="20" cy="13" r="0.8" fill="#0e0c13"/>
+      <path d="M14.5 15.5 L16 18 L17.5 15.5" stroke="#e6b840" strokeWidth="1" strokeLinejoin="round" fill="rgba(230,184,64,0.35)"/>
+      <path d="M11 5.5 L9 2.5 M21 5.5 L23 2.5" stroke="#e6b840" strokeWidth="1" strokeLinecap="round"/>
+      <path d="M6 16 L3.5 13.5 L6 20 M26 16 L28.5 13.5 L26 20" stroke="#e6b840" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M12 27 L10 30 M16 27 L16 30 M20 27 L22 30" stroke="#e6b840" strokeWidth="0.9" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
 function ChatMessage({ msg }) {
   const isUser = msg.role === "user";
   return (
     <div className={`chat-msg ${isUser ? "chat-msg-user" : "chat-msg-bot"}`}>
       {!isUser && (
-        <div className="chat-avatar">A</div>
+        <div className="chat-avatar"><OwlLogo size={18} /></div>
       )}
       <div className="chat-bubble">
         {isUser ? msg.content : <MarkdownText text={msg.content} />}
         {msg.sources && msg.sources.length > 0 && (
           <div className="chat-sources">
             {msg.sources.map((s, i) => (
-              <span key={i} className="chat-source-tag">📊 {s}</span>
+              <span key={i} className="chat-source-tag">{s}</span>
             ))}
           </div>
         )}
@@ -261,19 +280,23 @@ function AletheiaChat({ selectedCountry }) {
         <div className="chat-panel">
           <div className="chat-header">
             <div className="chat-header-left">
-              <div className="chat-header-avatar">A</div>
+              <div className="chat-header-avatar"><OwlLogo size={24} /></div>
               <div>
                 <div className="chat-header-title">Aletheia</div>
-                <div className="chat-header-sub">Asistente de análisis político</div>
+                <div className="chat-header-sub">aquello que no está oculto</div>
               </div>
             </div>
-            <button className="chat-close" onClick={() => setOpen(false)}>✕</button>
+            <button className="chat-close" onClick={() => setOpen(false)} aria-label="Cerrar chat">
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M3 3 L11 11 M11 3 L3 11"/>
+              </svg>
+            </button>
           </div>
 
           <div className="chat-body">
             {isEmpty && (
               <div className="chat-empty">
-                <div className="chat-empty-icon">🏛</div>
+                <div className="chat-empty-icon"><OwlLogo size={48} /></div>
                 <div className="chat-empty-title">¿En qué puedo ayudarte?</div>
                 <div className="chat-empty-sub">
                   Pregunta sobre corrupción, datos CPI o gobernanza en América Latina.
@@ -284,7 +307,8 @@ function AletheiaChat({ selectedCountry }) {
                 <div className="chat-suggestions">
                   {SUGGESTIONS.map((s, i) => (
                     <button key={i} className="chat-suggestion" onClick={() => sendMessage(s)}>
-                      {s}
+                      <span className="chat-suggestion-arrow">→</span>
+                      <span>{s}</span>
                     </button>
                   ))}
                 </div>
@@ -293,7 +317,7 @@ function AletheiaChat({ selectedCountry }) {
             {messages.map((m, i) => <ChatMessage key={i} msg={m} />)}
             {loading && (
               <div className="chat-msg chat-msg-bot">
-                <div className="chat-avatar">A</div>
+                <div className="chat-avatar"><OwlLogo size={18} /></div>
                 <div className="chat-bubble chat-thinking">
                   <span/><span/><span/>
                   {loadingStatus && (
@@ -303,7 +327,7 @@ function AletheiaChat({ selectedCountry }) {
               </div>
             )}
             {error && (
-              <div className="chat-error">⚠ {error}</div>
+              <div className="chat-error">{error}</div>
             )}
             <div ref={bottomRef} />
           </div>
@@ -332,12 +356,15 @@ function AletheiaChat({ selectedCountry }) {
                 onClick={() => sendMessage()}
                 disabled={!input.trim() || loading}
                 title="Enviar (Enter)"
+                aria-label="Enviar mensaje"
               >
-                ➤
+                <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 8 L13 8 M9 4 L13 8 L9 12"/>
+                </svg>
               </button>
             </div>
             <div className="chat-disclaimer">
-              Powered by Claude · Datos CPI TI 2017-2025 · Solo fines informativos
+              CPI Transparencia Internacional · 2017–2025 · Solo fines informativos
             </div>
           </div>
         </div>
