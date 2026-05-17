@@ -5486,6 +5486,16 @@
       color: rgba(237,233,224,0.75);
       line-height: 1.7;
     }
+    .ob-action-hint {
+      font-size: 12px; font-weight: 700;
+      color: #e6b840; letter-spacing: 0.06em;
+      text-align: center; margin: 10px 0 4px;
+      text-transform: uppercase;
+    }
+    @keyframes ob-pulse {
+      0%,100% { box-shadow: 0 0 0 9999px rgba(8,6,16,0.80), 0 0 0 0 rgba(230,184,64,0.5); }
+      50%      { box-shadow: 0 0 0 9999px rgba(8,6,16,0.80), 0 0 0 8px rgba(230,184,64,0); }
+    }
     /* Anim between steps */
     .ob-step-enter { animation: ob-step-in 0.28s ease both; }
     @keyframes ob-step-in {
@@ -5544,7 +5554,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=33"></script>
+  <script type="text/babel" src="app.jsx?v=34"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>

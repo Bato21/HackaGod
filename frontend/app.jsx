@@ -1353,6 +1353,15 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
     return () => window.removeEventListener("aletheia:select-country", handler);
   }, []);
 
+  // Tour: avisa cuando el panel se abrió (para paso spotlight-action)
+  const prevFullscreen = useRef(mapFullscreen);
+  useEffect(() => {
+    if (prevFullscreen.current && !mapFullscreen) {
+      window.dispatchEvent(new CustomEvent("aletheia:tour:action-done"));
+    }
+    prevFullscreen.current = mapFullscreen;
+  }, [mapFullscreen]);
+
   // Tour: reacciona a eventos del TourOverlay
   useEffect(() => {
     const openPanel  = () => setMapFullscreen(false);
@@ -1954,6 +1963,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
                   {mapFullscreen ? (
                     <button
                       className="map-action-btn expanded map-fs-toggle"
+                      data-tour="panel-btn"
                       onClick={() => setMapFullscreen(false)}
                       title="Abrir panel principal"
                       aria-label="Abrir panel principal"
@@ -2904,11 +2914,18 @@ const TOUR_STEPS = [
     desc: "Haz zoom con la rueda del mouse o los botones +/−. Arrastra para moverte por el mapa. Haz clic sobre cualquier país para ver su información detallada.",
   },
   {
+    type: "spotlight-action",
+    selector: '[data-tour="panel-btn"]',
+    tooltipPos: "left",
+    title: "Abre el panel",
+    desc: "Haz clic en el botón «Panel» para ver el ranking y los detalles de cada país.",
+    actionHint: "Toca el botón resaltado ↗",
+  },
+  {
     type: "spotlight",
     selector: '[data-tour="ranking"]',
     tooltipPos: "right",
-    event: "aletheia:tour:open-panel",
-    delay: 420,
+    delay: 200,
     title: "📊  Ranking de países",
     desc: "Lista todos los países ordenados por CPI. Busca, filtra por rango de puntuación o compara dos países simultáneamente.",
   },
@@ -3104,10 +3121,19 @@ function TourOverlay({ onDone }) {
     }
   }, [step, s.event]);
 
+  // spotlight-action: auto-advance when App fires aletheia:tour:action-done
+  useEffect(() => {
+    if (s.type !== "spotlight-action") return;
+    const handler = () => go(step + 1);
+    window.addEventListener("aletheia:tour:action-done", handler);
+    return () => window.removeEventListener("aletheia:tour:action-done", handler);
+  }, [step, s.type]);
+
   const isMobileView = window.innerWidth < 760;
+  const isAction = s.type === "spotlight-action";
 
   const { rect, ready } = useTourRect(
-    (s.type === "spotlight" && !isMobileView) ? s.selector : null,
+    ((s.type === "spotlight" || isAction) && !isMobileView) ? s.selector : null,
     step,
     s.delay || 0
   );
@@ -3184,13 +3210,46 @@ function TourOverlay({ onDone }) {
     height: rect.height + PAD * 2,
     borderRadius: 12,
     boxShadow: "0 0 0 9999px rgba(8,6,16,0.80)",
-    border: "2px solid rgba(230,184,64,0.6)",
+    // spotlight-action: let clicks pass through to the highlighted button
+    border: isAction ? "2.5px solid rgba(230,184,64,0.9)" : "2px solid rgba(230,184,64,0.6)",
     zIndex: 10000,
     pointerEvents: "none",
     transition: "top .32s ease,left .32s ease,width .32s ease,height .32s ease",
+    // Pulse animation for action steps to draw attention
+    animation: isAction ? "ob-pulse 1.4s ease-in-out infinite" : "none",
   };
 
-  const tooltipStyle = computeTooltipPos(rect, s.tooltipPos);
+  const tooltipStyle = computeTooltipPos(rect, s.tooltipPos || "left");
+
+  // spotlight-action tooltip: no Siguiente, just instruction + skip
+  if (isAction) {
+    return (
+      <>
+        <div style={spotStyle} />
+        <div className="ob-tooltip" style={tooltipStyle}>
+          <div className="ob-tooltip-header">
+            <div className="ob-tour-dots">
+              {TOUR_STEPS.map((_, i) => (
+                <div key={i} className={`ob-tour-dot${i === step ? " active" : ""}`} />
+              ))}
+            </div>
+            <button className="ob-tour-skip" onClick={onDone}>Saltar</button>
+          </div>
+          <div key={animKey} className="ob-step-enter">
+            <div className="ob-tooltip-title">{s.title}</div>
+            <div className="ob-tooltip-desc">{s.desc}</div>
+            {s.actionHint && (
+              <div className="ob-action-hint">{s.actionHint}</div>
+            )}
+          </div>
+          <button className="ob-btn-secondary" style={{ width:"100%", marginTop:4 }}
+            onClick={() => { window.dispatchEvent(new CustomEvent("aletheia:tour:open-panel")); go(step + 1); }}>
+            Abrir panel y continuar →
+          </button>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
