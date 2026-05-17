@@ -1,0 +1,16 @@
+{
+  "headers": {
+    "x-nextjs-stale-time": "300",
+    "x-nextjs-prerender": "1",
+    "x-next-cache-tags": "_N_T_/layout,_N_T_/(app)/layout,_N_T_/(app)/foro/layout,_N_T_/(app)/foro/page,_N_T_/foro"
+  },
+  "segmentPaths": [
+    "/_tree",
+    "/_full",
+    "/!KGFwcCk/foro/__PAGE__",
+    "/!KGFwcCk/foro",
+    "/!KGFwcCk",
+    "/_index",
+    "/_head"
+  ]
+}

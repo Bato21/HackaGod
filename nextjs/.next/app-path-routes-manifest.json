@@ -1,0 +1,12 @@
+{
+  "/(app)/atlas/page": "/atlas",
+  "/(app)/comparar/page": "/comparar",
+  "/(app)/foro/[id]/page": "/foro/[id]",
+  "/(app)/foro/page": "/foro",
+  "/(app)/reportes/page": "/reportes",
+  "/(auth)/login/page": "/login",
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/favicon.ico/route": "/favicon.ico",
+  "/page": "/"
+}

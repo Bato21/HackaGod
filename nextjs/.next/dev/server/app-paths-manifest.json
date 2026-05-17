@@ -1,0 +1,10 @@
+{
+  "/(app)/atlas/page": "app/(app)/atlas/page.js",
+  "/(app)/comparar/page": "app/(app)/comparar/page.js",
+  "/(app)/foro/[id]/page": "app/(app)/foro/[id]/page.js",
+  "/(app)/foro/page": "app/(app)/foro/page.js",
+  "/(app)/metodologia/page": "app/(app)/metodologia/page.js",
+  "/(app)/reportes/page": "app/(app)/reportes/page.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/page": "app/page.js"
+}
