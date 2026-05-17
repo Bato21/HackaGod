@@ -164,37 +164,11 @@ function ChatMessage({ msg }) {
   );
 }
 
-// TODO: quitar antes de prod. Mock para previsualizar UI cuando Groq rate-limita.
-// Cambia a `false` para usar el backend real.
-const USE_MOCK_CONVERSATION = true;
-
-const MOCK_MESSAGES = [
-  { role: "user", content: "¿Cuál es el país más corrupto de América Latina?" },
-  {
-    role: "assistant",
-    content:
-      "El país más corrupto de América Latina según el CPI 2025 es Venezuela, con un Aletheia score de **90.00/100**. " +
-      "Le siguen Nicaragua y Haití en la región, también con scores muy altos.\n\n" +
-      "En contraste, Uruguay y Chile son los más transparentes del continente: " +
-      "Uruguay obtuvo 24/100 y Chile 33/100 (2025).\n\n" +
-      "[Fuente: CPI TI vía Aletheia DB]",
-    sources: ["CPI TI — ranking mundial vía Aletheia DB"],
-  },
-  { role: "user", content: "¿Y cómo ha cambiado México?" },
-  {
-    role: "assistant",
-    content:
-      "México pasó de un Aletheia score de **70/100** en 2017 a **74/100** en 2025 — un *retroceso* de 4 puntos en transparencia.\n\n" +
-      "Comparado con Brasil (que mejoró ligeramente) y Colombia (estable), México muestra la peor tendencia entre las grandes economías latinoamericanas.",
-    sources: ["CPI TI 2017-2025", "Serie histórica Aletheia DB"],
-  },
-];
-
 function AletheiaChat({ selectedCountry }) {
   const { useState, useRef, useEffect } = React;
 
   const [open, setOpen]         = useState(false);
-  const [messages, setMessages] = useState(USE_MOCK_CONVERSATION ? MOCK_MESSAGES : []);
+  const [messages, setMessages] = useState([]);
   const [input, setInput]       = useState("");
   const [loading, setLoading]   = useState(false);
   const [loadingStatus, setLoadingStatus] = useState("");
@@ -414,23 +388,6 @@ function AletheiaChat({ selectedCountry }) {
     setMessages(prev => [...prev, userMsg]);
     setLoading(true);
     setLoadingStatus("");
-
-    // MOCK MODE: respuesta fake con hyperlinks para probar UI sin backend.
-    if (USE_MOCK_CONVERSATION) {
-      setTimeout(() => {
-        const fakeReply = {
-          role: "assistant",
-          content:
-            `Sobre "${msg}": un análisis breve menciona países como Venezuela, ` +
-            `Argentina, Chile y México. Estos son los más relevantes según los ` +
-            `datos CPI disponibles.\n\n[Respuesta simulada — Groq rate-limited]`,
-          sources: ["MOCK · UI preview"],
-        };
-        setMessages(prev => [...prev, fakeReply]);
-        setLoading(false);
-      }, 700);
-      return;
-    }
 
     try {
       const history = messages.slice(-10).map(m => ({
