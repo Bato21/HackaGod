@@ -2960,9 +2960,44 @@
       font-weight: 400;
       letter-spacing: 0.04em;
     }
-    .news-section.corrupcion .dot { background: var(--bad); }
-    .news-section.politica   .dot { background: var(--accent-2); }
-    .news-section.gobierno   .dot { background: var(--accent); }
+    .news-section.corrupcion  .dot { background: var(--bad); }
+    .news-section.politica    .dot { background: var(--accent-2); }
+    .news-section.gobierno    .dot { background: var(--accent); }
+    .news-section.gobernanza  .dot { background: #5eead4; }
+
+    /* ── World News Panel (right rail, no country selected) ─── */
+    .world-news-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      height: 100%;
+      overflow-y: auto;
+      padding: 0 0 16px;
+    }
+    .world-news-panel::-webkit-scrollbar { width: 4px; }
+    .world-news-panel::-webkit-scrollbar-thumb { background: var(--line-2); border-radius: 2px; }
+    .wnp-hint {
+      font-size: 11px;
+      color: var(--text-3);
+      line-height: 1.6;
+      padding: 12px 0 10px;
+      border-bottom: 1px solid var(--line);
+      margin-bottom: 14px;
+    }
+    .wnp-header-label {
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 10px;
+    }
+    .wnp-foot {
+      font-size: 10px;
+      color: var(--text-3);
+      text-align: center;
+      margin-top: 18px;
+      opacity: 0.5;
+    }
 
     .news-item {
       padding: 10px 0;
@@ -5554,7 +5589,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=34"></script>
+  <script type="text/babel" src="app.jsx?v=35"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>

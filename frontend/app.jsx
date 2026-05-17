@@ -992,6 +992,96 @@ function NewsRail({ country, year, onBack, onDiscuss }) {
   );
 }
 
+const WORLD_NEWS_DATA = [
+  {
+    id: "wn1", cat: "corrupcion", catLabel: "Corrupción", tag: "Europa",
+    source: "Reuters", rel: "Hace 1h",
+    title: "Tribunal europeo condena a ex primer ministro por desvío de fondos de cohesión",
+  },
+  {
+    id: "wn2", cat: "corrupcion", catLabel: "Corrupción", tag: "África",
+    source: "Al Jazeera", rel: "Hace 3h",
+    title: "Filtración expone red de sobornos en licitaciones de infraestructura vial",
+  },
+  {
+    id: "wn3", cat: "corrupcion", catLabel: "Corrupción", tag: "Asia",
+    source: "Bloomberg", rel: "Hace 6h",
+    title: "Gigante estatal investigado: auditores detectan irregularidades por 4.200M USD",
+  },
+  {
+    id: "wn4", cat: "politica", catLabel: "Política", tag: "LATAM",
+    source: "El País", rel: "Hace 2h",
+    title: "Cumbre CELAC debate pacto regional contra el lavado de activos",
+  },
+  {
+    id: "wn5", cat: "politica", catLabel: "Política", tag: "Global",
+    source: "FT", rel: "Hace 5h",
+    title: "G20 aprueba marco de intercambio automático de información fiscal",
+  },
+  {
+    id: "wn6", cat: "politica", catLabel: "Política", tag: "Medio Oriente",
+    source: "BBC", rel: "Hace 8h",
+    title: "Parlamento aprueba ley de protección a denunciantes de corrupción",
+  },
+  {
+    id: "wn7", cat: "gobernanza", catLabel: "Gobernanza", tag: "ONU",
+    source: "UN News", rel: "Hace 4h",
+    title: "UNODC publica índice global de integridad institucional 2026",
+  },
+  {
+    id: "wn8", cat: "gobernanza", catLabel: "Gobernanza", tag: "Europa",
+    source: "Euronews", rel: "Hace 7h",
+    title: "Comisión Europea endurece requisitos de transparencia para contratos públicos",
+  },
+  {
+    id: "wn9", cat: "gobernanza", catLabel: "Gobernanza", tag: "Global",
+    source: "TI", rel: "Hace 10h",
+    title: "Transparencia Internacional: 2 de cada 3 países mantienen niveles altos de corrupción",
+  },
+];
+
+const WORLD_NEWS_CATS = [
+  { key: "corrupcion", label: "Corrupción" },
+  { key: "politica",   label: "Política" },
+  { key: "gobernanza", label: "Gobernanza" },
+];
+
+function WorldNewsPanel() {
+  return (
+    <div className="world-news-panel">
+      <div className="wnp-hint">
+        Haz clic en un país en el mapa o el ranking para ver su detalle y compararlo con otro.
+      </div>
+      <div className="wnp-header-label">Noticias recientes · Mundial</div>
+      {WORLD_NEWS_CATS.map(cat => {
+        const items = WORLD_NEWS_DATA.filter(n => n.cat === cat.key);
+        return (
+          <div key={cat.key} className={`news-section ${cat.key}`}>
+            <div className="news-section-h">
+              <span className="dot"></span>
+              <span>{cat.label}</span>
+              <span className="count">{items.length}</span>
+            </div>
+            {items.map(item => (
+              <div key={item.id} className="news-item">
+                <div className="ni-meta">
+                  <span className="ni-source">{item.source}</span>
+                  <span>{item.rel}</span>
+                </div>
+                <div className="ni-title">{item.title}</div>
+                <div className="ni-foot">
+                  <span className="ni-sector">{item.tag}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        );
+      })}
+      <div className="wnp-foot">Datos ilustrativos · Aletheia demo</div>
+    </div>
+  );
+}
+
 function Sparkline({ country, year, onYearChange }) {
   const W = 280, H = 60, PAD = 6;
   const years = window.YEARS;
@@ -2126,7 +2216,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
           {/* Right rail */}
           <div className="col" data-tour="country-ficha">
             <div className="header">
-              <h2>{selected ? "Detalle" : "Resumen continental"}</h2>
+              <h2>{selected ? "Detalle" : "Noticias Mundiales"}</h2>
               {selected && (
                 <button
                   onClick={() => { setSelectedId(null); setComparedId(null); }}
@@ -2204,62 +2294,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
                   </div>
                 </>
               ) : (
-                <>
-                  <div className="detail-empty">
-                    <div className="h editorial">
-                      Haz clic en un país en el mapa o en el ranking para abrir su detalle, ver
-                      su evolución y compararlo con otro.
-                    </div>
-                  </div>
-                  <div className="top-block">
-                    <div className="tb-title">
-                      <span>Top 10 · más corruptos</span>
-                      <span className="note">{year}</span>
-                    </div>
-                    {topMost.map((c, i) => (
-                      <div key={c.id} className="top-row" onClick={() => handleSelect(c.id)} style={{ cursor: "pointer" }}>
-                        <span className="pos">{String(i + 1).padStart(2, "0")}</span>
-                        <div className="bar-wrap">
-                          <span className="name">{c.name}</span>
-                          <div className="bar">
-                            <div className="fill" style={{ width: `${c.scores[year]}%`, background: colorFor(c.scores[year]) }}></div>
-                          </div>
-                        </div>
-                        <span className="score" style={{ color: colorFor(c.scores[year]) }}>{c.scores[year].toFixed(1)}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="top-block">
-                    <div className="tb-title">
-                      <span>Top 10 · más limpios</span>
-                      <span className="note">{year}</span>
-                    </div>
-                    {topLeast.map((c, i) => (
-                      <div key={c.id} className="top-row" onClick={() => handleSelect(c.id)} style={{ cursor: "pointer" }}>
-                        <span className="pos">{String(i + 1).padStart(2, "0")}</span>
-                        <div className="bar-wrap">
-                          <span className="name">{c.name}</span>
-                          <div className="bar">
-                            <div className="fill" style={{ width: `${c.scores[year]}%`, background: colorFor(c.scores[year]) }}></div>
-                          </div>
-                        </div>
-                        <span className="score" style={{ color: colorFor(c.scores[year]) }}>{c.scores[year].toFixed(1)}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="regional-block">
-                    <div className="tb-title"><span>Promedio regional</span><span className="note">{year}</span></div>
-                    {regionAvgs.map(r => (
-                      <div key={r.region} className="regional-row">
-                        <span className="rn">{r.region}</span>
-                        <div className="rb">
-                          <div className="rf" style={{ width: `${r.avg}%`, background: colorFor(r.avg) }}></div>
-                        </div>
-                        <span className="rv" style={{ color: colorFor(r.avg) }}>{r.avg.toFixed(1)}</span>
-                      </div>
-                    ))}
-                  </div>
-                </>
+                <WorldNewsPanel />
               )}
             </div>
           </div>
