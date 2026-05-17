@@ -548,13 +548,13 @@
        tenues — forzado en cualquier tema. */
     .map-frame .globe-stage-bg ~ svg .sphere {
       fill: url(#globeWater);
-      stroke: rgba(120, 200, 230, 0.45);
+      stroke: rgba(120, 210, 245, 0.60);
       stroke-width: 0.6px;
     }
     html[data-theme="corporate"] .map-frame .globe-stage-bg ~ svg .sphere,
     html[data-theme="light"] .map-frame .globe-stage-bg ~ svg .sphere {
       fill: url(#globeWater);
-      stroke: rgba(120, 200, 230, 0.45);
+      stroke: rgba(120, 210, 245, 0.60);
     }
     /* Malla técnica sobre el agua */
     .map-frame .globe-stage-bg ~ svg .sphere-mesh {
@@ -580,6 +580,12 @@
       top: 14px;
       left: 18px;
       max-width: 60%;
+      background: rgba(10,11,14,0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border-radius: 6px;
+      padding: 10px 14px;
+      border: 1px solid rgba(255,255,255,0.06);
     }
     .map-title .kicker {
       font-size: 10px;
@@ -609,10 +615,10 @@
       top: 14px;
       background: rgba(var(--bg-2-rgb, 22,27,34), 0.82);
       border: 1px solid var(--line);
-      padding: 12px 14px;
+      padding: 12px 16px;
       pointer-events: auto;
-      min-width: 220px;
-      max-width: 220px;
+      min-width: 260px;
+      max-width: 260px;
       backdrop-filter: blur(8px);
       border-radius: 4px;
     }
@@ -624,10 +630,11 @@
       max-width: 320px !important;
     }
     .map-legend .lt {
-      font-size: 10px;
-      letter-spacing: 0.12em;
-      color: var(--text-3);
+      font-size: 12px;
+      letter-spacing: 0.10em;
+      color: #fff;
       text-transform: uppercase;
+      font-weight: 700;
       margin-bottom: 8px;
     }
     .legend-bar {
@@ -647,7 +654,7 @@
     .legend-foot {
       font-size: 10px;
       color: var(--text-3);
-      margin-top: 8px;
+      margin-top: 22px;
       line-height: 1.4;
     }
 
@@ -1468,10 +1475,10 @@
     }
     .auth-hero .ah-brand { position: relative; }
     .auth-hero .ah-logo {
-      font-family: var(--editorial);
-      font-weight: 500;
-      font-size: 28px;
-      letter-spacing: -0.02em;
+      font-family: "Cinzel", serif;
+      font-weight: 700;
+      font-size: 26px;
+      letter-spacing: 0.06em;
       color: #eef4fc;
     }
     .auth-hero .ah-logo::before {
@@ -1538,12 +1545,12 @@
       z-index: 1;
       width: 420px;
       flex-shrink: 0;
-      background: #ffffff;
+      background: #0d1a2e;
       border-radius: 20px;
       box-shadow:
-        0 32px 80px rgba(7,18,33,0.55),
-        0 4px 16px rgba(7,18,33,0.3),
-        inset 0 0 0 1px rgba(255,255,255,0.12);
+        0 32px 80px rgba(0,0,0,0.7),
+        0 4px 16px rgba(0,0,0,0.5),
+        inset 0 0 0 1px rgba(255,255,255,0.10);
       padding: 44px 40px 36px;
       max-height: calc(100vh - 80px);
       overflow-y: auto;
@@ -1553,22 +1560,22 @@
       font-size: 10px;
       letter-spacing: 0.16em;
       text-transform: uppercase;
-      color: #0ea5e9;
+      color: #e6b840;
       margin-bottom: 8px;
     }
     .auth-form .af-title {
-      font-family: var(--editorial);
-      font-size: 32px;
-      font-weight: 500;
-      letter-spacing: -0.02em;
-      line-height: 1.05;
-      color: #0d1b2a;
+      font-family: "Cinzel", serif;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+      color: #eef4fc;
       margin: 0 0 28px;
     }
     .auth-tabs {
       display: flex;
-      background: #f4f6fb;
-      border: 1px solid #d4dded;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
       padding: 3px;
       border-radius: 8px;
       margin-bottom: 22px;
@@ -1577,7 +1584,7 @@
       flex: 1;
       background: transparent;
       border: none;
-      color: #2d4163;
+      color: rgba(180,176,200,0.85);
       padding: 8px 10px;
       font-size: 11.5px;
       font-family: var(--sans);
@@ -1587,8 +1594,9 @@
       transition: all .15s;
     }
     .auth-tabs button.active {
-      background: linear-gradient(135deg, #0ea5e9, #7c3aed);
-      color: #fff;
+      background: linear-gradient(135deg, #e6b840, #c8921e);
+      color: #0e0c13;
+      font-weight: 600;
     }
     .auth-field {
       display: flex;
@@ -1600,12 +1608,12 @@
       font-size: 10px;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: #6b7fa3;
+      color: rgba(168,163,184,0.8);
     }
     .auth-field input {
-      background: #f4f6fb;
-      border: 1px solid #bec9de;
-      color: #0d1b2a;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.14);
+      color: #eef4fc;
       font-family: var(--sans);
       padding: 11px 12px;
       font-size: 13px;
@@ -1613,25 +1621,26 @@
       outline: none;
       transition: border-color .12s, box-shadow .12s;
     }
+    .auth-field input::placeholder { color: rgba(168,163,184,0.5); }
     .auth-field input:focus {
-      border-color: #0ea5e9;
-      box-shadow: 0 0 0 3px rgba(14,165,233,0.14);
+      border-color: #e6b840;
+      box-shadow: 0 0 0 3px rgba(230,184,64,0.18);
     }
     .auth-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-size: 11px;
-      color: #2d4163;
+      color: rgba(168,163,184,0.85);
       margin-bottom: 18px;
     }
     .auth-row label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-    .auth-row a { color: #0ea5e9; text-decoration: none; }
+    .auth-row a { color: #e6b840; text-decoration: none; }
     .auth-row a:hover { text-decoration: underline; }
     .auth-submit {
       width: 100%;
-      background: linear-gradient(135deg, #0ea5e9, #7c3aed);
-      color: #fff;
+      background: linear-gradient(135deg, #e6b840, #c8921e);
+      color: #0e0c13;
       border: none;
       padding: 13px 14px;
       font-family: var(--sans);
@@ -1640,13 +1649,13 @@
       text-transform: uppercase;
       cursor: pointer;
       border-radius: 8px;
-      font-weight: 600;
+      font-weight: 700;
       transition: opacity .15s, transform .1s;
     }
     .auth-submit:hover { opacity: 0.88; }
     .auth-submit:active { transform: translateY(1px); }
     .auth-error {
-      color: #b91c1c;
+      color: #fca5a5;
       font-size: 11px;
       margin-top: -6px;
       margin-bottom: 12px;
@@ -1657,7 +1666,7 @@
       align-items: center;
       gap: 14px;
       margin: 20px 0;
-      color: #6b7fa3;
+      color: rgba(168,163,184,0.6);
       font-size: 10px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
@@ -1666,13 +1675,13 @@
       content: "";
       flex: 1;
       height: 1px;
-      background: #d4dded;
+      background: rgba(255,255,255,0.10);
     }
     .auth-guest {
       width: 100%;
       background: transparent;
-      border: 1px dashed #bec9de;
-      color: #2d4163;
+      border: 1px dashed rgba(255,255,255,0.2);
+      color: rgba(168,163,184,0.75);
       padding: 11px 14px;
       font-family: var(--sans);
       font-size: 12px;
@@ -1682,16 +1691,19 @@
       border-radius: 8px;
       transition: all .15s;
     }
-    .auth-guest:hover { border-style: solid; border-color: #0ea5e9; color: #0d1b2a; }
+    .auth-guest:hover { border-style: solid; border-color: #e6b840; color: #e6b840; background: rgba(230,184,64,0.07); }
     .auth-foot {
       font-size: 10px;
-      color: #6b7fa3;
+      color: rgba(168,163,184,0.55);
       text-align: center;
       margin-top: 20px;
       letter-spacing: 0.04em;
       line-height: 1.5;
     }
-    .auth-foot .mono { color: #2d4163; }
+    .auth-foot .mono { color: rgba(168,163,184,0.8); }
+
+    /* Mobile brand header (hidden on desktop) */
+    .auth-mobile-brand { display: none; }
 
     /* User chip in topbar */
     .user-chip {
@@ -1784,6 +1796,26 @@
       animation: cd-in 0.3s ease;
     }
     html[data-theme="light"] .forum-backdrop { background: rgba(245,244,239,0.55); }
+
+    /* ── Forum: dark theme — Cinzel gold logo + vivid scope tabs ── */
+    html[data-theme="dark"] .fvt-logo { color: #facc15; letter-spacing: 0.05em; }
+    html[data-theme="dark"] .fvt-logo::before { color: #facc15; }
+    html[data-theme="dark"] .fvt-slash { color: rgba(250,204,21,0.3); }
+    html[data-theme="dark"] .fvt-name { color: rgba(245,245,244,0.6); }
+    html[data-theme="dark"] .fv-scope-tab.active { color: #facc15; border-bottom-color: #facc15; }
+    html[data-theme="dark"] .fv-scope-tab.active .fv-scope-count { background: rgba(250,204,21,0.15); color: #facc15; }
+    html[data-theme="dark"] .fvt-new-btn { background: #facc15; color: #0a0b0d; border: none; font-weight: 700; }
+    html[data-theme="dark"] .fvt-new-btn:hover { background: #fde047; }
+
+    /* ── Forum: light theme — Cinzel amber logo + vivid scope tabs ── */
+    html[data-theme="light"] .fvt-logo { color: #c8921e; letter-spacing: 0.05em; }
+    html[data-theme="light"] .fvt-logo::before { color: #c8921e; }
+    html[data-theme="light"] .fvt-slash { color: rgba(200,146,30,0.3); }
+    html[data-theme="light"] .fvt-name { color: rgba(26,26,26,0.55); }
+    html[data-theme="light"] .fv-scope-tab.active { color: #c8921e; border-bottom-color: #c8921e; }
+    html[data-theme="light"] .fv-scope-tab.active .fv-scope-count { background: rgba(200,146,30,0.12); color: #c8921e; }
+    html[data-theme="light"] .fvt-new-btn { background: #c8921e; color: #fff; border: none; font-weight: 700; }
+    html[data-theme="light"] .fvt-new-btn:hover { background: #a07018; }
     .forum-shell {
       width: 100%;
       max-width: 780px;
@@ -3156,15 +3188,15 @@
 
     html[data-theme="corporate"] .col { border-color: var(--navy-line); }
 
-    /* Timeline — deep gradient + vivid year dots */
+    /* Timeline — matches topbar dark navy + gold border */
     html[data-theme="corporate"] .timeline {
-      background: linear-gradient(90deg, #0b1829 0%, #0f2440 50%, #0b1829 100%);
+      background: linear-gradient(90deg, #0e0c13 0%, #151220 50%, #0e0c13 100%);
       border-top: 2px solid transparent;
-      border-image: linear-gradient(to right, #0ea5e9, #7c3aed, #0d9488) 1;
+      border-image: linear-gradient(to right, #e6b840, #f0c840, #e6b840) 1;
     }
     html[data-theme="corporate"] .timeline .year-display {
-      color: #38bdf8;
-      text-shadow: 0 0 20px rgba(56,189,248,0.3);
+      color: #ffffff;
+      text-shadow: 0 0 20px rgba(255,255,255,0.2);
     }
     html[data-theme="corporate"] .timeline .tick .lb { color: var(--navy-muted); }
     html[data-theme="corporate"] .timeline .tick.active .lb { color: #38bdf8; }
@@ -3174,10 +3206,13 @@
       box-shadow: 0 0 0 4px rgba(14,165,233,0.25);
     }
     html[data-theme="corporate"] .play-btn {
-      background: var(--navy-3); border-color: #0ea5e9; color: #38bdf8;
+      background: rgba(230,184,64,0.12);
+      border-color: #e6b840;
+      color: #e6b840;
     }
     html[data-theme="corporate"] .play-btn:hover {
-      background: #0ea5e9; color: #fff;
+      background: #e6b840;
+      color: #0e0c13;
     }
     html[data-theme="corporate"] .timeline-track .axis { background: var(--navy-3); }
 
@@ -3213,10 +3248,19 @@
     html[data-theme="corporate"] .map-legend {
       border-left: 3px solid #059669;
     }
+    html[data-theme="corporate"] .map-legend .lt,
+    html[data-theme="light"] .map-legend .lt { color: #fff; font-weight: 700; font-size: 12px; }
     html[data-theme="corporate"] .map-title .h {
-      color: #0d1b2a;
-      text-shadow: 0 1px 3px rgba(255,255,255,0.6);
+      color: #eef4fc;
+      text-shadow: none;
     }
+    html[data-theme="corporate"] .map-title,
+    html[data-theme="light"] .map-title {
+      background: rgba(10,12,18,0.62);
+      border-color: rgba(255,255,255,0.08);
+    }
+    html[data-theme="corporate"] .map-title .kicker { color: rgba(168,163,184,0.8); }
+    html[data-theme="corporate"] .map-title .sub { color: rgba(200,196,216,0.75); }
 
     /* Map overlay cards — frosted glass for light themes */
     html[data-theme="light"] .map-stats,
@@ -3341,14 +3385,20 @@
 
     /* ── Forum topbar ── */
     html[data-theme="corporate"] .fv-topbar {
-      background: linear-gradient(135deg, #0b1829 0%, #0f2440 55%, #0b1829 100%);
-      border-bottom: 2px solid transparent;
-      border-image: linear-gradient(to right, #0ea5e9, #7c3aed, #0d9488) 1;
+      background: linear-gradient(135deg, #0e0c13 0%, #151220 55%, #0e0c13 100%);
+      border-bottom: 1px solid rgba(230,184,64,0.2);
+      border-image: none;
     }
-    html[data-theme="corporate"] .fvt-logo,
-    html[data-theme="corporate"] .fvt-slash,
-    html[data-theme="corporate"] .fvt-name { color: var(--navy-text); }
-    html[data-theme="corporate"] .fvt-logo::before { color: #38bdf8; }
+    html[data-theme="corporate"] .fvt-logo {
+      font-family: "Cinzel", serif;
+      font-weight: 700;
+      font-size: 17px;
+      color: #e6b840;
+      letter-spacing: 0.04em;
+    }
+    html[data-theme="corporate"] .fvt-logo::before { color: #e6b840; }
+    html[data-theme="corporate"] .fvt-slash { color: rgba(230,184,64,0.35); }
+    html[data-theme="corporate"] .fvt-name { color: var(--navy-muted); font-weight: 400; }
     html[data-theme="corporate"] .fvt-live { color: var(--navy-muted); border-color: var(--navy-3); }
     html[data-theme="corporate"] .fvt-search-input {
       background: rgba(255,255,255,0.08); border-color: var(--navy-3);
@@ -3386,12 +3436,12 @@
     }
     html[data-theme="corporate"] .fv-scope-tab { color: var(--navy-muted); }
     html[data-theme="corporate"] .fv-scope-tab:hover { color: var(--navy-text); }
-    html[data-theme="corporate"] .fv-scope-tab.active { color: #38bdf8; border-bottom-color: #38bdf8; }
-    html[data-theme="corporate"] .fv-scope-tab.scope-gobierno.active { color: #a78bfa; border-bottom-color: #a78bfa; }
-    html[data-theme="corporate"] .fv-scope-tab.scope-tema.active    { color: #fb923c; border-bottom-color: #fb923c; }
+    html[data-theme="corporate"] .fv-scope-tab.active { color: #e6b840; border-bottom-color: #e6b840; }
+    html[data-theme="corporate"] .fv-scope-tab.scope-gobierno.active { color: #e6b840; border-bottom-color: #e6b840; }
+    html[data-theme="corporate"] .fv-scope-tab.scope-tema.active    { color: #e6b840; border-bottom-color: #e6b840; }
     html[data-theme="corporate"] .fv-scope-count { background: rgba(255,255,255,0.08); color: var(--navy-muted); }
     html[data-theme="corporate"] .fv-scope-tab.active .fv-scope-count {
-      background: rgba(56,189,248,0.15); color: #38bdf8;
+      background: rgba(230,184,64,0.18); color: #e6b840;
     }
     html[data-theme="corporate"] .fv-sort-lbl { color: var(--navy-muted); }
     html[data-theme="corporate"] .fv-sort-btn { color: var(--navy-muted); }
@@ -3438,9 +3488,9 @@
     }
     html[data-theme="corporate"] .mp-palette.active { border-color: #0ea5e9; background: rgba(14,165,233,0.05); }
 
-    /* Legend bar */
+    /* Legend bar — always follows active palette gradient */
     html[data-theme="corporate"] .legend-bar {
-      background: linear-gradient(to right, #059669, #84cc16, #facc15, #f97316, #b91c1c) !important;
+      background: var(--palette-gradient);
     }
 
     /* ── Profile Page (full-screen takeover) ─────────────────── */
@@ -4131,6 +4181,8 @@
       color: #f5f1e8;
       letter-spacing: 0.02em;
     }
+    .chat-title-ia { color: var(--accent-2); font-weight: 700; }
+    html[data-theme="corporate"] .chat-title-ia { color: #e6b840; font-weight: 700; }
     .chat-header-sub {
       font-size: 11px;
       color: rgba(230, 184, 64, 0.7);
@@ -4489,19 +4541,20 @@
       box-shadow: 0 4px 24px rgba(14,12,19,0.35), 0 0 0 1px rgba(230,184,64,0.12);
     }
 
-    /* ── Fix map-title: compact left card below legend ──────── */
+    /* ── Map-title: right side, below action buttons, legend owns left ── */
     .map-title {
-      left: 18px !important;
-      right: auto !important;
-      top: 120px !important;
-      max-width: 280px !important;
+      left: auto !important;
+      right: 18px !important;
+      top: 66px !important;
+      max-width: 300px !important;
+      text-align: right;
     }
     .map-title .h {
       font-size: 22px !important;
       line-height: 1.15 !important;
     }
     .map-title .kicker { font-size: 9px; letter-spacing: 0.22em; }
-    .map-title .sub { font-size: 11px; margin-top: 6px; line-height: 1.5; }
+    .map-title .sub { font-size: 11px; margin-top: 6px; line-height: 1.5; max-width: 300px; margin-left: auto; }
 
     /* ── AI chatbot FAB — right side, below map-title ───────── */
     .chat-fab {
@@ -4606,11 +4659,12 @@
       box-shadow: 0 0 0 4px rgba(200,146,30,0.20);
     }
     html[data-theme="corporate"] .play-btn {
-      background: #c8921e;
-      box-shadow: 0 3px 14px rgba(200,146,30,0.45);
+      background: rgba(230,184,64,0.12);
+      border-color: #e6b840;
+      color: #e6b840;
     }
-    html[data-theme="corporate"] .play-btn:hover { background: #e6b840; }
-    html[data-theme="corporate"] .timeline .year-display { color: #0e0c13; }
+    html[data-theme="corporate"] .play-btn:hover { background: #e6b840; color: #0e0c13; }
+    html[data-theme="corporate"] .timeline .year-display { color: #ffffff; text-shadow: 0 0 20px rgba(255,255,255,0.2); }
     html[data-theme="corporate"] .map-zoom-btn:hover { color: #c8921e; border-color: rgba(200,146,30,0.5); background: rgba(200,146,30,0.12); }
 
     /* ══════════════════════════════════════════════════════════════════
@@ -4627,7 +4681,7 @@
       .country-focus { width: min(440px, 100%); }
       .country-search .cs-input { width: 130px; }
       .country-search .cs-input:focus { width: 180px; }
-      .topbar-center { left: auto; right: 24px; transform: translateY(-50%); }
+      .topbar-center { left: auto; right: 170px; transform: translateY(-50%); }
       .ask-aletheia-btn { padding: 7px 12px; font-size: 11px; }
     }
 
@@ -5083,9 +5137,30 @@
          display:none aquí GANA al base .auth-hero{display:flex} (línea 1441)
          porque va después en el source con misma especificidad. */
       .auth-hero { display: none !important; }
+      .auth-mobile-brand {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+        align-self: center;
+        text-align: center;
+      }
+      .auth-mobile-brand .amb-logo-mark {
+        color: #e6b840;
+        font-size: 14px;
+      }
+      .auth-mobile-brand .amb-name {
+        font-family: "Cinzel", serif;
+        font-size: 22px;
+        font-weight: 700;
+        color: #eef4fc;
+        letter-spacing: 0.06em;
+      }
       .auth-stage {
         padding: 16px;
         gap: 0;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         overflow-y: auto;
@@ -5094,7 +5169,7 @@
         width: 100%;
         max-width: 420px;
         flex-shrink: 1;
-        margin: auto;
+        margin: 0 auto;
         padding: 28px 22px 24px;
         max-height: calc(100vh - 32px);
         border-radius: 16px;
@@ -5106,6 +5181,54 @@
       .auth-field { margin-bottom: 12px; }
       .auth-field input { font-size: 16px; padding: 12px; } /* 16px evita zoom iOS */
       .auth-submit { padding: 14px; font-size: 12px; }
+      /* Safe-area: auth form must not be obscured by home indicator */
+      .auth-form {
+        padding-bottom: max(24px, calc(24px + env(safe-area-inset-bottom)));
+      }
+
+      /* Fix 5: Leaflet touch events must not compete with iOS page scroll.
+         pan-x pan-y lets the browser handle two-finger pinch-zoom natively. */
+      .leaflet-container {
+        touch-action: pan-x pan-y !important;
+      }
+      /* Chat header drag: block scroll to allow pointer drag without page jump */
+      .chat-header {
+        touch-action: none;
+      }
+
+      /* Fix 6: clear bottom-nav + safe-area for floating elements */
+      .chat-panel {
+        bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+      }
+      .chat-fab {
+        bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+      }
+      .compare-hint {
+        bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+      }
+
+      /* Fix 7b: map stats hidden by bottom-nav at bottom:12px */
+      .map-stats {
+        bottom: calc(60px + env(safe-area-inset-bottom) + 8px) !important;
+      }
+
+      /* Fix 7d: map settings popover overflows narrow screens */
+      .map-settings-pop {
+        right: 8px !important;
+        left: 8px !important;
+        width: auto !important;
+        max-width: 360px !important;
+      }
+
+      /* Fix 7e: profile hero row wraps on narrow screens */
+      .pp-hero {
+        flex-wrap: wrap;
+        gap: 12px;
+      }
+      .pp-score-card { width: 100%; order: 3; }
+      .pp-banner { height: 90px; }
+      .pp-rep-track { gap: 8px; }
+      .pp-rep-step { min-width: 0; flex: 1 1 60px; text-align: center; }
     }
 
     /* ── Smartphone chico (≤420px) ────────────────────────────── */
@@ -5140,12 +5263,46 @@
       .nf-header { min-height: 60px; padding: 8px 14px; }
       .nf-country { font-size: 18px; }
     }
+
+    /* ── Horizontal phone (landscape) ─────────────────────────── */
+    @media (max-height: 500px) and (orientation: landscape) {
+      .auth-stage {
+        padding: 16px 32px;
+        gap: 32px;
+        flex-direction: row;
+        align-items: center;
+      }
+      .auth-hero {
+        min-height: 0;
+        max-height: 100%;
+      }
+      .auth-hero .ah-headline h2 { font-size: 28px; }
+      .auth-hero .ah-headline p { display: none; }
+      .auth-hero .ah-stats { padding-top: 12px; gap: 20px; }
+      .auth-form { max-height: calc(100vh - 32px); padding: 24px 28px; }
+      .auth-form .af-title { font-size: 22px; margin-bottom: 16px; }
+      .auth-mobile-brand { display: none; }
+
+      /* App layout: compress timeline in landscape */
+      .app { grid-template-rows: 48px 1fr 60px; }
+      .timeline { padding: 8px 16px 8px; }
+      .timeline .year-display { font-size: 22px; }
+    }
   </style>
 
   <script type="application/json" id="speaker-notes">[]</script>
 </head>
 <body style="background-color: rgba(245, 244, 239, 0)">
-  <div id="root"></div>
+  <div id="root">
+    <div id="app-loading" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0e0c13;color:#e6b840;font-family:'Montserrat',sans-serif;font-size:13px;letter-spacing:0.1em;z-index:9999;">
+      <svg width="44" height="44" viewBox="0 0 32 32" fill="none" style="margin-bottom:18px;animation:al-spin 1.6s linear infinite;">
+        <path d="M16 4 L22 6 L26 12 L26 22 L20 27 L12 27 L6 22 L6 12 L10 6 Z" stroke="#e6b840" stroke-width="1.2" fill="none"/>
+        <circle cx="16" cy="16" r="3.5" stroke="#e6b840" stroke-width="1" fill="none"/>
+      </svg>
+      <span>ALETHEIA</span>
+      <style>@keyframes al-spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}</style>
+    </div>
+  </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>

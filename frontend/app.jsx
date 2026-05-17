@@ -250,7 +250,14 @@ function MapView({
       setMapZoom(z);
     });
     mapInst.current = map;
-    setTimeout(() => { map.invalidateSize(); map.fitBounds([[-58, -120], [74, -32]]); }, 100);
+    // Two-pass invalidate: 250ms for initial layout, 600ms for iOS Safari
+    // which settles layout a frame later (single 100ms was too short on mobile)
+    const resizeAndFit = () => {
+      map.invalidateSize({ animate: false });
+      map.fitBounds([[-58, -120], [74, -32]]);
+    };
+    setTimeout(resizeAndFit, 250);
+    setTimeout(resizeAndFit, 600);
 
     // Mobile: el layout (topbar wrap, dvh, rotación) cambia el tamaño del
     // contenedor después del mount → Leaflet queda con size 0 (mapa en blanco).
@@ -794,9 +801,9 @@ function GlobeView({
          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1, touchAction: 'none', cursor: 'grab' }}>
       <defs>
         <radialGradient id="globeWater" cx="0.4" cy="0.34" r="0.9">
-          <stop offset="0%"   stopColor="#1c5470" />
-          <stop offset="55%"  stopColor="#123b52" />
-          <stop offset="100%" stopColor="#081d2c" />
+          <stop offset="0%"   stopColor="#2a8ab5" />
+          <stop offset="55%"  stopColor="#1a6080" />
+          <stop offset="100%" stopColor="#0d3550" />
         </radialGradient>
         <pattern id="globeMesh" width="13" height="13" patternUnits="userSpaceOnUse">
           <path d="M13 0 H0 V13" fill="none"
@@ -1176,6 +1183,12 @@ function App({ user: authUser, onLogout }) {
     zoomIn: () => {}, zoomOut: () => {}, reset: () => {},
     zoomToFeature: () => {}, getFeatureById: () => null
   });
+
+  // Remove Babel loading splash once React has mounted
+  useEffect(() => {
+    const el = document.getElementById("app-loading");
+    if (el) el.remove();
+  }, []);
 
   // Cargar topojson
   useEffect(() => {

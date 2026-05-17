@@ -484,7 +484,7 @@ function AletheiaChat({ selectedCountry }) {
             <div className="chat-header-left">
               <div className="chat-header-avatar"><OwlLogo size={24} /></div>
               <div>
-                <div className="chat-header-title">Aletheia</div>
+                <div className="chat-header-title">alethe<span className="chat-title-ia">IA</span></div>
                 <div className="chat-header-sub">aquello que no está oculto</div>
               </div>
             </div>
