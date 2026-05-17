@@ -2773,6 +2773,16 @@
     }
     .meth-src li b { color: var(--text); font-weight: 600; }
     .meth-def li::before { background: var(--text-3); }
+    .meth-num {
+      list-style: decimal; padding-left: 22px; margin: 6px 0 12px;
+    }
+    .meth-num li {
+      padding: 5px 0; border-bottom: 1px solid var(--line);
+      font-size: 12px;
+    }
+    .meth-num li::before { display: none; }
+    .meth-num li:last-child { border-bottom: none; }
+    .meth-num li b { color: var(--text); }
     .meth-table-wrap { overflow-x: auto; margin: 6px 0 14px; }
     .meth-table {
       width: 100%; border-collapse: collapse; font-size: 11px;
@@ -5169,7 +5179,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=21"></script>
+  <script type="text/babel" src="app.jsx?v=22"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>

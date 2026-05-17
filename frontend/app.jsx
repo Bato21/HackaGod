@@ -2475,6 +2475,27 @@ function App({ user: authUser, onLogout }) {
               Verde es mejor, rojo es peor.
             </p>
 
+            <div className="nh">En qué se basa el puntaje (13 criterios)</div>
+            <p style={{ fontSize: 12, color: "var(--text-2)" }}>
+              El CPI mide la percepción de corrupción del sector público a partir
+              de estos 13 aspectos:
+            </p>
+            <ol className="meth-src meth-num">
+              <li><b>Soborno de funcionarios</b> — pagos irregulares en servicios públicos.</li>
+              <li><b>Desvío de fondos públicos</b> — malversación o uso indebido del presupuesto.</li>
+              <li><b>Cargos públicos para beneficio privado</b> — conflictos de interés y enriquecimiento ilícito.</li>
+              <li><b>Nepotismo</b> — contratación por conexiones o favoritismo.</li>
+              <li><b>Captura del Estado</b> — influencia indebida de empresas en políticas públicas.</li>
+              <li><b>Acceso a la información</b> — transparencia y disponibilidad de datos públicos.</li>
+              <li><b>Protección a denunciantes</b> — leyes y canales efectivos para denunciar.</li>
+              <li><b>Financiamiento de campañas</b> — regulación de donaciones y gastos electorales.</li>
+              <li><b>Declaración de bienes</b> — divulgación y verificación patrimonial.</li>
+              <li><b>Independencia judicial</b> — autonomía e imparcialidad de tribunales.</li>
+              <li><b>Integridad del sector público</b> — códigos de ética y sistemas de mérito.</li>
+              <li><b>Fiscalización y auditoría</b> — órganos de control independientes.</li>
+              <li><b>Aplicación de leyes anticorrupción</b> — procesamiento y sanciones reales.</li>
+            </ol>
+
             <div className="nh">Datos verificados</div>
             <ul className="meth-src">
               <li><b>Puntaje de corrupción</b> — Transparencia Internacional (CPI).</li>
