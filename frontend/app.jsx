@@ -2946,6 +2946,15 @@ const TOUR_STEPS = [
   },
 ];
 
+function isElVisible(el) {
+  if (!el) return false;
+  const r = el.getBoundingClientRect();
+  const vw = window.innerWidth, vh = window.innerHeight;
+  return r.width > 10 && r.height > 10
+    && r.left < vw && r.right > 0
+    && r.top  < vh && r.bottom > 0;
+}
+
 function useTourRect(selector, step, delay) {
   const [rect, setRect] = useState(null);
   const [ready, setReady] = useState(false);
@@ -2954,40 +2963,41 @@ function useTourRect(selector, step, delay) {
     setReady(false);
     setRect(null);
     if (!selector) { setReady(true); return; }
-    const poll = () => {
+
+    const capture = () => {
       const el = document.querySelector(selector);
-      if (el) {
+      if (isElVisible(el)) {
         const r = el.getBoundingClientRect();
-        if (r.width > 0 && r.height > 0) {
-          setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
-          setReady(true);
-          return true;
-        }
+        setRect({ top: r.top, left: r.left, width: r.width, height: r.height, right: r.right, bottom: r.bottom });
+        setReady(true);
+        return true;
       }
       return false;
     };
-    if (!poll()) {
-      const id = setInterval(() => { if (poll()) clearInterval(id); }, 80);
-      const timeout = setTimeout(() => { clearInterval(id); setReady(true); }, 2000);
-      return () => { clearInterval(id); clearTimeout(timeout); };
-    }
-  }, [selector, step]);
+
+    // Wait delay ms (for event-triggered state changes) then start polling
+    let pollId, timeoutId;
+    const start = () => {
+      if (!capture()) {
+        pollId = setInterval(() => { if (capture()) clearInterval(pollId); }, 100);
+        timeoutId = setTimeout(() => { clearInterval(pollId); setReady(true); }, 2500);
+      }
+    };
+    const waitId = delay ? setTimeout(start, delay) : (start(), null);
+    return () => { clearTimeout(waitId); clearInterval(pollId); clearTimeout(timeoutId); };
+  }, [selector, step, delay]);
 
   useEffect(() => {
-    if (!rect) return;
+    if (!rect || !selector) return;
     const update = () => {
       const el = document.querySelector(selector);
       if (el) {
         const r = el.getBoundingClientRect();
-        setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+        setRect({ top: r.top, left: r.left, width: r.width, height: r.height, right: r.right, bottom: r.bottom });
       }
     };
     window.addEventListener("resize", update);
-    window.addEventListener("scroll", update, true);
-    return () => {
-      window.removeEventListener("resize", update);
-      window.removeEventListener("scroll", update, true);
-    };
+    return () => window.removeEventListener("resize", update);
   }, [selector, rect]);
 
   return { rect, ready };
@@ -3021,43 +3031,52 @@ function TourTooltip({ step: s, stepIdx, totalSteps, animKey, onPrev, onNext, on
   );
 }
 
-function computeTooltipPos(rect, pos) {
-  const PAD = 10;
-  const TW  = 300;
-  const vw  = window.innerWidth;
-  const vh  = window.innerHeight;
-  const sl  = rect.left  - PAD;
-  const st  = rect.top   - PAD;
-  const sr  = rect.left  + rect.width  + PAD;
-  const sb  = rect.top   + rect.height + PAD;
+function computeTooltipPos(rect, preferredPos) {
+  const PAD = 12, GAP = 16, TW = 300, TH_EST = 220;
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const cl = (v, lo, hi) => Math.min(Math.max(v, lo), hi);
+
+  const spaceRight  = vw - rect.right  - PAD;
+  const spaceLeft   = rect.left - PAD;
+  const spaceBottom = vh - rect.bottom - PAD;
+  const spaceTop    = rect.top  - PAD;
+
+  // Auto-pick best side if preferred doesn't fit
+  let pos = preferredPos;
+  if (pos === "right"  && spaceRight  < TW + GAP) pos = spaceLeft > TW + GAP ? "left"   : "bottom";
+  if (pos === "left"   && spaceLeft   < TW + GAP) pos = spaceRight > TW + GAP ? "right"  : "bottom";
+  if (pos === "bottom" && spaceBottom < TH_EST + GAP) pos = spaceTop > TH_EST + GAP ? "top" : "right";
+  if (pos === "top"    && spaceTop    < TH_EST + GAP) pos = spaceBottom > TH_EST + GAP ? "bottom" : "right";
+
+  const midX = rect.left + rect.width  / 2;
   const midY = rect.top  + rect.height / 2;
 
   switch (pos) {
-    case "right": return {
-      position: "fixed",
-      left: Math.min(sr + 14, vw - TW - 12),
-      top:  Math.max(12, Math.min(midY - 110, vh - 240)),
-      width: TW,
+    case "right": return { position:"fixed", zIndex:10001,
+      left: rect.right + PAD + GAP,
+      top:  cl(midY - TH_EST / 2, 12, vh - TH_EST - 12),
+      width: cl(TW, 200, vw - 24),
     };
-    case "left": return {
-      position: "fixed",
-      right: Math.max(12, vw - sl + 14),
-      top:   Math.max(12, Math.min(midY - 110, vh - 240)),
-      width: TW,
+    case "left": return { position:"fixed", zIndex:10001,
+      left: cl(rect.left - PAD - GAP - TW, 12, vw - TW - 12),
+      top:  cl(midY - TH_EST / 2, 12, vh - TH_EST - 12),
+      width: cl(TW, 200, vw - 24),
     };
-    case "bottom": return {
-      position: "fixed",
-      top:  Math.min(sb + 14, vh - 240),
-      left: Math.max(12, Math.min(sl + (rect.width / 2) - TW / 2, vw - TW - 12)),
-      width: TW,
+    case "bottom": return { position:"fixed", zIndex:10001,
+      left: cl(midX - TW / 2, 12, vw - TW - 12),
+      top:  rect.bottom + PAD + GAP,
+      width: cl(TW, 200, vw - 24),
     };
-    case "top": return {
-      position: "fixed",
-      bottom: Math.max(12, vh - st + 14),
-      left:   Math.max(12, Math.min(sl + (rect.width / 2) - TW / 2, vw - TW - 12)),
-      width: TW,
+    case "top": return { position:"fixed", zIndex:10001,
+      left:   cl(midX - TW / 2, 12, vw - TW - 12),
+      bottom: cl(vh - rect.top + PAD + GAP, 12, vh - 60),
+      width:  cl(TW, 200, vw - 24),
     };
-    default: return { position: "fixed", left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: TW };
+    default: return { position:"fixed", zIndex:10001,
+      left: cl(vw / 2 - TW / 2, 12, vw - TW - 12),
+      top:  cl(vh / 2 - TH_EST / 2, 12, vh - TH_EST - 12),
+      width: cl(TW, 200, vw - 24),
+    };
   }
 }
 
@@ -3077,8 +3096,10 @@ function TourOverlay({ onDone }) {
     }
   }, [step, s.event]);
 
+  const isMobileView = window.innerWidth < 760;
+
   const { rect, ready } = useTourRect(
-    s.type === "spotlight" ? s.selector : null,
+    (s.type === "spotlight" && !isMobileView) ? s.selector : null,
     step,
     s.delay || 0
   );
@@ -3089,11 +3110,11 @@ function TourOverlay({ onDone }) {
     setStep(next);
   };
 
-  const isLast  = step === TOUR_STEPS.length - 1;
-  const PAD     = 10;
+  const isLast = step === TOUR_STEPS.length - 1;
+  const PAD    = 12;
 
-  // Modal mode (type:'modal' OR spotlight element not found)
-  if (s.type === "modal" || (s.type === "spotlight" && ready && !rect)) {
+  // Modal mode: type:'modal', mobile, or element not found after polling
+  if (s.type === "modal" || isMobileView || (ready && !rect)) {
     return (
       <div className="ob-backdrop">
         <div className="ob-card">
@@ -3128,10 +3149,8 @@ function TourOverlay({ onDone }) {
     );
   }
 
-  // Loading spotlight
-  if (s.type === "spotlight" && !ready) {
-    return <div className="ob-spotlight-overlay" />;
-  }
+  // Polling — show dim but no spotlight yet
+  if (!ready) return <div className="ob-spotlight-overlay" />;
 
   // Spotlight mode
   const spotStyle = {
@@ -3140,12 +3159,12 @@ function TourOverlay({ onDone }) {
     left:   rect.left   - PAD,
     width:  rect.width  + PAD * 2,
     height: rect.height + PAD * 2,
-    borderRadius: 10,
-    boxShadow: "0 0 0 9999px rgba(8,6,16,0.82)",
-    border: "2px solid rgba(230,184,64,0.55)",
+    borderRadius: 12,
+    boxShadow: "0 0 0 9999px rgba(8,6,16,0.80)",
+    border: "2px solid rgba(230,184,64,0.6)",
     zIndex: 10000,
     pointerEvents: "none",
-    transition: "top .3s,left .3s,width .3s,height .3s",
+    transition: "top .32s ease,left .32s ease,width .32s ease,height .32s ease",
   };
 
   const tooltipStyle = computeTooltipPos(rect, s.tooltipPos);
