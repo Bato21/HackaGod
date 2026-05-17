@@ -35,10 +35,10 @@
   flex-shrink: 0;
 }
 .fvt-logo {
-  font-family: var(--editorial);
-  font-weight: 500;
-  font-size: 19px;
-  letter-spacing: -0.02em;
+  font-family: "Cinzel", serif;
+  font-weight: 700;
+  font-size: 17px;
+  letter-spacing: 0.05em;
   color: var(--text);
 }
 .fvt-logo::before {
