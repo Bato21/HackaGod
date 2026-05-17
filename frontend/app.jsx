@@ -2848,18 +2848,155 @@ function App({ user: authUser, onLogout }) {
   );
 }
 
+// ── Onboarding ───────────────────────────────────────────────
+const TOUR_STEPS = [
+  {
+    icon: "🌎",
+    title: "El mapa interactivo",
+    desc: "Cada país tiene un color según su Índice de Percepción de Corrupción (CPI). Verde = más transparente, rojo = mayor corrupción percibida.",
+  },
+  {
+    icon: "📊",
+    title: "Ranking de países",
+    desc: "El panel lateral ordena todos los países por puntaje. Puedes filtrar por región, buscar por nombre y comparar dos países al mismo tiempo.",
+  },
+  {
+    icon: "🗂️",
+    title: "Ficha de país",
+    desc: "Toca cualquier país en el mapa para ver su ficha completa: presidente actual, gabinete, indicadores económicos y datos judiciales.",
+  },
+  {
+    icon: "🦉",
+    title: "Aletheia — IA",
+    desc: "El botón del búho (esquina inferior derecha) abre el asistente de IA. Puedes preguntarle sobre cualquier país, dato o contexto histórico.",
+  },
+];
+
+function TourOverlay({ onDone }) {
+  const [step, setStep] = useState(0);
+  const [animKey, setAnimKey] = useState(0);
+
+  const go = (next) => {
+    setAnimKey(k => k + 1);
+    if (next >= TOUR_STEPS.length) { onDone(); return; }
+    setStep(next);
+  };
+
+  const s = TOUR_STEPS[step];
+  const isLast = step === TOUR_STEPS.length - 1;
+
+  return (
+    <div className="ob-backdrop">
+      <div className="ob-card">
+        <div className="ob-tour-header">
+          <div className="ob-tour-dots">
+            {TOUR_STEPS.map((_, i) => (
+              <div key={i} className={`ob-tour-dot${i === step ? " active" : ""}`} />
+            ))}
+          </div>
+          <button className="ob-tour-skip" onClick={onDone}>Saltar</button>
+        </div>
+        <div key={animKey} className="ob-step-enter">
+          <div className="ob-tour-icon">{s.icon}</div>
+          <div className="ob-tour-title">{s.title}</div>
+          <div className="ob-tour-desc">{s.desc}</div>
+        </div>
+        <div className="ob-tour-nav">
+          {step > 0 && (
+            <button className="ob-btn-secondary" onClick={() => go(step - 1)}>Anterior</button>
+          )}
+          <button
+            className={`ob-btn-primary${isLast ? " done" : ""}`}
+            onClick={() => go(step + 1)}
+          >
+            {isLast ? "¡Listo, explorar!" : "Siguiente →"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WelcomeModal({ user, onClose }) {
+  const [showTour, setShowTour] = useState(false);
+
+  const markDone = () => {
+    try { localStorage.setItem("aletheia.onboarded", "1"); } catch (_) {}
+    onClose();
+  };
+
+  if (showTour) return <TourOverlay onDone={markDone} />;
+
+  return (
+    <div className="ob-backdrop">
+      <div className="ob-card">
+        <div className="ob-owl">
+          <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+            <ellipse cx="32" cy="38" rx="20" ry="18" fill="rgba(230,184,64,0.12)" stroke="rgba(230,184,64,0.35)" strokeWidth="1.5"/>
+            <ellipse cx="24" cy="26" rx="9" ry="11" fill="#1d1a2d" stroke="rgba(230,184,64,0.4)" strokeWidth="1.5"/>
+            <ellipse cx="40" cy="26" rx="9" ry="11" fill="#1d1a2d" stroke="rgba(230,184,64,0.4)" strokeWidth="1.5"/>
+            <circle cx="24" cy="26" r="5" fill="#e6b840" opacity="0.9"/>
+            <circle cx="40" cy="26" r="5" fill="#e6b840" opacity="0.9"/>
+            <circle cx="24" cy="26" r="2.5" fill="#12100e"/>
+            <circle cx="40" cy="26" r="2.5" fill="#12100e"/>
+            <circle cx="24.8" cy="25.2" r="1" fill="white" opacity="0.7"/>
+            <circle cx="40.8" cy="25.2" r="1" fill="white" opacity="0.7"/>
+            <path d="M29 35 Q32 38 35 35" stroke="rgba(230,184,64,0.6)" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
+            <path d="M20 18 L24 22 L28 18" stroke="rgba(230,184,64,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <path d="M36 18 L40 22 L44 18" stroke="rgba(230,184,64,0.5)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <ellipse cx="32" cy="52" rx="14" ry="6" fill="rgba(230,184,64,0.06)" stroke="rgba(230,184,64,0.15)" strokeWidth="1"/>
+          </svg>
+        </div>
+        <div className="ob-title">
+          Bienvenido a <span>Aletheia</span>
+          {user?.name && user.kind !== "guest" ? `, ${user.name.split(" ")[0]}` : ""}
+        </div>
+        <div className="ob-desc">
+          Plataforma de inteligencia cívica para América Latina. Datos reales de corrupción, presidentes, gabinetes e indicadores.<br/><br/>
+          ¿Quieres una introducción rápida?
+        </div>
+        <div className="ob-actions">
+          <button className="ob-btn-primary" onClick={() => setShowTour(true)}>
+            Sí, muéstrame cómo funciona →
+          </button>
+          <button className="ob-btn-secondary" onClick={markDone}>
+            Explorar por mi cuenta
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
 function Root() {
   const [authUser, setAuthUser] = useState(() => window.AuthAPI?.current() || null);
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  const handleAuth = useCallback((user) => {
+    setAuthUser(user);
+    try {
+      if (!localStorage.getItem("aletheia.onboarded")) setShowWelcome(true);
+    } catch (_) {}
+  }, []);
+
   if (!authUser) {
-    return <window.AuthScreen onAuth={setAuthUser} />;
+    return <window.AuthScreen onAuth={handleAuth} />;
   }
   const handleLogout = () => {
     window.AuthAPI.logout();
     setAuthUser(null);
+    setShowWelcome(false);
   };
-  return <App user={authUser} onLogout={handleLogout} />;
+  return (
+    <>
+      <App user={authUser} onLogout={handleLogout} />
+      {showWelcome && (
+        <WelcomeModal user={authUser} onClose={() => setShowWelcome(false)} />
+      )}
+    </>
+  );
 }
 
 root.render(<Root />);
