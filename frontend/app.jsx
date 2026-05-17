@@ -525,39 +525,44 @@ function MapView({
     entries.forEach(sig => {
       const country = window.COUNTRIES.find(c => c.iso3 === sig.iso3);
       if (!country) return;
-      const color  = window.riskColor(sig.strength) || '#eab308';
-      const label  = window.riskLabel(sig.strength);
-      const radius = 5 + Math.round((sig.strength - 0.5) / 0.5 * 5); // 5→10
+      const color = window.riskColor(sig.strength) || '#eab308';
+      const label = window.riskLabel(sig.strength);
+      const size  = 18 + Math.round((sig.strength - 0.5) / 0.5 * 10); // 18→28
 
-      // Anillo exterior
-      L.circleMarker([country.lat, country.lng], {
-        radius: radius + 5,
-        color, weight: 1.5, fillColor: color, fillOpacity: 0.12,
-        pane: 'news-pois', interactive: false,
-      }).addTo(grp);
+      // Triángulo de alerta + 2 ecos de pulso (avisa que hay señal)
+      const poly = '12,1.5 22.5,20.5 1.5,20.5';
+      const tri = (cls, extra) =>
+        `<svg class="${cls}" width="${size}" height="${size}" viewBox="0 0 24 22">` +
+        `<polygon points="${poly}" ${extra}/></svg>`;
+      const html =
+        `<div class="risk-poi-wrap">` +
+        tri('risk-echo', `fill="${color}" opacity="0.45"`) +
+        tri('risk-echo d2', `fill="${color}" opacity="0.45"`) +
+        tri('risk-tri', `fill="${color}" stroke="#fff" stroke-width="1.6" stroke-linejoin="round"`) +
+        `</div>`;
 
-      // Punto interior
-      const dot = L.circleMarker([country.lat, country.lng], {
-        radius, color: '#fff', weight: 1.2,
-        fillColor: color, fillOpacity: 0.92, pane: 'news-pois',
+      const marker = L.marker([country.lat, country.lng], {
+        icon: L.divIcon({ className: 'risk-poi', html, iconSize: [0, 0], iconAnchor: [0, 0] }),
+        pane: 'news-pois',
+        riseOnHover: true,
       });
 
       const esc = s => String(s || '').replace(/</g, '&lt;');
-      dot.bindTooltip(`
+      marker.bindTooltip(`
         <div style="font-family:monospace;font-size:10px;line-height:1.5;max-width:230px;">
           <div style="font-weight:700;color:${color};letter-spacing:0.08em;text-transform:uppercase;margin-bottom:3px;">
-            ⬤ ${label} · ${(sig.strength * 100).toFixed(0)}%
+            ▲ ${label} · ${(sig.strength * 100).toFixed(0)}%
           </div>
           <div style="font-weight:600;">${esc(country.name)}</div>
           <div style="color:#aaa;margin-top:2px;">${esc(sig.pattern)} · ${sig.count} señal${sig.count === 1 ? '' : 'es'}</div>
           ${sig.summary ? `<div style="color:#888;margin-top:4px;">${esc(sig.summary)}</div>` : ''}
         </div>
-      `, { direction: 'top', offset: [0, -8], opacity: 1, className: 'news-poi-tooltip' });
+      `, { direction: 'top', offset: [0, -size], opacity: 1, className: 'news-poi-tooltip' });
 
-      dot.on('click', () =>
+      marker.on('click', () =>
         window.dispatchEvent(new CustomEvent("aletheia:risk:open", { detail: { iso3: sig.iso3 } }))
       );
-      dot.addTo(grp);
+      marker.addTo(grp);
     });
 
     grp.addTo(map);

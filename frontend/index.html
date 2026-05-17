@@ -3274,6 +3274,33 @@
       line-height: 14px;
     }
     html[data-theme="corporate"] .map-iso-label { color: rgba(255,255,255,0.95); }
+
+    /* ── Risk POI: triángulo de alerta con pulso ── */
+    .risk-poi { width: 0; height: 0; }
+    .risk-poi-wrap { position: absolute; left: 0; top: 0; }
+    .risk-tri, .risk-echo {
+      position: absolute; left: 0; top: 0;
+      transform: translate(-50%, -50%);
+      transform-origin: center;
+    }
+    .risk-tri {
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.55));
+      cursor: pointer;
+    }
+    .risk-echo {
+      animation: risk-pulse 1.8s ease-out infinite;
+      pointer-events: none;
+    }
+    .risk-echo.d2 { animation-delay: 0.9s; }
+    @keyframes risk-pulse {
+      0%   { opacity: 0.55; transform: translate(-50%,-50%) scale(0.5); }
+      70%  { opacity: 0; }
+      100% { opacity: 0; transform: translate(-50%,-50%) scale(2.3); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .risk-echo { animation: none; opacity: 0; }
+    }
+
     /* Hide default Leaflet zoom controls (we use custom ones) */
     .leaflet-control-zoom { display: none !important; }
     /* Map frame needs a defined height for Leaflet */
@@ -5712,7 +5739,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=51"></script>
+  <script type="text/babel" src="app.jsx?v=52"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>
