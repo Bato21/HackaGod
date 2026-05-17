@@ -250,7 +250,14 @@ function MapView({
       setMapZoom(z);
     });
     mapInst.current = map;
-    setTimeout(() => { map.invalidateSize(); map.fitBounds([[-58, -120], [74, -32]]); }, 100);
+    // Two-pass invalidate: 250ms for initial layout, 600ms for iOS Safari
+    // which settles layout a frame later (single 100ms was too short on mobile)
+    const resizeAndFit = () => {
+      map.invalidateSize({ animate: false });
+      map.fitBounds([[-58, -120], [74, -32]]);
+    };
+    setTimeout(resizeAndFit, 250);
+    setTimeout(resizeAndFit, 600);
 
     // Mobile: el layout (topbar wrap, dvh, rotación) cambia el tamaño del
     // contenedor después del mount → Leaflet queda con size 0 (mapa en blanco).
@@ -1131,6 +1138,12 @@ function App({ user: authUser, onLogout }) {
     zoomIn: () => {}, zoomOut: () => {}, reset: () => {},
     zoomToFeature: () => {}, getFeatureById: () => null
   });
+
+  // Remove Babel loading splash once React has mounted
+  useEffect(() => {
+    const el = document.getElementById("app-loading");
+    if (el) el.remove();
+  }, []);
 
   // Cargar topojson
   useEffect(() => {
