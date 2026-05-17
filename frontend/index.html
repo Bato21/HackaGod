@@ -154,6 +154,8 @@
     .mobile-nav { display: none; }
     /* Foro es takeover con su propia nav → esconder bottom-nav encima */
     body.forum-open .mobile-nav { display: none !important; }
+    /* Barra de pestañas de ficha: solo mobile */
+    .ficha-tabs { display: none; }
     .topbar .brand {
       display: flex;
       align-items: baseline;
@@ -4651,7 +4653,73 @@
       .news-focus, .country-focus, .chat-panel {
         padding-bottom: 0;
       }
-      .news-rail-body, .cf-body { padding-bottom: 78px !important; }
+      .news-rail-body, .cf-body { padding-bottom: 40px !important; }
+
+      /* ── Ficha país mobile: overlay full-screen con pestañas ──────
+         Al tocar un país: ficha primero (info), todo scrolleable, y
+         arriba una barra para alternar Información ↔ Noticias. */
+      body.ficha-open .mobile-nav { display: none !important; }
+
+      .ficha-tabs {
+        display: flex !important;
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: 50px;
+        z-index: 260;
+        align-items: stretch;
+        background: #0e0c13;
+        border-bottom: 1px solid rgba(230,184,64,0.18);
+        padding-top: env(safe-area-inset-top);
+      }
+      .ficha-tab {
+        flex: 1;
+        display: inline-flex; align-items: center; justify-content: center;
+        gap: 7px;
+        background: transparent; border: none;
+        border-bottom: 2px solid transparent;
+        color: rgba(245,241,232,0.55);
+        font-family: inherit; font-size: 13px; font-weight: 500;
+        cursor: pointer; transition: all .15s;
+      }
+      .ficha-tab svg { width: 16px; height: 16px; }
+      .ficha-tab.active {
+        color: #e6b840;
+        border-bottom-color: #e6b840;
+        background: rgba(230,184,64,0.06);
+      }
+      .ficha-tabs-close {
+        width: 50px; flex-shrink: 0;
+        background: transparent; border: none;
+        color: rgba(245,241,232,0.5);
+        display: inline-flex; align-items: center; justify-content: center;
+        cursor: pointer;
+      }
+      .ficha-tabs-close svg { width: 16px; height: 16px; }
+      .ficha-tabs-close:active { color: #e6b840; }
+
+      /* Paneles → overlay full-screen bajo la barra de pestañas.
+         transform:none anula el slide-in lateral del desktop. */
+      .country-focus, .news-focus {
+        position: fixed !important;
+        inset: 0 !important;
+        top: calc(50px + env(safe-area-inset-top)) !important;
+        width: 100% !important;
+        height: auto !important;
+        transform: none !important;
+        border: none !important;
+        box-shadow: none !important;
+        z-index: 250 !important;
+      }
+      /* Visibilidad por pestaña activa */
+      body.ficha-tab-info  .news-focus    { display: none !important; }
+      body.ficha-tab-info  .country-focus { display: flex !important; }
+      body.ficha-tab-news  .country-focus { display: none !important; }
+      body.ficha-tab-news  .news-focus    { display: flex !important; }
+      /* Ocultar los botones de cerrar internos (la barra ya tiene su X) */
+      .country-focus .cf-close,
+      .news-focus .nf-close { display: none !important; }
+      /* La ficha mobile no necesita el header "Noticias" duplicado */
+      .news-focus .nf-header { display: none !important; }
 
       /* Country search: compacta y dropdown ancho */
       .country-search { margin-left: 0; }
@@ -4905,7 +4973,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=4"></script>
+  <script type="text/babel" src="app.jsx?v=5"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>

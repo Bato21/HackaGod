@@ -1074,6 +1074,9 @@ function App({ user: authUser, onLogout }) {
   const [mapSettingsOpen, setMapSettingsOpen] = useState(false);
   const [countryFocus, setCountryFocus] = useState(null);
   const [countryDashboard, setCountryDashboard] = useState(null);
+  // Mobile: ficha de país y noticias se muestran como un solo overlay con
+  // pestañas. 'info' = ficha, 'news' = noticias. Default 'info'.
+  const [mobileFichaTab, setMobileFichaTab] = useState("info");
   const [compareMode, setCompareMode] = useState(false);
   const [forumOpen, setForumOpen] = useState(null); // null | { iso3?, threadId?, _global? }
   const [profileOpen, setProfileOpen] = useState(false);
@@ -1230,6 +1233,7 @@ function App({ user: authUser, onLogout }) {
     setSelectedId(id);
     setComparedId(null);
     setCountryFocus(id);
+    setMobileFichaTab("info"); // mobile: abrir siempre en la ficha primero
     setTimeout(() => {
       const feat = mapApi.current?.getFeatureById?.(id);
       if (feat) mapApi.current?.zoomToFeature(feat, true);
@@ -1268,6 +1272,18 @@ function App({ user: authUser, onLogout }) {
     document.body.classList.toggle("forum-open", !!forumOpen);
     return () => document.body.classList.remove("forum-open");
   }, [forumOpen]);
+
+  // Ficha país abierta (mobile): body classes para overlay full-screen
+  // con pestañas Información/Noticias y para ocultar el bottom-nav.
+  useEffect(() => {
+    const open = !!countryFocus;
+    document.body.classList.toggle("ficha-open", open);
+    document.body.classList.toggle("ficha-tab-info", open && mobileFichaTab === "info");
+    document.body.classList.toggle("ficha-tab-news", open && mobileFichaTab === "news");
+    return () => {
+      document.body.classList.remove("ficha-open", "ficha-tab-info", "ficha-tab-news");
+    };
+  }, [countryFocus, mobileFichaTab]);
 
   const selected = selectedId ? COUNTRIES_BY_ID[selectedId] : null;
   const compared = comparedId ? COUNTRIES_BY_ID[comparedId] : null;
@@ -2007,6 +2023,38 @@ function App({ user: authUser, onLogout }) {
             <strong>Modo comparar</strong> · Selecciona otro país en el mapa
           </span>
           <button className="ch-cancel" onClick={() => setCompareMode(false)}>Cancelar</button>
+        </div>
+      )}
+
+      {/* Ficha mobile: barra de pestañas Información / Noticias.
+          CSS la muestra solo en mobile cuando hay país enfocado. */}
+      {countryFocus && (
+        <div className="ficha-tabs" role="tablist">
+          <button
+            className={`ficha-tab${mobileFichaTab === "info" ? " active" : ""}`}
+            onClick={() => setMobileFichaTab("info")}
+          >
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="8" cy="8" r="6.2"/>
+              <path d="M8 7.2 L8 11.2 M8 5 L8 5.01"/>
+            </svg>
+            <span>Información</span>
+          </button>
+          <button
+            className={`ficha-tab${mobileFichaTab === "news" ? " active" : ""}`}
+            onClick={() => setMobileFichaTab("news")}
+          >
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="2.5" y="3" width="11" height="10" rx="1"/>
+              <path d="M5 6 L11 6 M5 8.5 L11 8.5 M5 11 L9 11"/>
+            </svg>
+            <span>Noticias</span>
+          </button>
+          <button className="ficha-tabs-close" onClick={closeCountryFocus} aria-label="Cerrar">
+            <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+              <path d="M3 3 L11 11 M11 3 L3 11"/>
+            </svg>
+          </button>
         </div>
       )}
 
