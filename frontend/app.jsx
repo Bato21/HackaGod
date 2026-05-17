@@ -1353,6 +1353,24 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
     return () => window.removeEventListener("aletheia:select-country", handler);
   }, []);
 
+  // Tour: reacciona a eventos del TourOverlay
+  useEffect(() => {
+    const openPanel  = () => setMapFullscreen(false);
+    const toFullscreen = () => setMapFullscreen(true);
+    const selectForTour = () => {
+      const c = (window.COUNTRIES || []).find(c => c.iso3 === "MEX") || (window.COUNTRIES || [])[0];
+      if (c) handleSelectRef.current(c.id);
+    };
+    window.addEventListener("aletheia:tour:open-panel",      openPanel);
+    window.addEventListener("aletheia:tour:go-fullscreen",   toFullscreen);
+    window.addEventListener("aletheia:tour:select-country",  selectForTour);
+    return () => {
+      window.removeEventListener("aletheia:tour:open-panel",     openPanel);
+      window.removeEventListener("aletheia:tour:go-fullscreen",  toFullscreen);
+      window.removeEventListener("aletheia:tour:select-country", selectForTour);
+    };
+  }, []);
+
   // Forum takeover abierto → marca body para ocultar el bottom-nav mobile
   // (el foro tiene su propia navegación y el nav tapaba el composer).
   useEffect(() => {
@@ -1464,7 +1482,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
           </div>
 
           {/* PillNav + Pregunta a Aletheia */}
-          <div className="topbar-center">
+          <div className="topbar-center" data-tour="forum-btn">
             {window.PillNav && (
               <window.PillNav
                 items={pillNavItems}
@@ -1475,6 +1493,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
             )}
             <button
               className="ask-aletheia-btn"
+              data-tour="chatbot"
               onClick={() => window.dispatchEvent(new CustomEvent("aletheia:chat:toggle"))}
               title="Asistente Aletheia"
             >
@@ -1663,7 +1682,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
         {/* Main */}
         <div className={`main${mapFullscreen ? " fullscreen" : ""}`}>
           {/* Left rail */}
-          <div className="col">
+          <div className="col" data-tour="ranking">
             {selected && !isMobile ? (
               <NewsRail
                 country={selected}
@@ -1857,7 +1876,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
 
           {/* Map */}
           <div className="col" style={{ borderRight: "none", borderLeft: "none" }}>
-            <div className="map-wrap">
+            <div className="map-wrap" data-tour="globe">
               <div className="map-frame">
                 {!topology && <div className="loading">Cargando geometría</div>}
                 {topology && tweaks.projection === "orthographic" && (
@@ -2095,7 +2114,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
           </div>
 
           {/* Right rail */}
-          <div className="col">
+          <div className="col" data-tour="country-ficha">
             <div className="header">
               <h2>{selected ? "Detalle" : "Resumen continental"}</h2>
               {selected && (
@@ -2306,7 +2325,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
       )}
 
       {/* News Focus Panel — slide-in desde la izquierda */}
-      <div className={`news-focus${selected && mapFullscreen ? " open" : ""}`}>
+      <div className={`news-focus${selected && mapFullscreen ? " open" : ""}`} data-tour="news">
         {selected && (
           <>
             <div className="nf-header">
@@ -2859,8 +2878,12 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
 }
 
 // ── Onboarding ───────────────────────────────────────────────
+// type:'modal' → tarjeta centrada. type:'spotlight' → recorta hueco sobre el elemento real.
+// event: CustomEvent que App escucha para ajustar su estado antes de mostrar el paso.
+// delay: ms a esperar después de disparar el event (animaciones).
 const TOUR_STEPS = [
   {
+    type: "modal",
     icon: "◆",
     iconStyle: { fontSize: "28px", color: "#e6b840", fontStyle: "normal" },
     title: "¿Qué es Aletheia?",
@@ -2868,40 +2891,197 @@ const TOUR_STEPS = [
     isSummary: true,
   },
   {
+    type: "modal",
     icon: "🌍",
     title: "El mapa interactivo",
-    desc: "Cada país tiene un color según su puntaje CPI. Verde = más transparente, rojo = mayor corrupción percibida. Gira el globo y explora.",
+    desc: "Cada país tiene un color según su puntaje CPI. Verde = más transparente, rojo = mayor corrupción percibida. Gira el globo, haz zoom y explora cada país.",
   },
   {
-    icon: "📊",
-    title: "Ranking de países",
-    desc: "El panel lateral ordena todos los países por puntaje. Puedes filtrar por región, buscar por nombre y comparar dos países al mismo tiempo.",
+    type: "spotlight",
+    selector: '[data-tour="globe"]',
+    tooltipPos: "right",
+    title: "🌍  El mapa — inténtalo",
+    desc: "Arrastra para girar el globo. Haz clic sobre cualquier país para ver su información detallada.",
   },
   {
-    icon: "🗂️",
-    title: "Ficha de país",
-    desc: "Toca cualquier país en el mapa para ver su ficha completa: presidente actual, gabinete, indicadores económicos y datos judiciales.",
+    type: "spotlight",
+    selector: '[data-tour="ranking"]',
+    tooltipPos: "right",
+    event: "aletheia:tour:open-panel",
+    delay: 420,
+    title: "📊  Ranking de países",
+    desc: "Lista todos los países ordenados por CPI. Busca, filtra por rango de puntuación o compara dos países simultáneamente.",
   },
   {
-    icon: "📰",
-    title: "Noticias por país",
-    desc: "Cada ficha de país incluye una sección de noticias recientes. Mantente informado sobre los eventos más relevantes de cada nación.",
+    type: "spotlight",
+    selector: '[data-tour="country-ficha"]',
+    tooltipPos: "left",
+    event: "aletheia:tour:select-country",
+    delay: 350,
+    title: "🗂️  Ficha de país",
+    desc: "Presidente actual, gabinete ministerial, indicadores económicos y datos judiciales. Todo con fuentes verificadas.",
   },
   {
-    icon: "💬",
-    title: "Foro ciudadano",
-    desc: "Debate, comenta y discute con otros usuarios sobre la situación de cada país. El foro está abierto por país — tu voz cuenta.",
+    type: "spotlight",
+    selector: '[data-tour="news"]',
+    tooltipPos: "left",
+    event: "aletheia:tour:go-fullscreen",
+    delay: 380,
+    title: "📰  Noticias por país",
+    desc: "Noticias recientes filtradas por país. Aparecen cuando seleccionas un país en el mapa.",
   },
   {
-    icon: "🦉",
-    title: "Aletheia — IA",
-    desc: "El botón del búho (esquina inferior derecha) abre el asistente de IA. Puedes preguntarle sobre cualquier país, dato o contexto histórico.",
+    type: "spotlight",
+    selector: '[data-tour="forum-btn"]',
+    tooltipPos: "bottom",
+    title: "💬  Foro ciudadano",
+    desc: "Accede a debates por país desde el menú superior. Comenta, discute y conecta con otros usuarios.",
+  },
+  {
+    type: "spotlight",
+    selector: '[data-tour="chatbot"]',
+    tooltipPos: "bottom",
+    title: "🦉  Aletheia IA",
+    desc: "Pregunta cualquier cosa sobre los datos: rankings, comparativas, contexto histórico. La IA responde con información real de la plataforma.",
   },
 ];
 
+function useTourRect(selector, step, delay) {
+  const [rect, setRect] = useState(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setReady(false);
+    setRect(null);
+    if (!selector) { setReady(true); return; }
+    const poll = () => {
+      const el = document.querySelector(selector);
+      if (el) {
+        const r = el.getBoundingClientRect();
+        if (r.width > 0 && r.height > 0) {
+          setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+          setReady(true);
+          return true;
+        }
+      }
+      return false;
+    };
+    if (!poll()) {
+      const id = setInterval(() => { if (poll()) clearInterval(id); }, 80);
+      const timeout = setTimeout(() => { clearInterval(id); setReady(true); }, 2000);
+      return () => { clearInterval(id); clearTimeout(timeout); };
+    }
+  }, [selector, step]);
+
+  useEffect(() => {
+    if (!rect) return;
+    const update = () => {
+      const el = document.querySelector(selector);
+      if (el) {
+        const r = el.getBoundingClientRect();
+        setRect({ top: r.top, left: r.left, width: r.width, height: r.height });
+      }
+    };
+    window.addEventListener("resize", update);
+    window.addEventListener("scroll", update, true);
+    return () => {
+      window.removeEventListener("resize", update);
+      window.removeEventListener("scroll", update, true);
+    };
+  }, [selector, rect]);
+
+  return { rect, ready };
+}
+
+function TourTooltip({ step: s, stepIdx, totalSteps, animKey, onPrev, onNext, onSkip, style }) {
+  const isLast = stepIdx === totalSteps - 1;
+  return (
+    <div className="ob-tooltip" style={style}>
+      <div className="ob-tooltip-header">
+        <div className="ob-tour-dots">
+          {Array.from({ length: totalSteps }).map((_, i) => (
+            <div key={i} className={`ob-tour-dot${i === stepIdx ? " active" : ""}`} />
+          ))}
+        </div>
+        <button className="ob-tour-skip" onClick={onSkip}>Saltar</button>
+      </div>
+      <div key={animKey} className="ob-step-enter">
+        <div className="ob-tooltip-title">{s.title}</div>
+        <div className="ob-tooltip-desc">{s.desc}</div>
+      </div>
+      <div className="ob-tour-nav">
+        {stepIdx > 0 && (
+          <button className="ob-btn-secondary" onClick={onPrev}>Anterior</button>
+        )}
+        <button className={`ob-btn-primary${isLast ? " done" : ""}`} onClick={onNext}>
+          {isLast ? "¡Listo!" : "Siguiente →"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function computeTooltipPos(rect, pos) {
+  const PAD = 10;
+  const TW  = 300;
+  const vw  = window.innerWidth;
+  const vh  = window.innerHeight;
+  const sl  = rect.left  - PAD;
+  const st  = rect.top   - PAD;
+  const sr  = rect.left  + rect.width  + PAD;
+  const sb  = rect.top   + rect.height + PAD;
+  const midY = rect.top  + rect.height / 2;
+
+  switch (pos) {
+    case "right": return {
+      position: "fixed",
+      left: Math.min(sr + 14, vw - TW - 12),
+      top:  Math.max(12, Math.min(midY - 110, vh - 240)),
+      width: TW,
+    };
+    case "left": return {
+      position: "fixed",
+      right: Math.max(12, vw - sl + 14),
+      top:   Math.max(12, Math.min(midY - 110, vh - 240)),
+      width: TW,
+    };
+    case "bottom": return {
+      position: "fixed",
+      top:  Math.min(sb + 14, vh - 240),
+      left: Math.max(12, Math.min(sl + (rect.width / 2) - TW / 2, vw - TW - 12)),
+      width: TW,
+    };
+    case "top": return {
+      position: "fixed",
+      bottom: Math.max(12, vh - st + 14),
+      left:   Math.max(12, Math.min(sl + (rect.width / 2) - TW / 2, vw - TW - 12)),
+      width: TW,
+    };
+    default: return { position: "fixed", left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: TW };
+  }
+}
+
 function TourOverlay({ onDone }) {
-  const [step, setStep] = useState(0);
+  const [step, setStep]     = useState(0);
   const [animKey, setAnimKey] = useState(0);
+  const eventFiredRef = useRef(-1);
+
+  const s = TOUR_STEPS[step];
+
+  // Fire event before polling for spotlight
+  useEffect(() => {
+    if (eventFiredRef.current === step) return;
+    eventFiredRef.current = step;
+    if (s.event) {
+      window.dispatchEvent(new CustomEvent(s.event));
+    }
+  }, [step, s.event]);
+
+  const { rect, ready } = useTourRect(
+    s.type === "spotlight" ? s.selector : null,
+    step,
+    s.delay || 0
+  );
 
   const go = (next) => {
     setAnimKey(k => k + 1);
@@ -2909,41 +3089,81 @@ function TourOverlay({ onDone }) {
     setStep(next);
   };
 
-  const s = TOUR_STEPS[step];
-  const isLast = step === TOUR_STEPS.length - 1;
+  const isLast  = step === TOUR_STEPS.length - 1;
+  const PAD     = 10;
 
-  return (
-    <div className="ob-backdrop">
-      <div className="ob-card">
-        <div className="ob-tour-header">
-          <div className="ob-tour-dots">
-            {TOUR_STEPS.map((_, i) => (
-              <div key={i} className={`ob-tour-dot${i === step ? " active" : ""}`} />
-            ))}
+  // Modal mode (type:'modal' OR spotlight element not found)
+  if (s.type === "modal" || (s.type === "spotlight" && ready && !rect)) {
+    return (
+      <div className="ob-backdrop">
+        <div className="ob-card">
+          <div className="ob-tour-header">
+            <div className="ob-tour-dots">
+              {TOUR_STEPS.map((_, i) => (
+                <div key={i} className={`ob-tour-dot${i === step ? " active" : ""}`} />
+              ))}
+            </div>
+            <button className="ob-tour-skip" onClick={onDone}>Saltar</button>
           </div>
-          <button className="ob-tour-skip" onClick={onDone}>Saltar</button>
-        </div>
-        <div key={animKey} className="ob-step-enter">
-          <div className={`ob-tour-icon${s.isSummary ? " ob-tour-icon--summary" : ""}`}
-               style={s.iconStyle || {}}>
-            {s.icon}
+          <div key={animKey} className="ob-step-enter">
+            {s.icon && (
+              <div className={`ob-tour-icon${s.isSummary ? " ob-tour-icon--summary" : ""}`}
+                   style={s.iconStyle || {}}>
+                {s.icon}
+              </div>
+            )}
+            <div className={`ob-tour-title${s.isSummary ? " ob-tour-title--summary" : ""}`}>{s.title}</div>
+            <div className={`ob-tour-desc${s.isSummary ? " ob-tour-desc--summary" : ""}`}>{s.desc}</div>
           </div>
-          <div className={`ob-tour-title${s.isSummary ? " ob-tour-title--summary" : ""}`}>{s.title}</div>
-          <div className={`ob-tour-desc${s.isSummary ? " ob-tour-desc--summary" : ""}`}>{s.desc}</div>
-        </div>
-        <div className="ob-tour-nav">
-          {step > 0 && (
-            <button className="ob-btn-secondary" onClick={() => go(step - 1)}>Anterior</button>
-          )}
-          <button
-            className={`ob-btn-primary${isLast ? " done" : ""}`}
-            onClick={() => go(step + 1)}
-          >
-            {isLast ? "¡Listo, explorar!" : step === 0 ? "Ver funciones →" : "Siguiente →"}
-          </button>
+          <div className="ob-tour-nav">
+            {step > 0 && (
+              <button className="ob-btn-secondary" onClick={() => go(step - 1)}>Anterior</button>
+            )}
+            <button className={`ob-btn-primary${isLast ? " done" : ""}`} onClick={() => go(step + 1)}>
+              {isLast ? "¡Listo, explorar!" : step === 0 ? "Ver funciones →" : "Siguiente →"}
+            </button>
+          </div>
         </div>
       </div>
-    </div>
+    );
+  }
+
+  // Loading spotlight
+  if (s.type === "spotlight" && !ready) {
+    return <div className="ob-spotlight-overlay" />;
+  }
+
+  // Spotlight mode
+  const spotStyle = {
+    position: "fixed",
+    top:    rect.top    - PAD,
+    left:   rect.left   - PAD,
+    width:  rect.width  + PAD * 2,
+    height: rect.height + PAD * 2,
+    borderRadius: 10,
+    boxShadow: "0 0 0 9999px rgba(8,6,16,0.82)",
+    border: "2px solid rgba(230,184,64,0.55)",
+    zIndex: 10000,
+    pointerEvents: "none",
+    transition: "top .3s,left .3s,width .3s,height .3s",
+  };
+
+  const tooltipStyle = computeTooltipPos(rect, s.tooltipPos);
+
+  return (
+    <>
+      <div style={spotStyle} />
+      <TourTooltip
+        step={s}
+        stepIdx={step}
+        totalSteps={TOUR_STEPS.length}
+        animKey={animKey}
+        onPrev={() => go(step - 1)}
+        onNext={() => go(step + 1)}
+        onSkip={onDone}
+        style={tooltipStyle}
+      />
+    </>
   );
 }
 

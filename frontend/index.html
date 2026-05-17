@@ -5437,6 +5437,37 @@
     .ob-tour-nav .ob-btn-secondary { flex: 1; }
     .ob-tour-nav .ob-btn-primary { flex: 2; }
     .ob-tour-nav .ob-btn-primary.done { flex: 1; background: linear-gradient(135deg, #2e8a66 0%, #1f6b50 100%); }
+    /* Spotlight tooltip card (positioned next to element) */
+    .ob-tooltip {
+      position: fixed;
+      z-index: 10001;
+      background: linear-gradient(160deg, #151220 0%, #1d1a2d 100%);
+      border: 1px solid rgba(230,184,64,0.25);
+      border-radius: 14px;
+      padding: 20px 20px 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.55), 0 0 0 1px rgba(230,184,64,0.06);
+      max-width: 92vw;
+      animation: ob-card-in 0.3s cubic-bezier(.22,.68,0,1.2) both;
+    }
+    .ob-tooltip-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .ob-tooltip-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 15px; font-weight: 700;
+      color: #ede9e0; margin-bottom: 8px;
+      line-height: 1.3;
+    }
+    .ob-tooltip-desc {
+      font-size: 13px; color: rgba(237,233,224,0.62);
+      line-height: 1.6; margin-bottom: 16px;
+    }
+    .ob-spotlight-overlay {
+      position: fixed; inset: 0;
+      background: rgba(8,6,16,0.7);
+      z-index: 10000;
+    }
     /* Summary step overrides */
     .ob-tour-icon--summary {
       width: 64px; height: 64px;
@@ -5513,7 +5544,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=28"></script>
+  <script type="text/babel" src="app.jsx?v=29"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>
