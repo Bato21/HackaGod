@@ -166,8 +166,48 @@ function AletheiaChat({ selectedCountry }) {
   const [loading, setLoading]   = useState(false);
   const [loadingStatus, setLoadingStatus] = useState("");
   const [error, setError]       = useState("");
+  // Position: null = use default CSS anchor (bottom-right). Once user drags, becomes {x,y}.
+  const [pos, setPos] = useState(null);
   const bottomRef = useRef(null);
   const inputRef  = useRef(null);
+  const panelRef  = useRef(null);
+  const dragRef   = useRef(null); // {offsetX, offsetY}
+
+  // Drag handlers — only on header, ignore button clicks
+  const onHeaderMouseDown = (e) => {
+    if (e.target.closest("button")) return; // don't drag when clicking close
+    const rect = panelRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    dragRef.current = {
+      offsetX: e.clientX - rect.left,
+      offsetY: e.clientY - rect.top,
+      w: rect.width,
+      h: rect.height,
+    };
+    e.preventDefault();
+  };
+
+  useEffect(() => {
+    const onMove = (e) => {
+      const d = dragRef.current;
+      if (!d) return;
+      const x = e.clientX - d.offsetX;
+      const y = e.clientY - d.offsetY;
+      const maxX = window.innerWidth  - d.w;
+      const maxY = window.innerHeight - d.h;
+      setPos({
+        x: Math.max(0, Math.min(maxX, x)),
+        y: Math.max(0, Math.min(maxY, y)),
+      });
+    };
+    const onUp = () => { dragRef.current = null; };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -277,8 +317,12 @@ function AletheiaChat({ selectedCountry }) {
 
       {/* Chat panel */}
       {open && (
-        <div className="chat-panel">
-          <div className="chat-header">
+        <div
+          ref={panelRef}
+          className="chat-panel"
+          style={pos ? { left: pos.x, top: pos.y, right: "auto", bottom: "auto" } : undefined}
+        >
+          <div className="chat-header" onMouseDown={onHeaderMouseDown}>
             <div className="chat-header-left">
               <div className="chat-header-avatar"><OwlLogo size={24} /></div>
               <div>
