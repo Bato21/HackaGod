@@ -1388,41 +1388,11 @@
         repeating-linear-gradient(90deg, transparent 0 39px, rgba(255,255,255,0.022) 39px 40px);
       pointer-events: none;
     }
-    @media (max-width: 900px) {
-      .auth-stage { padding: 24px; justify-content: center; }
-      .auth-hero { display: none; }
-    }
-    /* ── Login responsive mobile ──────────────────────────────── */
-    @media (max-width: 600px) {
-      .auth-stage {
-        padding: 16px;
-        align-items: flex-start;
-      }
-      .auth-form {
-        width: 100%;
-        max-width: 420px;
-        padding: 30px 22px 26px;
-        border-radius: 16px;
-        max-height: calc(100vh - 32px);
-      }
-      .auth-form .af-title { font-size: 25px; margin-bottom: 20px; }
-      .auth-form .af-kicker { font-size: 9px; margin-bottom: 6px; }
-      .auth-tabs { margin-bottom: 16px; }
-      .auth-tabs button { font-size: 11px; padding: 9px 8px; }
-      .auth-field { margin-bottom: 12px; }
-      .auth-field input { font-size: 16px; padding: 12px; } /* 16px evita zoom iOS */
-      .auth-submit { padding: 14px; font-size: 12px; }
-    }
-    @media (max-width: 380px) {
-      .auth-stage { padding: 10px; }
-      .auth-form { padding: 24px 16px 20px; }
-      .auth-form .af-title { font-size: 22px; }
-    }
-    /* Pantallas bajas (landscape phone): centrar y permitir scroll */
-    @media (max-height: 640px) and (max-width: 900px) {
-      .auth-stage { align-items: flex-start; padding-top: 14px; padding-bottom: 14px; }
-      .auth-form { max-height: none; }
-    }
+    /* NOTA responsive login: las media queries de auth viven DESPUÉS de las
+       reglas base (~línea 1441/1488) para ganar la cascada — están en el
+       bloque @media (max-width:760px) y @media (max-width:420px) más abajo.
+       Poner overrides aquí (antes del base) NO funciona: misma especificidad,
+       el base posterior gana. */
 
     .auth-world-map {
       position: absolute;
@@ -4772,16 +4742,31 @@
       .pp-btn { padding: 6px 12px; font-size: 11px; }
       .pp-banner { height: 100px; }
 
-      /* Auth (login) — el form ocupa toda la pantalla */
-      .auth-stage { padding: 16px; gap: 0; }
+      /* Auth (login) — el form ocupa toda la pantalla.
+         display:none aquí GANA al base .auth-hero{display:flex} (línea 1441)
+         porque va después en el source con misma especificidad. */
+      .auth-hero { display: none !important; }
+      .auth-stage {
+        padding: 16px;
+        gap: 0;
+        justify-content: center;
+        align-items: flex-start;
+      }
       .auth-form {
         width: 100%;
-        max-width: 380px;
+        max-width: 420px;
+        flex-shrink: 1;
         padding: 28px 22px 24px;
         max-height: calc(100vh - 32px);
         border-radius: 16px;
       }
-      .auth-form .af-title { font-size: 26px; margin-bottom: 20px; }
+      .auth-form .af-title { font-size: 25px; margin-bottom: 20px; }
+      .auth-form .af-kicker { font-size: 9px; margin-bottom: 6px; }
+      .auth-tabs { margin-bottom: 16px; }
+      .auth-tabs button { font-size: 11px; padding: 9px 8px; }
+      .auth-field { margin-bottom: 12px; }
+      .auth-field input { font-size: 16px; padding: 12px; } /* 16px evita zoom iOS */
+      .auth-submit { padding: 14px; font-size: 12px; }
     }
 
     /* ── Smartphone chico (≤420px) ────────────────────────────── */
@@ -4799,6 +4784,10 @@
       .timeline .year-display { font-size: 18px; min-width: 44px; }
       .map-title .h { font-size: 16px; }
       .map-legend { max-width: 130px; padding: 6px 8px; }
+      /* Login aún más compacto en phones chicos */
+      .auth-stage { padding: 10px; }
+      .auth-form { padding: 22px 16px 18px; border-radius: 14px; }
+      .auth-form .af-title { font-size: 22px; margin-bottom: 16px; }
     }
 
     /* ── Landscape compacto en mobile ─────────────────────────── */
