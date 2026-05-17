@@ -303,9 +303,20 @@ function AletheiaChat({ selectedCountry }) {
     if (open) setTimeout(() => inputRef.current?.focus(), 120);
   }, [open]);
 
-  // Disparado desde el header ("Pregunta a Aletheia" al lado del navbar)
+  // Disparado desde el header ("Pregunta a Aletheia" al lado del navbar).
+  // Al ABRIR siempre reseteamos posición/size/dock para que el chat aparezca
+  // en su lugar default (bottom-right flotante).
   useEffect(() => {
-    const toggle = () => setOpen(o => !o);
+    const toggle = () => setOpen(o => {
+      const next = !o;
+      if (next) {
+        setPos(null);
+        setSize(null);
+        setDocked(false);
+        setLeftTab("chat");
+      }
+      return next;
+    });
     window.addEventListener("aletheia:chat:toggle", toggle);
     return () => window.removeEventListener("aletheia:chat:toggle", toggle);
   }, []);
