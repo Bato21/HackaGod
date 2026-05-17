@@ -687,19 +687,26 @@ function GlobeView({
       setRotation(pending);
       pending = null;
     };
+    let captured = false;
     const onDown = (event) => {
       if (event.button !== 0 && event.pointerType === "mouse") return;
       startRot = [rotationRef.current[0], rotationRef.current[1]];
       startPos = [event.clientX, event.clientY];
       moved = false;
-      try { svgRef.current.setPointerCapture(event.pointerId); } catch (_) {}
+      // NO capturar aquí: robaría el click del país (tap = select).
     };
     const onMove = (event) => {
       if (!startPos) return;
       const dx = event.clientX - startPos[0];
       const dy = event.clientY - startPos[1];
       if (!moved && Math.hypot(dx, dy) < 3) return;
-      if (!moved) { moved = true; svg.classed("dragging", true); }
+      if (!moved) {
+        moved = true;
+        svg.classed("dragging", true);
+        // Capturar solo cuando ES un drag real → el tap simple sigue
+        // generando click en el <path> y selecciona el país.
+        try { svgRef.current.setPointerCapture(event.pointerId); captured = true; } catch (_) {}
+      }
       const k = 0.35;
       // Coalesce: guarda el último valor y aplica 1 vez por frame (fluido).
       pending = [
@@ -714,7 +721,10 @@ function GlobeView({
       startPos = null; startRot = null;
       if (moved) svg.classed("dragging", false);
       moved = false;
-      try { svgRef.current.releasePointerCapture(event.pointerId); } catch (_) {}
+      if (captured) {
+        try { svgRef.current.releasePointerCapture(event.pointerId); } catch (_) {}
+        captured = false;
+      }
     };
     const el = svgRef.current;
     el.addEventListener("pointerdown", onDown);
