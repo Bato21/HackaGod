@@ -1,5 +1,5 @@
-// AUTO-GENERADO desde el Excel de respaldo (hojas de justificación).
-// Fuente: PRESIDENTES_POR_AÑO_GABINETE_HITOS_MINISTROS_INDICADORES_NUMERICOS.xlsx
+// AUTO-GENERADO desde hojas de justificación del Excel de respaldo.
+// Fuente: PRESIDENTES_..._INDICADORES_INFLACION.xlsx
 window.METHODOLOGY = {
  "fuentes": [
   [
@@ -241,6 +241,12 @@ window.METHODOLOGY = {
    "Fuentes a consultar",
    "UIF/UAF/UIAF nacional, Fiscalía/Ministerio Público, Poder Judicial, Contraloría, Consejo/Instituto de Transparencia y reportes anuales oficiales.",
    "2026-05-17"
+  ],
+  [
+   "Inflación anual (%)",
+   "World Bank / IMF via Our World in Data",
+   "Indicador FP.CPI.TOTL.ZG; annual %",
+   "Se agregaron columnas AG:AI con valor numérico cuando hay dato comparable 2017-2024; 2025 queda sin dato anual oficial publicado en la fuente."
   ]
  ],
  "guia_indicadores": [
@@ -455,6 +461,208 @@ window.METHODOLOGY = {
   [
    "Actualización gabinete completo",
    "Se eliminaron los 'Sin dato respaldado' de J:O. Celdas se completaron por dato explícito, continuidad por país/presidente, equivalente ministerial, o criterio de cartera no individualizada. Ver columna X."
+  ]
+ ],
+ "guia_inflacion": [
+  [
+   "Campo",
+   "Descripción",
+   "Fuente / criterio",
+   "Nota"
+  ],
+  [
+   "Inflación anual (%)",
+   "Variación anual del índice de precios al consumidor, en porcentaje.",
+   "World Bank / IMF International Financial Statistics vía Our World in Data, indicador FP.CPI.TOTL.ZG.",
+   "Dato comparable internacionalmente."
+  ],
+  [
+   "Cobertura",
+   "Se completan datos disponibles 2017-2024 cuando aparecen en la fuente comparable.",
+   "La fuente consultada disponible públicamente llega hasta 2024.",
+   "Para 2025 se deja en blanco si no existe dato anual comparable publicado."
+  ],
+  [
+   "País-año sin dato",
+   "Celdas en blanco indican que no se encontró dato público comparable en la fuente usada.",
+   "No se reemplazó por estimaciones para evitar números ficticios.",
+   "Power BI puede tratar estos valores como nulos."
+  ],
+  [
+   "Fuente",
+   "https://ourworldindata.org/grapher/inflation-of-consumer-prices",
+   "https://data.worldbank.org/indicator/FP.CPI.TOTL.ZG",
+   "Inflación anual, precios al consumidor (%)"
+  ],
+  [
+   "Última revisión",
+   "2026-05-17",
+   "Revisión realizada para esta base",
+   ""
+  ]
+ ],
+ "cobertura_inflacion": [
+  [
+   "Año",
+   "Filas totales",
+   "Con inflación numérica",
+   "Sin dato numérico"
+  ],
+  [
+   "2017",
+   "184",
+   "168",
+   "16"
+  ],
+  [
+   "2018",
+   "184",
+   "170",
+   "14"
+  ],
+  [
+   "2019",
+   "184",
+   "170",
+   "14"
+  ],
+  [
+   "2020",
+   "184",
+   "173",
+   "11"
+  ],
+  [
+   "2021",
+   "184",
+   "173",
+   "11"
+  ],
+  [
+   "2022",
+   "184",
+   "173",
+   "11"
+  ],
+  [
+   "2023",
+   "184",
+   "176",
+   "8"
+  ],
+  [
+   "2024",
+   "184",
+   "176",
+   "8"
+  ],
+  [
+   "2025",
+   "184",
+   "0",
+   "184"
+  ],
+  [
+   "Países con faltantes 2017-2024 en fuente usada",
+   "",
+   "",
+   ""
+  ],
+  [
+   "Barbados",
+   "2017",
+   "",
+   ""
+  ],
+  [
+   "Comoros",
+   "2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024",
+   "",
+   ""
+  ],
+  [
+   "Cuba",
+   "2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024",
+   "",
+   ""
+  ],
+  [
+   "Democratic Republic of the Congo",
+   "2017, 2018, 2019, 2020, 2021, 2022",
+   "",
+   ""
+  ],
+  [
+   "Eritrea",
+   "2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024",
+   "",
+   ""
+  ],
+  [
+   "Eswatini",
+   "2017, 2018, 2019",
+   "",
+   ""
+  ],
+  [
+   "Myanmar",
+   "2017, 2018, 2019",
+   "",
+   ""
+  ],
+  [
+   "North Korea",
+   "2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024",
+   "",
+   ""
+  ],
+  [
+   "Russia",
+   "2017",
+   "",
+   ""
+  ],
+  [
+   "Somalia",
+   "2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024",
+   "",
+   ""
+  ],
+  [
+   "Syria",
+   "2017, 2018, 2019",
+   "",
+   ""
+  ],
+  [
+   "Taiwan",
+   "2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024",
+   "",
+   ""
+  ],
+  [
+   "Tajikistan",
+   "2017, 2018, 2019, 2020, 2021, 2022",
+   "",
+   ""
+  ],
+  [
+   "Turkmenistan",
+   "2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024",
+   "",
+   ""
+  ],
+  [
+   "Venezuela",
+   "2017, 2018, 2019, 2020, 2021, 2022",
+   "",
+   ""
+  ],
+  [
+   "Yemen",
+   "2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024",
+   "",
+   ""
   ]
  ]
 };

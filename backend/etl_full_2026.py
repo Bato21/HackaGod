@@ -26,7 +26,7 @@ from etl_presidents import name_to_iso3, NO_DATA
 load_dotenv()
 
 XLSX = os.path.expanduser(
-    "~/Downloads/PRESIDENTES_POR_AÑO_GABINETE_HITOS_MINISTROS_INDICADORES_NUMERICOS.xlsx"
+    "~/Downloads/PRESIDENTES_POR_AÑO_GABINETE_HITOS_MINISTROS_INDICADORES_INFLACION.xlsx"
 )
 SHEET = "CPI país-año con presidente"
 
@@ -131,6 +131,9 @@ def main():
                 num(r[6]),                      # gdp_growth
                 gdp_comment,                    # gdp_comment
                 clean_text(r[8]),               # political_stance
+                num(r[32]) if len(r) > 32 else None,        # inflation
+                clean_text(r[33]) if len(r) > 33 else None,  # inflation_source
+                clean_text(r[34]) if len(r) > 34 else None,  # inflation_status
             ))
 
         # cabinet (6 carteras)
@@ -200,11 +203,19 @@ def main():
     GRANT SELECT ON country_indicators TO anon, authenticated;
     """)
 
+    # president_year: columnas de inflación (idempotente)
+    cur.execute("""
+      ALTER TABLE president_year
+        ADD COLUMN IF NOT EXISTS inflation numeric,
+        ADD COLUMN IF NOT EXISTS inflation_source text,
+        ADD COLUMN IF NOT EXISTS inflation_status text;
+    """)
     # president_year UPSERT
     execute_values(cur, """
       INSERT INTO president_year
         (iso3,country_name,year,president,approval,poverty_pct,
-         homicide_rate,gdp_growth,gdp_comment,political_stance)
+         homicide_rate,gdp_growth,gdp_comment,political_stance,
+         inflation,inflation_source,inflation_status)
       VALUES %s
       ON CONFLICT (iso3,year) DO UPDATE SET
         country_name=EXCLUDED.country_name,
@@ -214,7 +225,10 @@ def main():
         homicide_rate=EXCLUDED.homicide_rate,
         gdp_growth=EXCLUDED.gdp_growth,
         gdp_comment=EXCLUDED.gdp_comment,
-        political_stance=EXCLUDED.political_stance
+        political_stance=EXCLUDED.political_stance,
+        inflation=EXCLUDED.inflation,
+        inflation_source=EXCLUDED.inflation_source,
+        inflation_status=EXCLUDED.inflation_status
     """, py_rows)
 
     # cabinet: reemplazo limpio por (iso3,year,portfolio)

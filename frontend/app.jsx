@@ -2532,6 +2532,18 @@ function App({ user: authUser, onLogout }) {
                   <Table rows={M.guia_indicadores} />
                   <div className="nh">Cobertura del gabinete</div>
                   <Table rows={M.cobertura_gabinete} />
+                  {M.guia_inflacion && M.guia_inflacion.length > 0 && (
+                    <>
+                      <div className="nh">Inflación anual (%)</div>
+                      <p style={{ fontSize: 12, color: "var(--text-2)" }}>
+                        Variación anual del IPC, fuente World Bank / IMF vía
+                        Our World in Data (FP.CPI.TOTL.ZG). País-año sin dato
+                        público comparable queda en blanco (no se estima).
+                      </p>
+                      <Table rows={M.guia_inflacion} />
+                      <Table rows={M.cobertura_inflacion} />
+                    </>
+                  )}
                 </>
               );
             })()}
@@ -2658,14 +2670,20 @@ function App({ user: authUser, onLogout }) {
                   </div>
                 )}
 
-                {/* Contexto macro — solo métricas reales (sin inflación: nunca real) */}
-                {(detail.contextReal.gdp || detail.contextReal.poverty || detail.contextReal.homicide) && (
+                {/* Contexto macro — solo métricas reales */}
+                {(detail.contextReal.gdp || detail.contextReal.poverty || detail.contextReal.homicide || detail.contextReal.inflation) && (
                   <div className="cd-card span-2">
                     <div className="cd-card-h">
                       <span>Contexto macro · {year}</span>
                       <span style={{ fontSize: 9, color: "var(--good)" }}>DATOS REALES</span>
                     </div>
                     <div className="ctx-grid">
+                      {detail.contextReal.inflation && (
+                        <div className="ctx-cell">
+                          <div className="lb">Inflación anual</div>
+                          <div className="vl">{detail.context.inflation}<span className="un">%</span></div>
+                        </div>
+                      )}
                       {detail.contextReal.gdp && (
                         <div className="ctx-cell">
                           <div className="lb">Crecimiento PIB</div>

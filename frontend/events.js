@@ -455,13 +455,15 @@
         detail.context.poverty  = (py.poverty_pct  != null) ? py.poverty_pct  : null;
         detail.context.homicide = (py.homicide_rate != null) ? py.homicide_rate : null;
         detail.context.gdp      = (py.gdp_growth    != null) ? py.gdp_growth    : null;
-        detail.context.inflation = null; // inflación nunca es dato real → fuera
+        detail.context.inflation = (py.inflation    != null) ? py.inflation     : null;
+        detail.inflationSource   = py.inflation_source || null;
         detail.contextReal = {
-          gdp:      py.gdp_growth    != null,
-          poverty:  py.poverty_pct   != null,
-          homicide: py.homicide_rate != null,
+          gdp:       py.gdp_growth    != null,
+          poverty:   py.poverty_pct   != null,
+          homicide:  py.homicide_rate != null,
+          inflation: py.inflation     != null,
         };
-        if (py.poverty_pct  != null || py.homicide_rate != null || py.gdp_growth != null) detail.real = true;
+        if (py.poverty_pct != null || py.homicide_rate != null || py.gdp_growth != null || py.inflation != null) detail.real = true;
         if (py.gdp_comment) detail.gdpComment = py.gdp_comment;
       } else {
         // Sin registro real para este país-año: no inventar nada.
@@ -470,7 +472,7 @@
         detail.president.stance   = null;
         detail.president.party    = null;
         detail.context = { gdp: null, poverty: null, homicide: null, inflation: null };
-        detail.contextReal = { gdp: false, poverty: false, homicide: false };
+        detail.contextReal = { gdp: false, poverty: false, homicide: false, inflation: false };
       }
     } catch (_) {}
 
