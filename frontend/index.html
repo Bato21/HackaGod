@@ -5437,6 +5437,24 @@
     .ob-tour-nav .ob-btn-secondary { flex: 1; }
     .ob-tour-nav .ob-btn-primary { flex: 2; }
     .ob-tour-nav .ob-btn-primary.done { flex: 1; background: linear-gradient(135deg, #2e8a66 0%, #1f6b50 100%); }
+    /* Summary step overrides */
+    .ob-tour-icon--summary {
+      width: 64px; height: 64px;
+      background: rgba(230,184,64,0.12);
+      border-color: rgba(230,184,64,0.35);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .ob-tour-title--summary {
+      font-size: 22px;
+      background: linear-gradient(135deg, #e6b840, #f0c840);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .ob-tour-desc--summary {
+      font-size: 14px;
+      color: rgba(237,233,224,0.75);
+      line-height: 1.7;
+    }
     /* Anim between steps */
     .ob-step-enter { animation: ob-step-in 0.28s ease both; }
     @keyframes ob-step-in {
@@ -5495,7 +5513,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=26"></script>
+  <script type="text/babel" src="app.jsx?v=27"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>

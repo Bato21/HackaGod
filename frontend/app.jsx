@@ -2861,9 +2861,16 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
 // ── Onboarding ───────────────────────────────────────────────
 const TOUR_STEPS = [
   {
-    icon: "🌎",
+    icon: "◆",
+    iconStyle: { fontSize: "28px", color: "#e6b840", fontStyle: "normal" },
+    title: "¿Qué es Aletheia?",
+    desc: "Aletheia es una plataforma de inteligencia cívica global. Visualiza y compara el Índice de Percepción de Corrupción (CPI) de países de todo el mundo, con datos reales: líderes, gabinetes, indicadores económicos y judiciales.",
+    isSummary: true,
+  },
+  {
+    icon: "🌍",
     title: "El mapa interactivo",
-    desc: "Cada país tiene un color según su Índice de Percepción de Corrupción (CPI). Verde = más transparente, rojo = mayor corrupción percibida.",
+    desc: "Cada país tiene un color según su puntaje CPI. Verde = más transparente, rojo = mayor corrupción percibida. Gira el globo y explora.",
   },
   {
     icon: "📊",
@@ -2907,9 +2914,12 @@ function TourOverlay({ onDone }) {
           <button className="ob-tour-skip" onClick={onDone}>Saltar</button>
         </div>
         <div key={animKey} className="ob-step-enter">
-          <div className="ob-tour-icon">{s.icon}</div>
-          <div className="ob-tour-title">{s.title}</div>
-          <div className="ob-tour-desc">{s.desc}</div>
+          <div className={`ob-tour-icon${s.isSummary ? " ob-tour-icon--summary" : ""}`}
+               style={s.iconStyle || {}}>
+            {s.icon}
+          </div>
+          <div className={`ob-tour-title${s.isSummary ? " ob-tour-title--summary" : ""}`}>{s.title}</div>
+          <div className={`ob-tour-desc${s.isSummary ? " ob-tour-desc--summary" : ""}`}>{s.desc}</div>
         </div>
         <div className="ob-tour-nav">
           {step > 0 && (
@@ -2919,7 +2929,7 @@ function TourOverlay({ onDone }) {
             className={`ob-btn-primary${isLast ? " done" : ""}`}
             onClick={() => go(step + 1)}
           >
-            {isLast ? "¡Listo, explorar!" : "Siguiente →"}
+            {isLast ? "¡Listo, explorar!" : step === 0 ? "Ver funciones →" : "Siguiente →"}
           </button>
         </div>
       </div>
