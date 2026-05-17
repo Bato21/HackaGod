@@ -1565,40 +1565,30 @@ function App({ user: authUser, onLogout }) {
                   <button
                     className={`map-action-btn${mapSettingsOpen ? " active" : ""}`}
                     onClick={() => setMapSettingsOpen(o => !o)}
-                    title="Opciones del mapa"
-                    aria-label="Opciones del mapa"
+                    title="Configuración del mapa"
+                    aria-label="Configuración del mapa"
                   >
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                      <circle cx="8" cy="8" r="2.4" />
-                      <path d="M8 1.5 L8 3.2 M8 12.8 L8 14.5 M1.5 8 L3.2 8 M12.8 8 L14.5 8 M3.4 3.4 L4.6 4.6 M11.4 11.4 L12.6 12.6 M3.4 12.6 L4.6 11.4 M11.4 4.6 L12.6 3.4" />
-                    </svg>
-                  </button>
-                  <button
-                    className={`map-action-btn${tweaks.showLabels ? " active" : ""}`}
-                    onClick={() => setTweak("showLabels", !tweaks.showLabels)}
-                    title={tweaks.showLabels ? "Ocultar nombres de países" : "Mostrar nombres de países"}
-                    aria-label={tweaks.showLabels ? "Ocultar nombres de países" : "Mostrar nombres de países"}
-                  >
-                    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M1.5 8 C 3.5 4.5, 12.5 4.5, 14.5 8 C 12.5 11.5, 3.5 11.5, 1.5 8 Z" />
-                      <circle cx="8" cy="8" r="2" />
-                      {!tweaks.showLabels && (
-                        <path d="M2 14 L14 2" stroke="currentColor" strokeWidth="1.6" />
-                      )}
+                    {/* Cog / wrench-nut: hex outer ring + inner hole */}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                      <circle cx="12" cy="12" r="3" />
                     </svg>
                   </button>
                   {mapFullscreen ? (
                     <button
                       className="map-action-btn expanded"
                       onClick={() => setMapFullscreen(false)}
-                      title="Volver al panel principal"
-                      aria-label="Volver al panel principal"
+                      title="Abrir panel principal"
+                      aria-label="Abrir panel principal"
                     >
-                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M7 3 L2 8 L7 13" />
-                        <path d="M2 8 L14 8" />
+                      {/* Dashboard layout icon: 2x2 grid */}
+                      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <rect x="2" y="2" width="5" height="5" rx="0.8" />
+                        <rect x="9" y="2" width="5" height="5" rx="0.8" />
+                        <rect x="2" y="9" width="5" height="5" rx="0.8" />
+                        <rect x="9" y="9" width="5" height="5" rx="0.8" />
                       </svg>
-                      <span>Volver</span>
+                      <span>Panel</span>
                     </button>
                   ) : (
                     <button
