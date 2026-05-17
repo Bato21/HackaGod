@@ -3086,20 +3086,6 @@ const TOUR_STEPS = [
     desc: "Panel de noticias del país seleccionado, clasificadas en Corrupción, Política y Gobierno. Puedes abrir un hilo de debate en el foro desde cualquier noticia.",
   },
   {
-    type: "spotlight",
-    selector: '[data-tour="forum-btn"]',
-    tooltipPos: "bottom",
-    title: "💬  Foro ciudadano",
-    desc: "Hilo de debate por país. Lee, comenta y discute con otros usuarios sobre los datos, noticias y eventos de cada nación.",
-  },
-  {
-    type: "spotlight",
-    selector: '[data-tour="chatbot"]',
-    tooltipPos: "bottom",
-    title: "🦉  Aletheia IA",
-    desc: "Asistente con acceso a todos los datos de la plataforma. Pregúntale por rankings, comparativas, evolución histórica o contexto político de cualquier país.",
-  },
-  {
     type: "modal",
     icon: "⚙️",
     title: "Personaliza tu vista",
@@ -3151,6 +3137,20 @@ const TOUR_STEPS = [
     title: "🌍  Vista Globo 3D",
     desc: "Activa el modo globo tridimensional. Arrastra para rotar el planeta y usa la rueda para hacer zoom sobre cualquier región.",
     actionHint: "Toca «Globo» ↓",
+  },
+  {
+    type: "spotlight",
+    selector: '[data-tour="forum-btn"]',
+    tooltipPos: "bottom",
+    title: "💬  Foro ciudadano",
+    desc: "Hilo de debate por país. Lee, comenta y discute con otros usuarios sobre los datos, noticias y eventos de cada nación.",
+  },
+  {
+    type: "spotlight",
+    selector: '[data-tour="chatbot"]',
+    tooltipPos: "bottom",
+    title: "🦉  Aletheia IA",
+    desc: "Asistente con acceso a todos los datos de la plataforma. Pregúntale por rankings, comparativas, evolución histórica o contexto político de cualquier país.",
   },
 ];
 
