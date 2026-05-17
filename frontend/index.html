@@ -459,6 +459,10 @@
       cursor: grab;
     }
     .map-frame svg.dragging { cursor: grabbing; }
+    /* Al rotar el globo: sin labels ni transiciones → mucho más fluido,
+       sobre todo en mobile (menos nodos que repintar por frame). */
+    svg.dragging .country-label { display: none; }
+    svg.dragging path { transition: none !important; }
     .map-frame svg .country-path,
     .map-frame svg .country-bubble {
       vector-effect: non-scaling-stroke;
@@ -5127,7 +5131,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=13"></script>
+  <script type="text/babel" src="app.jsx?v=14"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>

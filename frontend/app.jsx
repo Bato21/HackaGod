@@ -679,11 +679,20 @@ function GlobeView({
     if (!svgRef.current) return;
     const svg = d3.select(svgRef.current);
     let startRot = null, startPos = null, moved = false;
+    let rafId = null, pending = null;
+
+    const flush = () => {
+      rafId = null;
+      if (!pending) return;
+      setRotation(pending);
+      pending = null;
+    };
     const onDown = (event) => {
-      if (event.button !== 0) return;
+      if (event.button !== 0 && event.pointerType === "mouse") return;
       startRot = [rotationRef.current[0], rotationRef.current[1]];
       startPos = [event.clientX, event.clientY];
       moved = false;
+      try { svgRef.current.setPointerCapture(event.pointerId); } catch (_) {}
     };
     const onMove = (event) => {
       if (!startPos) return;
@@ -692,42 +701,62 @@ function GlobeView({
       if (!moved && Math.hypot(dx, dy) < 3) return;
       if (!moved) { moved = true; svg.classed("dragging", true); }
       const k = 0.35;
-      setRotation([
+      // Coalesce: guarda el último valor y aplica 1 vez por frame (fluido).
+      pending = [
         startRot[0] + dx * k,
         Math.max(-89, Math.min(89, startRot[1] - dy * k)),
-      ]);
+      ];
+      if (rafId == null) rafId = requestAnimationFrame(flush);
     };
-    const onUp = () => {
+    const onUp = (event) => {
+      if (rafId != null) { cancelAnimationFrame(rafId); rafId = null; }
+      if (pending) { setRotation(pending); pending = null; }
       startPos = null; startRot = null;
       if (moved) svg.classed("dragging", false);
       moved = false;
+      try { svgRef.current.releasePointerCapture(event.pointerId); } catch (_) {}
     };
-    svgRef.current.addEventListener("pointerdown", onDown);
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
+    const el = svgRef.current;
+    el.addEventListener("pointerdown", onDown);
+    el.addEventListener("pointermove", onMove);
+    el.addEventListener("pointerup", onUp);
+    el.addEventListener("pointercancel", onUp);
     return () => {
-      svgRef.current && svgRef.current.removeEventListener("pointerdown", onDown);
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
+      if (rafId != null) cancelAnimationFrame(rafId);
+      el.removeEventListener("pointerdown", onDown);
+      el.removeEventListener("pointermove", onMove);
+      el.removeEventListener("pointerup", onUp);
+      el.removeEventListener("pointercancel", onUp);
     };
   }, []);
 
-  const { allFeatures, americasFeatures, projectionFn, pathFn, graticule, sphere } = useMemo(() => {
-    if (!topology) return {};
+  // Geometría: SOLO depende de topology (caro: no recomputar al rotar).
+  const geo = useMemo(() => {
+    if (!topology) return null;
     const all = topojson.feature(topology, topology.objects.countries).features;
-    const americas = all.filter(f => COUNTRIES_BY_ID[f.id]);
+    return {
+      all,
+      americas: all.filter(f => COUNTRIES_BY_ID[f.id]),
+      graticule: d3.geoGraticule10(),
+      sphere: { type: "Sphere" },
+    };
+  }, [topology]);
+
+  // Proyección/path: depende de tamaño y rotación (barato vs rebuild geo).
+  const { projectionFn, pathFn } = useMemo(() => {
+    if (!geo) return {};
     const proj = d3.geoOrthographic()
       .rotate([rotation[0], rotation[1], 0])
       .clipAngle(90)
       .translate([size.w / 2, size.h / 2])
       .scale(Math.min(size.w, size.h) * 0.45);
-    const pf = d3.geoPath(proj);
-    return {
-      allFeatures: all, americasFeatures: americas,
-      projectionFn: proj, pathFn: pf,
-      graticule: d3.geoGraticule10(), sphere: { type: "Sphere" },
-    };
-  }, [topology, size, rotation]);
+    return { projectionFn: proj, pathFn: d3.geoPath(proj) };
+  }, [geo, size, rotation]);
+
+  const allFeatures      = geo?.all;
+  const americasFeatures = geo?.americas;
+  const graticule        = geo?.graticule;
+  const sphere           = geo?.sphere;
 
   if (!topology || !pathFn) return null;
   pathFnRef.current = pathFn;
@@ -752,7 +781,7 @@ function GlobeView({
       {/* Fondo estilo login: gradiente navy (sin animación) */}
       <div className="globe-stage-bg" />
       <svg ref={svgRef} viewBox={`0 0 ${size.w} ${size.h}`} preserveAspectRatio="none"
-         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1 }}>
+         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1, touchAction: 'none', cursor: 'grab' }}>
       <defs>
         <radialGradient id="globeWater" cx="0.4" cy="0.34" r="0.9">
           <stop offset="0%"   stopColor="#1c5470" />
