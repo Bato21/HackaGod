@@ -444,6 +444,25 @@
     } catch (_) { return false; }
   }
 
+  async function hydrateIndicators() {
+    if (!window.COUNTRIES || !window.COUNTRIES.length) return false;
+    try {
+      var yearFirst = window.YEARS ? window.YEARS[0] : 2017;
+      var r = await sb.rpc("get_indicators", { min_year: yearFirst });
+      if (r.error || !r.data || !r.data.length) return false;
+      window.INDICATORS = window.INDICATORS || {};
+      var cache = {};
+      r.data.forEach(function (row) {
+        var iso = row.iso3.trim();
+        cache[iso] = row.data;
+        window.INDICATORS[iso] = row.data;
+      });
+      lsSet("aletheia.indicators", cache);
+      window.dispatchEvent(new CustomEvent("aletheia:indicators:loaded", { detail: { count: r.data.length } }));
+      return true;
+    } catch (_) { return false; }
+  }
+
   // ── 6. Boot ────────────────────────────────────────────────────────
   async function hydrateAll() {
     var u   = currentUser();
@@ -454,6 +473,7 @@
       hydratePresidents(),
       hydrateCabinet(),
       hydrateMilestones(),
+      hydrateIndicators(),
       uid ? hydrateProfile(uid, u.email) : Promise.resolve(false),
       uid ? hydrateStars(uid, u.email)   : Promise.resolve(false),
     ]);

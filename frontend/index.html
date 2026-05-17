@@ -2756,6 +2756,25 @@
       padding: 28px 32px;
       box-shadow: var(--shadow);
     }
+    .meth-table-wrap { overflow-x: auto; margin: 6px 0 14px; }
+    .meth-table {
+      width: 100%; border-collapse: collapse; font-size: 11px;
+      color: var(--text-2);
+    }
+    .meth-table th, .meth-table td {
+      border: 1px solid var(--line); padding: 6px 8px;
+      text-align: left; vertical-align: top;
+    }
+    .meth-table th {
+      background: var(--bg-2); color: var(--text);
+      font-weight: 600; position: sticky; top: 0;
+    }
+    .meth-table td { max-width: 320px; overflow-wrap: anywhere; }
+    .meth-table a { color: var(--accent-2); word-break: break-all; }
+    @media (max-width: 760px) {
+      .meth-table { font-size: 10px; }
+      .meth-table td { max-width: 180px; }
+    }
     .notes-card h3 {
       font-family: var(--editorial);
             font-size: 24px;
@@ -5118,6 +5137,8 @@
   <script src="presidents-override.js"></script>
   <script src="cabinet-override.js"></script>
   <script src="milestones-override.js"></script>
+  <script src="indicators-override.js"></script>
+  <script src="methodology-data.js"></script>
   <script src="world-data.js"></script>
   <script src="events.js"></script>
   <script src="forum.js"></script>
@@ -5131,7 +5152,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=15"></script>
+  <script type="text/babel" src="app.jsx?v=16"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>

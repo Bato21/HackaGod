@@ -2497,6 +2497,58 @@ function App({ user: authUser, onLogout }) {
               Proyección por defecto: Equal Earth. Escala cromática secuencial verde→rojo
               para reforzar la dirección semántica del indicador.
             </p>
+
+            {window.METHODOLOGY && (() => {
+              const M = window.METHODOLOGY;
+              const Table = ({ rows }) => {
+                if (!rows || !rows.length) return null;
+                const [head, ...body] = rows;
+                return (
+                  <div className="meth-table-wrap">
+                    <table className="meth-table">
+                      <thead><tr>{head.map((h, i) => <th key={i}>{h}</th>)}</tr></thead>
+                      <tbody>
+                        {body.map((r, ri) => (
+                          <tr key={ri}>
+                            {r.map((c, ci) => (
+                              <td key={ci}>
+                                {/^https?:\/\//.test(String(c))
+                                  ? <a href={c} target="_blank" rel="noopener noreferrer">{c}</a>
+                                  : c}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              };
+              return (
+                <>
+                  <div className="nh">Fuentes y criterios por variable</div>
+                  <p style={{ fontSize: 12, color: "var(--text-2)" }}>
+                    Aprobación, pobreza, homicidios, PIB, postura y presidente provienen
+                    de fuentes públicas verificables. El gabinete usa CIA World Leaders
+                    y fuentes oficiales; cuando no hay verificación se marca
+                    «Sin dato respaldado».
+                  </p>
+                  <Table rows={M.fuentes} />
+                  <div className="nh">Indicadores numéricos (proxy)</div>
+                  <p style={{ fontSize: 12, color: "var(--bad)" }}>
+                    Los indicadores judiciales/anticorrupción son <strong>proxy
+                    comparativos calculados</strong> desde variables de la base
+                    (PIB, pobreza, homicidios, aprobación y palabras clave de los
+                    hitos). <strong>No son cifras oficiales</strong>; sirven para
+                    comparar intensidad relativa entre país-año.
+                  </p>
+                  <Table rows={M.guia_indicadores} />
+                  <div className="nh">Cobertura del gabinete</div>
+                  <Table rows={M.cobertura_gabinete} />
+                </>
+              );
+            })()}
+
             <button className="notes-close" onClick={() => setShowNotes(false)}>Entendido</button>
           </div>
         </div>
@@ -2661,7 +2713,12 @@ function App({ user: authUser, onLogout }) {
 
                 {/* Indicadores */}
                 <div className="cd-card">
-                  <div className="cd-card-h"><span>Indicadores asociados</span><span style={{ fontSize: 9, color: "var(--text-3)" }}>ILUSTRATIVOS</span></div>
+                  <div className="cd-card-h">
+                    <span>Indicadores asociados</span>
+                    <span style={{ fontSize: 9, color: detail.realIndicators ? "var(--good)" : "var(--text-3)" }}>
+                      {detail.realIndicators ? "DATOS REALES" : "ILUSTRATIVOS"}
+                    </span>
+                  </div>
                   <div className="ctx-grid" style={{ gridTemplateColumns: "1fr 1fr" }}>
                     {detail.indicators.map((ind, i) => (
                       <div key={i} className="ctx-cell">
@@ -2670,6 +2727,11 @@ function App({ user: authUser, onLogout }) {
                       </div>
                     ))}
                   </div>
+                  {detail.realIndicators && detail.indicatorsSource && (
+                    <div style={{ fontSize: 9.5, color: "var(--text-3)", marginTop: 8, lineHeight: 1.4 }}>
+                      {detail.indicatorsSource}
+                    </div>
+                  )}
                 </div>
 
                 {/* Cronología extendida */}
