@@ -1068,7 +1068,7 @@ function CountrySearch({ onPick }) {
   );
 }
 
-function App({ user: authUser, onLogout }) {
+function App({ user: authUser, onLogout, onOpenHelp }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   // Cerrar menú de usuario al clickear fuera
@@ -1544,6 +1544,16 @@ function App({ user: authUser, onLogout }) {
                   </div>
                 )}
               </div>
+            )}
+            {onOpenHelp && (
+              <button className="help-btn" onClick={onOpenHelp} title="Introducción a Aletheia">
+                <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="8" cy="8" r="6.5"/>
+                  <path d="M6 6.2C6 5 6.9 4.2 8 4.2c1.2 0 2 .9 2 1.9 0 1.4-1.5 1.9-2 2.7"/>
+                  <circle cx="8" cy="11.5" r=".7" fill="currentColor" stroke="none"/>
+                </svg>
+                <span className="help-btn-label">Ayuda</span>
+              </button>
             )}
             <div
               className={`user-chip${authUser.kind === "guest" ? " guest" : ""}`}
@@ -2977,8 +2987,12 @@ function Root() {
   const handleAuth = useCallback((user) => {
     setAuthUser(user);
     try {
-      if (!localStorage.getItem("aletheia.onboarded")) setShowWelcome(true);
-    } catch (_) {}
+      // Guests always see the welcome modal; registered users only on first login
+      const seen = localStorage.getItem("aletheia.onboarded");
+      if (user.kind === "guest" || !seen) setShowWelcome(true);
+    } catch (_) {
+      setShowWelcome(true);
+    }
   }, []);
 
   if (!authUser) {
@@ -2991,7 +3005,7 @@ function Root() {
   };
   return (
     <>
-      <App user={authUser} onLogout={handleLogout} />
+      <App user={authUser} onLogout={handleLogout} onOpenHelp={() => setShowWelcome(true)} />
       {showWelcome && (
         <WelcomeModal user={authUser} onClose={() => setShowWelcome(false)} />
       )}

@@ -3924,6 +3924,19 @@
     .pp-sc-score { font-family: var(--mono); font-size: 13px; font-weight: 700; }
 
     /* ── Notification bell ────────────────────────────────────── */
+    .help-btn {
+      background: none;
+      border: 1px solid var(--line-2);
+      border-radius: 6px;
+      color: var(--text-3);
+      cursor: pointer;
+      display: flex; align-items: center; gap: 5px;
+      padding: 0 10px; height: 32px;
+      font-size: 12px; font-family: 'Montserrat', sans-serif;
+      font-weight: 500; letter-spacing: 0.01em;
+      transition: all .12s; white-space: nowrap;
+    }
+    .help-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--bg-2); }
     .notif-bell-wrap {
       position: relative;
     }
@@ -4747,6 +4760,8 @@
       .brand .tagline { display: none; }
 
       .topbar .meta { gap: 8px; flex-shrink: 0; }
+      .help-btn-label { display: none; }
+      .help-btn { padding: 0 8px; }
       .user-chip { padding: 4px 6px; }
       .user-chip .uc-name { display: none; }
       .user-chip .uc-tag { display: none; }
@@ -5480,7 +5495,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=25"></script>
+  <script type="text/babel" src="app.jsx?v=26"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>
