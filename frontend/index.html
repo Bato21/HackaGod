@@ -4501,19 +4501,20 @@
       box-shadow: 0 4px 24px rgba(14,12,19,0.35), 0 0 0 1px rgba(230,184,64,0.12);
     }
 
-    /* ── Fix map-title: compact left card below legend ──────── */
+    /* ── Map-title: right side, below action buttons, legend owns left ── */
     .map-title {
-      left: 18px !important;
-      right: auto !important;
-      top: 120px !important;
-      max-width: 280px !important;
+      left: auto !important;
+      right: 18px !important;
+      top: 66px !important;
+      max-width: 300px !important;
+      text-align: right;
     }
     .map-title .h {
       font-size: 22px !important;
       line-height: 1.15 !important;
     }
     .map-title .kicker { font-size: 9px; letter-spacing: 0.22em; }
-    .map-title .sub { font-size: 11px; margin-top: 6px; line-height: 1.5; }
+    .map-title .sub { font-size: 11px; margin-top: 6px; line-height: 1.5; max-width: 300px; margin-left: auto; }
 
     /* ── AI chatbot FAB — right side, below map-title ───────── */
     .chat-fab {
