@@ -437,8 +437,51 @@
       }
     } catch (_) {}
 
+    // ── Gabinete REAL (Excel → Supabase → window.CABINET) ──
+    // Siempre 6 carteras estándar. Si no hay dato respaldado para una cartera
+    // NO se muestra un ministro ficticio: se muestra un mensaje.
+    try {
+      const cab = (window.CABINET
+        && window.CABINET[country.iso3]
+        && window.CABINET[country.iso3][year]) || [];
+      const byPort = {};
+      cab.forEach(m => { byPort[m.portfolio] = m; });
+      detail.cabinet = CAB_PORTFOLIOS.map(p => {
+        const m = byPort[p];
+        if (m) return {
+          portfolio: p,
+          name: m.minister,
+          stance: m.role || m.political_stance || "—",
+          risk: false,
+          color: stanceColor(m.political_stance),
+        };
+        return {
+          portfolio: p,
+          name: null,
+          noData: true,
+          message: "Sin dato respaldado — el perfil de ministro no existe en la base",
+        };
+      });
+      detail.realCabinet = cab.length > 0;
+      if (cab.length) detail.real = true;
+    } catch (_) {}
+
     return detail;
   };
+
+  // Carteras estándar del gabinete (coinciden con cabinet_ministers en DB)
+  const CAB_PORTFOLIOS = ["Economía", "Salud", "Vivienda", "Transporte", "Trabajo", "Justicia"];
+
+  // Color político por postura (gobierno) — para el gabinete real
+  function stanceColor(s) {
+    if (!s) return "#94a3b8";
+    const t = s.toLowerCase();
+    if (t.includes("izquierda")) return "#e2495a";
+    if (t.includes("derecha"))   return "#3b82f6";
+    if (t.includes("centro"))    return "#a78bfa";
+    return "#94a3b8"; // independiente / no ideológico / sin clasificar
+  }
+  window.stanceColor = stanceColor;
 
   // ── COUNTRY_NEWS (panel de noticias del país en la rail izquierda) ──
   // Devuelve titulares de noticias clasificados en tres bandejas:

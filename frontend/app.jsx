@@ -89,7 +89,8 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "viewMode": "choropleth",
   "showLabels": false,
   "theme": "corporate",
-  "palette": "riesgo"
+  "palette": "riesgo",
+  "labelScale": 1
 }/*EDITMODE-END*/;
 
 const COUNTRIES_BY_ID = {};
@@ -229,14 +230,8 @@ function MapView({
       maxBoundsViscosity: 1.0,
     });
 
-    const isDark = !liveProps.current || !['light','corporate'].includes(liveProps.current.theme);
-    const TILE_OPTS = { subdomains: 'abcd', maxZoom: 19 };
-    tileLayerRef.current = L.tileLayer(
-      isDark
-        ? 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png'
-        : 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png',
-      { ...TILE_OPTS, attribution: '© <a href="https://carto.com">CARTO</a>', opacity: isDark ? 0.5 : 0.9 }
-    ).addTo(map);
+    // Sin tile layer: el fondo es el mismo que el del globo
+    // (.globe-stage-bg = gradiente navy + malla login, detrás del mapa).
 
     // Custom labels pane above GeoJSON overlay (400)
     map.createPane('labels');
@@ -736,10 +731,25 @@ function GlobeView({
   };
 
   return (
-    <svg ref={svgRef} viewBox={`0 0 ${size.w} ${size.h}`} preserveAspectRatio="none"
-         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}>
+    <React.Fragment>
+      {/* Fondo estilo login: gradiente navy (sin animación) */}
+      <div className="globe-stage-bg" />
+      <svg ref={svgRef} viewBox={`0 0 ${size.w} ${size.h}`} preserveAspectRatio="none"
+         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 1 }}>
+      <defs>
+        <radialGradient id="globeWater" cx="0.4" cy="0.34" r="0.9">
+          <stop offset="0%"   stopColor="#1c5470" />
+          <stop offset="55%"  stopColor="#123b52" />
+          <stop offset="100%" stopColor="#081d2c" />
+        </radialGradient>
+        <pattern id="globeMesh" width="13" height="13" patternUnits="userSpaceOnUse">
+          <path d="M13 0 H0 V13" fill="none"
+                stroke="rgba(94,200,230,0.16)" strokeWidth="0.6" />
+        </pattern>
+      </defs>
       <g ref={gRef}>
         <path d={pathFn(sphere)} className="sphere" />
+        <path d={pathFn(sphere)} className="sphere-mesh" />
         <path d={pathFn(graticule)} className="graticule" />
         <g>
           {allFeatures.map((f, i) => {
@@ -857,6 +867,7 @@ function GlobeView({
         )}
       </g>
     </svg>
+    </React.Fragment>
   );
 }
 
@@ -942,6 +953,52 @@ function Sparkline({ country, year, onYearChange }) {
   );
 }
 
+// Buscador de país (topbar). Al elegir → onPick(country.id) (mismo flujo que click).
+function CountrySearch({ onPick }) {
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState(false);
+  const norm = s => (s || "").toString().normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  const results = useMemo(() => {
+    const t = norm(q.trim());
+    if (!t) return [];
+    return (window.COUNTRIES || [])
+      .filter(c => norm(c.name).includes(t) || norm(c.iso3).includes(t))
+      .sort((a, b) => norm(a.name).indexOf(t) - norm(b.name).indexOf(t))
+      .slice(0, 8);
+  }, [q]);
+  const pick = (c) => { onPick(c.id); setQ(""); setOpen(false); };
+  return (
+    <div className="country-search">
+      <svg className="cs-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round">
+        <circle cx="7" cy="7" r="4.5" /><path d="M10.5 10.5 L14 14" />
+      </svg>
+      <input
+        className="cs-input"
+        type="text"
+        placeholder="Buscar país…"
+        value={q}
+        onChange={e => { setQ(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+        onKeyDown={e => {
+          if (e.key === "Enter" && results[0]) pick(results[0]);
+          else if (e.key === "Escape") { setQ(""); setOpen(false); e.target.blur(); }
+        }}
+      />
+      {open && results.length > 0 && (
+        <div className="cs-dropdown">
+          {results.map(c => (
+            <div key={c.id} className="cs-item" onMouseDown={() => pick(c)}>
+              <span className="cs-name">{c.name}</span>
+              <span className="cs-iso">{c.iso3}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function App({ user: authUser, onLogout }) {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
@@ -979,6 +1036,10 @@ function App({ user: authUser, onLogout }) {
   useEffect(() => {
     document.documentElement.style.setProperty("--palette-gradient", paletteCss(tweaks.palette || "editorial"));
   }, [tweaks.palette]);
+
+  useEffect(() => {
+    document.documentElement.style.setProperty("--label-scale", tweaks.labelScale || 1);
+  }, [tweaks.labelScale]);
 
   // ── Estado
   const [topology, setTopology] = useState(null);
@@ -1223,10 +1284,11 @@ function App({ user: authUser, onLogout }) {
               </svg>
               <span className="logo-text">Aletheia</span>
             </div>
-            <div className="tagline">Índice ilustrativo · América · 2015–2024</div>
+            <div className="tagline">aquello que no está oculto</div>
+            <CountrySearch onPick={handleSelect} />
           </div>
 
-          {/* Centered PillNav */}
+          {/* PillNav + Pregunta a Aletheia */}
           <div className="topbar-center">
             {window.PillNav && (
               <window.PillNav
@@ -1236,10 +1298,16 @@ function App({ user: authUser, onLogout }) {
                 hoveredPillTextColor="#e6b840"
               />
             )}
+            <button
+              className="ask-aletheia-btn"
+              onClick={() => window.dispatchEvent(new CustomEvent("aletheia:chat:toggle"))}
+              title="Asistente Aletheia"
+            >
+              <span aria-hidden="true">💬</span> Pregunta a Aletheia
+            </button>
           </div>
 
           <div className="meta">
-            <span className="pill pill--tag">DATOS ILUSTRATIVOS</span>
             {authUser.kind !== "guest" && (
               <div className="notif-bell-wrap">
                 <button
@@ -1452,6 +1520,9 @@ function App({ user: authUser, onLogout }) {
                   />
                 )}
                 {topology && tweaks.projection !== "orthographic" && (
+                  <React.Fragment>
+                  {/* Mismo fondo que el globo (gradiente navy + malla login) */}
+                  <div className="globe-stage-bg" />
                   <MapView
                     topology={topology}
                     year={year}
@@ -1469,6 +1540,7 @@ function App({ user: authUser, onLogout }) {
                     apiRef={mapApi}
                     onZoomChange={setZoomLevel}
                   />
+                  </React.Fragment>
                 )}
                 <div className="map-zoom-controls">
                   <button className="map-zoom-btn" onClick={() => mapApi.current?.zoomIn()} title="Acercar (+)">
@@ -1582,6 +1654,23 @@ function App({ user: authUser, onLogout }) {
                               <div className="pal-name">{PALETTES[k].name}</div>
                               <div className="pal-bar" style={{ background: paletteCss(k) }}></div>
                             </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mp-section">
+                        <div className="mp-lbl">Tamaño de letras</div>
+                        <div className="mp-seg cols-4">
+                          {[
+                            { v: 1,    label: "Normal" },
+                            { v: 1.1,  label: "Media" },
+                            { v: 1.2,  label: "Grande" },
+                            { v: 1.32, label: "Máx" },
+                          ].map(o => (
+                            <button
+                              key={o.v}
+                              className={(tweaks.labelScale || 1) === o.v ? "active" : ""}
+                              onClick={() => setTweak("labelScale", o.v)}
+                            >{o.label}</button>
                           ))}
                         </div>
                       </div>
@@ -2135,16 +2224,25 @@ function App({ user: authUser, onLogout }) {
                 <div className="cd-card">
                   <div className="cd-card-h">
                     <span>Gabinete · {year}</span>
-                    <span className="mono" style={{ color: "var(--bad)" }}>● bajo investigación</span>
+                    <span className="mono" style={{ color: detail.realCabinet ? "var(--good)" : "var(--text-3)" }}>{detail.realCabinet ? "● datos reales" : "● sin datos respaldados"}</span>
                   </div>
                   <div className="cabinet-grid">
                     {detail.cabinet.map((m, i) => (
-                      <div key={i} className={`cabinet-row${m.risk ? " at-risk" : ""}`}>
-                        <span className="port">{m.portfolio}</span>
-                        <span className="min">
-                          {m.name}
-                          <span className="stance">{m.risk ? "imputación pendiente" : m.stance}</span>
+                      <div key={i} className={`cabinet-row${m.risk ? " at-risk" : ""}${m.noData ? " no-data" : ""}`}>
+                        <span className="port">
+                          {m.color && <span style={{ display: "inline-block", width: 7, height: 7, borderRadius: "50%", background: m.color, marginRight: 6, verticalAlign: "middle" }} />}
+                          {m.portfolio}
                         </span>
+                        {m.noData ? (
+                          <span className="min" style={{ color: "var(--text-3)", fontStyle: "italic" }}>
+                            {m.message}
+                          </span>
+                        ) : (
+                          <span className="min">
+                            {m.name}
+                            <span className="stance">{m.risk ? "imputación pendiente" : m.stance}</span>
+                          </span>
+                        )}
                         <span className="risk"></span>
                       </div>
                     ))}
@@ -2236,7 +2334,7 @@ function App({ user: authUser, onLogout }) {
                   <div style={{ fontSize: 11, color: "var(--text-2)", lineHeight: 1.6 }}>
                     {detail.real ? (
                       <>
-                        <strong style={{ color: "var(--text)" }}>Fuentes:</strong> presidente/líder, aprobación de gobierno, pobreza, homicidios y crecimiento del PIB son <span className="mono" style={{ color: "var(--good)" }}>datos reales</span> (Banco Mundial, Cadem/Gallup/Executive Approval, DPI 2023){detail.gdpComment ? ` · PIB: ${detail.gdpComment}` : ""}. Gabinete, partido, titulares e inflación siguen siendo <span className="mono" style={{ color: "var(--bad)" }}>ilustrativos</span>.
+                        <strong style={{ color: "var(--text)" }}>Fuentes:</strong> presidente/líder, aprobación de gobierno, pobreza, homicidios y crecimiento del PIB son <span className="mono" style={{ color: "var(--good)" }}>datos reales</span> (Banco Mundial, Cadem/Gallup/Executive Approval, DPI 2023){detail.realCabinet ? "; gabinete: titulares reales por cartera, color = postura del gobierno" : ""}{detail.gdpComment ? ` · PIB: ${detail.gdpComment}` : ""}. {detail.realCabinet ? "Partido, titulares e inflación" : "Gabinete, partido, titulares e inflación"} siguen siendo <span className="mono" style={{ color: "var(--bad)" }}>ilustrativos</span>.
                       </>
                     ) : (
                       <>

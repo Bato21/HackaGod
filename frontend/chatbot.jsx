@@ -157,6 +157,13 @@ function AletheiaChat({ selectedCountry }) {
     if (open) setTimeout(() => inputRef.current?.focus(), 120);
   }, [open]);
 
+  // Disparado desde el header ("Pregunta a Aletheia" al lado del navbar)
+  useEffect(() => {
+    const toggle = () => setOpen(o => !o);
+    window.addEventListener("aletheia:chat:toggle", toggle);
+    return () => window.removeEventListener("aletheia:chat:toggle", toggle);
+  }, []);
+
   const sendMessage = async (text) => {
     const msg = (text || input).trim();
     if (!msg || loading) return;
@@ -206,16 +213,7 @@ function AletheiaChat({ selectedCountry }) {
 
   return (
     <>
-      {/* Floating button */}
-      <button
-        className={`chat-fab ${open ? "chat-fab-open" : ""}`}
-        onClick={() => setOpen(o => !o)}
-        title="Asistente Aletheia"
-        aria-label="Abrir chat"
-      >
-        {open ? "✕" : "💬"}
-        {!open && <span className="chat-fab-label">Pregunta a Aletheia</span>}
-      </button>
+      {/* Trigger en el header (window.dispatchEvent aletheia:chat:toggle) */}
 
       {/* Chat panel */}
       {open && (

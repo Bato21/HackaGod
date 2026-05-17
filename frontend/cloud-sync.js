@@ -406,6 +406,25 @@
     } catch (_) { return false; }
   }
 
+  async function hydrateCabinet() {
+    if (!window.COUNTRIES || !window.COUNTRIES.length) return false;
+    try {
+      var yearFirst = window.YEARS ? window.YEARS[0] : 2017;
+      var r = await sb.rpc("get_cabinet", { min_year: yearFirst });
+      if (r.error || !r.data || !r.data.length) return false;
+      window.CABINET = window.CABINET || {};
+      var cache = {};
+      r.data.forEach(function (row) {
+        var iso = row.iso3.trim();
+        cache[iso] = row.data;
+        window.CABINET[iso] = row.data;
+      });
+      lsSet("aletheia.cabinet", cache);
+      window.dispatchEvent(new CustomEvent("aletheia:cabinet:loaded", { detail: { count: r.data.length } }));
+      return true;
+    } catch (_) { return false; }
+  }
+
   // ── 6. Boot ────────────────────────────────────────────────────────
   async function hydrateAll() {
     var u   = currentUser();
@@ -414,6 +433,7 @@
       hydrateForum(),
       hydrateCPI(),
       hydratePresidents(),
+      hydrateCabinet(),
       uid ? hydrateProfile(uid, u.email) : Promise.resolve(false),
       uid ? hydrateStars(uid, u.email)   : Promise.resolve(false),
     ]);
