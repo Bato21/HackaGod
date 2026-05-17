@@ -1234,6 +1234,11 @@ function App({ user: authUser, onLogout }) {
     setComparedId(null);
     setCountryFocus(id);
     setMobileFichaTab("info"); // mobile: abrir siempre en la ficha primero
+    // Mobile: la pestaña Información usa el dashboard completo (presidente,
+    // gabinete, etc.) en vez del panel básico → abrirlo al tocar el país.
+    if (window.matchMedia("(max-width: 760px)").matches) {
+      setCountryDashboard(id);
+    }
     setTimeout(() => {
       const feat = mapApi.current?.getFeatureById?.(id);
       if (feat) mapApi.current?.zoomToFeature(feat, true);
@@ -1245,6 +1250,7 @@ function App({ user: authUser, onLogout }) {
     setCountryFocus(null);
     setComparedId(null);
     setCompareMode(false);
+    setCountryDashboard(null); // mobile: cierra también el dashboard de la ficha
     mapApi.current?.reset();
   };
 
@@ -2320,8 +2326,8 @@ function App({ user: authUser, onLogout }) {
                       const i = window.YEARS.indexOf(year);
                       if (i < window.YEARS.length - 1) setYear(window.YEARS[i + 1]);
                     }}>{year + 1} →</button>
-                    <button className="cd-btn" onClick={() => setForumOpen({ iso3: c.iso3 })}>Foro</button>
-                    <button className="cd-btn primary" onClick={() => setCountryDashboard(null)}>Cerrar (Esc)</button>
+                    <button className="cd-btn cd-btn--foro" onClick={() => setForumOpen({ iso3: c.iso3 })}>Foro</button>
+                    <button className="cd-btn primary cd-btn--close" onClick={() => setCountryDashboard(null)}>Cerrar (Esc)</button>
                   </div>
                 </div>
               </div>

@@ -4653,7 +4653,9 @@
       .news-focus, .country-focus, .chat-panel {
         padding-bottom: 0;
       }
-      .news-rail-body, .cf-body { padding-bottom: 40px !important; }
+      .news-rail-body, .cf-body, .cd-body {
+        padding-bottom: calc(32px + env(safe-area-inset-bottom)) !important;
+      }
 
       /* ── Ficha país mobile: overlay full-screen con pestañas ──────
          Al tocar un país: ficha primero (info), todo scrolleable, y
@@ -4697,11 +4699,15 @@
       .ficha-tabs-close svg { width: 16px; height: 16px; }
       .ficha-tabs-close:active { color: #e6b840; }
 
-      /* Paneles → overlay full-screen bajo la barra de pestañas.
-         transform:none anula el slide-in lateral del desktop.
-         OCULTOS por defecto: sin esto cubren toda la pantalla en blanco
-         cuando no hay país (se renderizan siempre, vacíos). */
-      .country-focus, .news-focus {
+      /* En mobile la pestaña Información = DASHBOARD completo (.cd-*),
+         que ya trae presidente, gabinete, indicadores, etc. El panel
+         básico .country-focus NO se usa en mobile. */
+      .country-focus { display: none !important; }
+      .cf-actions { display: none !important; }
+
+      /* news-focus y dashboard → overlay full-screen bajo la barra de
+         pestañas. Ocultos por defecto (se renderizan vacíos). */
+      .news-focus, .cd-backdrop {
         display: none !important;
         position: fixed !important;
         inset: 0 !important;
@@ -4711,15 +4717,27 @@
         transform: none !important;
         border: none !important;
         box-shadow: none !important;
+        background: var(--bg) !important;
         z-index: 250 !important;
+        padding: 0 !important;
       }
-      /* Solo se muestra el panel de la pestaña activa (y solo con país) */
-      body.ficha-tab-info  .country-focus { display: flex !important; }
-      body.ficha-tab-news  .news-focus    { display: flex !important; }
-      /* Ocultar los botones de cerrar internos (la barra ya tiene su X) */
-      .country-focus .cf-close,
-      .news-focus .nf-close { display: none !important; }
-      /* La ficha mobile no necesita el header "Noticias" duplicado */
+      .cd-shell {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+        border: none !important;
+      }
+      /* Solo el panel de la pestaña activa (y solo con país) */
+      body.ficha-tab-info  .cd-backdrop { display: block !important; }
+      body.ficha-tab-news  .news-focus  { display: flex !important; }
+
+      /* Quitar botones que no van en mobile: Foro y Cerrar del dashboard
+         (la barra de pestañas ya tiene su X). Se mantienen los de año. */
+      .cd-btn--foro, .cd-btn--close { display: none !important; }
+      /* Cerrar internos + header duplicado de noticias fuera */
+      .news-focus .nf-close,
       .news-focus .nf-header { display: none !important; }
 
       /* Country search: compacta y dropdown ancho */
@@ -4974,7 +4992,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=5"></script>
+  <script type="text/babel" src="app.jsx?v=6"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>
