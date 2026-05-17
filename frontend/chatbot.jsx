@@ -420,8 +420,9 @@ function AletheiaChat({ selectedCountry }) {
           style={docked
             ? {
                 position: "fixed",
-                top: 56, left: 0, right: "auto", bottom: 76,
-                width: 380, height: "auto",
+                top: 56, left: 0, right: "auto", bottom: "auto",
+                width: 380,
+                height: "calc(100vh - 132px)", // 56 topbar + 76 timeline
                 minWidth: 0, minHeight: 0, maxWidth: 380, maxHeight: "none",
                 borderRadius: 0,
               }
