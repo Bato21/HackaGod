@@ -2407,8 +2407,8 @@ function App({ user: authUser, onLogout }) {
                       </span>
                       <span className="cs-of">/ 100</span>
                       <span className="cs-rank">
-                        Posición América
-                        <span className="rk">#{rank}</span>
+                        Posición mundial
+                        <span className="rk rk--grad" style={{ color: colorFor(c.scores[year]) }}>#{rank}</span>
                       </span>
                     </div>
                     <div className="cf-bar">
