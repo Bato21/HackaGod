@@ -1,4 +1,4 @@
-# AletheiaPath · Aquello que no está oculto
+# Aletheia · Aquello que no está oculto
 
 > Plataforma de inteligencia cívica global. Convierte datos fiscales,
 > índices de transparencia y noticias de medios investigativos en un mapa
@@ -16,7 +16,7 @@
 
 El acceso a información sobre corrupción institucional existe — el problema es que está fragmentado. Hay CPI de Transparency International, hay datos de gasto público de ministerios de hacienda, hay noticias de medios independientes, hay historiales de presidencias. Pero no hay una herramienta que lo cruce todo, lo contextualice históricamente y lo haga legible en 30 segundos para cualquier ciudadano, sin importar en qué país viva.
 
-**AletheiaPath** responde a esa brecha. El nombre viene del griego ἀλήθεια — *aquello que no está oculto*. La plataforma cubre países de todo el mundo, con profundidad especial en América Latina donde la densidad de datos históricos y fuentes investigativas es mayor.
+**Aletheia** responde a esa brecha. El nombre viene del griego ἀλήθεια — *aquello que no está oculto*. La plataforma cubre países de todo el mundo, con profundidad especial en América Latina donde la densidad de datos históricos y fuentes investigativas es mayor.
 
 Preguntas que responde:
 
@@ -65,7 +65,7 @@ La plataforma **no acusa, no condena, no atribuye responsabilidad personal**. Ag
 - Actualizaciones en tiempo real vía Supabase Realtime (WebSocket).
 - Sistema de likes con constraint UNIQUE en DB + trigger de sincronización.
 
-### Chatbot IA "alethIA"
+### Chatbot IA "aletheIA"
 
 - Búho flotante con drag, resize y dock.
 - Modelo **Claude Haiku 4.5** vía OpenRouter.
@@ -131,7 +131,7 @@ Preferencia de escala: `pct_gdp` → fallback `millions` (nunca mezcla escalas e
 
 ---
 
-## 4. Pipeline de inteligencia: AletheiaPath en Make.com
+## 4. Pipeline de inteligencia: Aletheia en Make.com
 
 Este es el corazón del sistema de noticias en tiempo real. Make.com corre **cada hora**, iterando sobre **37 fuentes RSS de medios investigativos** a nivel mundial (con densidad mayor en LATAM). Por cada noticia, ejecuta tres llamadas a **Mistral vía OpenRouter** en secuencia:
 
@@ -387,7 +387,7 @@ HackaGod/
 │   └── migrations/                   # SQL versionado (001–005)
 │
 ├── nextjs/                           # Plan original Next.js (no activo)
-├── AletheiaPath Plan integral.txt    # Plan estratégico inicial
+├── Aletheia Plan integral.txt    # Plan estratégico inicial
 ├── bugs.md                           # Tracker de issues conocidos
 └── readMe.md
 ```
