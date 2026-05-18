@@ -3231,6 +3231,20 @@
       border-top: none;
       padding-top: 2px;
     }
+    .news-item.news-item-risk {
+      border-left: 3px solid #eab308; /* sobreescrito inline por riskColor() */
+      padding-left: 10px;
+      background: rgba(234,179,8,0.06);
+      border-radius: 4px;
+      margin: 6px 0;
+    }
+    .news-item.news-item-risk .ni-title {
+      font-weight: 700;
+    }
+    .news-item.news-item-risk .ni-source {
+      color: var(--accent);
+      font-weight: 600;
+    }
     .news-item .ni-meta {
       display: flex;
       justify-content: space-between;
@@ -5865,7 +5879,7 @@
   <script src="methodology-data.js"></script>
   <script src="world-data.js"></script>
   <script src="events.js"></script>
-  <script src="news-override.js"></script>
+  <script src="news-override.js?v=2"></script>
   <script src="forum.js"></script>
   <script>window.ALETHEIA_BACKEND_URL = "https://aletheia-qk3s.onrender.com";</script>
   <script type="text/babel" src="CardNav.jsx"></script>
@@ -5877,7 +5891,7 @@
   <script type="text/babel" src="forum.jsx"></script>
   <script type="text/babel" src="profile.jsx"></script>
   <script type="text/babel" src="chatbot.jsx?v=14"></script>
-  <script type="text/babel" src="app.jsx?v=59"></script>
+  <script type="text/babel" src="app.jsx?v=60"></script>
   <script type="text/babel" src="cloud-sync.js"></script>
 </body>
 </html>

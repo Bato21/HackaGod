@@ -152,10 +152,36 @@
   // ── Override de window.COUNTRY_NEWS ────────────────────────────────
   // La rail del país agrupa en corrupcion/politica/gobierno. Ignoramos el
   // año (solo tenemos cobertura reciente real).
+  //
+  // Además: si hay una señal en window.ALETHEIA_RISK[iso3], la inyectamos
+  // como primer item de "corrupcion" — el usuario debe ver siempre las
+  // señales de riesgo al abrir las noticias del país.
   window.COUNTRY_NEWS = function (country, _year) {
     var out = { corrupcion: [], politica: [], gobierno: [] };
     if (!country) return out;
-    var items = (window.ALETHEIA_NEWS || {})[(country.iso3 || "").trim()] || [];
+    var iso = (country.iso3 || "").trim();
+
+    // 1) Señal de riesgo (si existe) → primero en corrupcion
+    var risk = (window.ALETHEIA_RISK || {})[iso];
+    if (risk && risk.strength >= 0.5) {
+      var lvl = (typeof window.riskLabel === "function") ? window.riskLabel(risk.strength) : "RIESGO";
+      var pct = Math.round(risk.strength * 100);
+      out.corrupcion.push({
+        id: "risk-" + iso,
+        source: "Aletheia · risk_signals",
+        ts: risk.ts || Date.now(),
+        title: "▲ " + lvl + " (" + pct + "%) — " + (risk.pattern || "Señal de riesgo"),
+        summary: risk.summary || "Señal de riesgo detectada por el pipeline analítico de Aletheia.",
+        url: null,
+        sector: risk.pattern || "Señal de riesgo",
+        categoryLabel: "Corrupción · Señal",
+        isRisk: true,
+        riskStrength: risk.strength,
+      });
+    }
+
+    // 2) Noticias reales del país
+    var items = (window.ALETHEIA_NEWS || {})[iso] || [];
     items.forEach(function (it) {
       (out[it.cat] || out.corrupcion).push({
         id: it.id,

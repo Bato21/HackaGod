@@ -1,14 +1,16 @@
 """Chatbot endpoint — POST /api/v1/chat.
 
-Llama 3.3 70B via Groq. Acceso completo a tablas de datos (cpi_scores,
-countries, presidents, public_expenditures). Sin acceso a tablas de
-usuario (user_profiles, forum_*, country_follows, post_likes).
-Respuestas cortas y precisas, limitadas al scope de Aletheia.
+Llama 3.3 70B vía OpenRouter (gateway). Acceso completo a tablas de
+datos (cpi_scores, countries, presidents, public_expenditures). Sin
+acceso a tablas de usuario (user_profiles, forum_*, country_follows,
+post_likes). Respuestas cortas y precisas, limitadas al scope de
+Aletheia.
 """
 
 import re
+from typing import Any
 
-from groq import AuthenticationError, Groq, RateLimitError
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from sqlalchemy import text
@@ -19,7 +21,9 @@ from app.database import get_db
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
-_MODEL = "llama-3.3-70b-versatile"
+_OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+_DEFAULT_MODEL = "meta-llama/llama-3.3-70b-instruct"
+_TIMEOUT = 45.0
 
 _SYSTEM = """Eres el asistente de datos de **Aletheia**.
 
@@ -266,17 +270,28 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     response: str
     context_used: list[str]
-    model: str = _MODEL
+    model: str = _DEFAULT_MODEL
 
 
 @router.post(
     "",
     response_model=ChatResponse,
     status_code=status.HTTP_200_OK,
-    summary="Chat Aletheia — Llama 3.3 70B + datos reales de Supabase",
+    summary="Chat Aletheia — Llama 3.3 70B (OpenRouter) + datos reales de Supabase",
 )
 async def chat(payload: ChatRequest, db: AsyncSession = Depends(get_db)) -> ChatResponse:
     settings = get_settings()
+    api_key = getattr(settings, "OPENROUTER_API_KEY_CHATBOT", "") or getattr(
+        settings, "OPENROUTER_API_KEY", ""
+    )
+    if not api_key:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="OPENROUTER_API_KEY_CHATBOT no configurada en el backend.",
+        )
+    model = (
+        getattr(settings, "OPENROUTER_MODEL_CHATBOT", None) or _DEFAULT_MODEL
+    )
 
     context_str, sources = await _build_context(
         payload.message, payload.country_iso3, db
@@ -286,35 +301,62 @@ async def chat(payload: ChatRequest, db: AsyncSession = Depends(get_db)) -> Chat
     if context_str:
         system_prompt += f"\n\n## DATOS DISPONIBLES (fuente Aletheia DB)\n{context_str}"
 
-    messages = [{"role": "system", "content": system_prompt}]
+    messages: list[dict[str, Any]] = [{"role": "system", "content": system_prompt}]
     for h in payload.history[-8:]:
         if h.get("role") in ("user", "assistant") and h.get("content"):
             messages.append({"role": h["role"], "content": h["content"]})
     messages.append({"role": "user", "content": payload.message})
 
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://aletheia-xi.vercel.app",
+        "X-Title": "Aletheia Chatbot",
+    }
+    body = {
+        "model": model,
+        "messages": messages,
+        "max_tokens": 512,
+        "temperature": 0.4,
+    }
+
     try:
-        client = Groq(api_key=settings.GROQ_API_KEY)
-        completion = client.chat.completions.create(
-            model=_MODEL,
-            messages=messages,
-            max_tokens=512,
-            temperature=0.4,
-        )
-        response_text = completion.choices[0].message.content
-    except AuthenticationError:
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            r = await client.post(_OPENROUTER_URL, headers=headers, json=body)
+    except httpx.TimeoutException:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="API key de Groq inválida.",
+            status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+            detail="OpenRouter no respondió a tiempo.",
         )
-    except RateLimitError:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Límite de Groq alcanzado. Reintenta en unos segundos.",
-        )
-    except Exception as e:
+    except httpx.HTTPError as e:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"Error Groq: {str(e)}",
+            detail=f"Error de red con OpenRouter: {str(e)}",
         )
 
-    return ChatResponse(response=response_text, context_used=sources)
+    if r.status_code == 401:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="API key de OpenRouter inválida.",
+        )
+    if r.status_code == 429:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Límite de OpenRouter alcanzado. Reintenta en unos segundos.",
+        )
+    if r.status_code >= 400:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"OpenRouter devolvió {r.status_code}: {r.text[:200]}",
+        )
+
+    data = r.json()
+    try:
+        response_text = data["choices"][0]["message"]["content"]
+    except (KeyError, IndexError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Respuesta inesperada de OpenRouter.",
+        )
+
+    return ChatResponse(response=response_text, context_used=sources, model=model)

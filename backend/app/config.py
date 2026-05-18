@@ -36,10 +36,10 @@ class Settings(BaseSettings):
         description="Publishable / anon key used by the supabase-py client.",
     )
 
-    # ── Anthropic ───────────────────────────────────────────────────
+    # ── Groq (legacy, ya no usado — reemplazado por OpenRouter) ──────
     GROQ_API_KEY: str = Field(
-        ...,
-        description="Groq API key (Llama 3.3 70B) for the chatbot endpoint.",
+        default="",
+        description="Groq API key (deprecated). Mantener vacío.",
     )
 
     # ── OpenRouter (country analysis) ───────────────────────────────
@@ -50,6 +50,16 @@ class Settings(BaseSettings):
     OPENROUTER_MODEL: str = Field(
         default="anthropic/claude-sonnet-4",
         description="OpenRouter model slug for the country analysis agent.",
+    )
+
+    # ── OpenRouter (chatbot) ────────────────────────────────────────
+    OPENROUTER_API_KEY_CHATBOT: str = Field(
+        default="",
+        description="OpenRouter API key dedicated to the /chat endpoint.",
+    )
+    OPENROUTER_MODEL_CHATBOT: str = Field(
+        default="meta-llama/llama-3.3-70b-instruct",
+        description="OpenRouter model slug for the chatbot.",
     )
 
     # ── Direct Postgres (transaction pooler) ────────────────────────

@@ -1197,7 +1197,9 @@ function CountryRiskModal({ iso3, onClose }) {
 
         <div className="crm-cats">
           {NEWS_CATS.map(({ key, label: catLabel, icon }) => {
-            const items = (news[key] || []).slice(0, 3);
+            // En el modal de riesgo, el header ya muestra la señal; evitamos
+            // duplicarla en la columna de corrupción.
+            const items = (news[key] || []).filter(it => !it.isRisk).slice(0, 3);
             return (
               <div key={key} className="crm-cat">
                 <div className="crm-cat-h">
@@ -1266,26 +1268,35 @@ function NewsRail({ country, year, onBack, onDiscuss }) {
               </div>
               {items.length === 0 ? (
                 <div style={{ fontSize: 11, color: "var(--text-3)" }}>Sin coberturas este periodo.</div>
-              ) : items.map(item => (
-                <div key={item.id} className="news-item">
-                  <div className="ni-meta">
-                    <span className="ni-source">{item.source}</span>
-                    <span>{window.formatRelativeTime(item.ts)}</span>
+              ) : items.map(item => {
+                const riskColor = item.isRisk && window.riskColor ? window.riskColor(item.riskStrength) : null;
+                return (
+                  <div
+                    key={item.id}
+                    className={`news-item${item.isRisk ? " news-item-risk" : ""}`}
+                    style={riskColor ? { borderLeftColor: riskColor } : null}
+                  >
+                    <div className="ni-meta">
+                      <span className="ni-source">{item.source}</span>
+                      <span>{window.formatRelativeTime(item.ts)}</span>
+                    </div>
+                    {item.url ? (
+                      <a className="ni-title ni-title-link" href={item.url} target="_blank" rel="noopener noreferrer">{item.title}</a>
+                    ) : (
+                      <div className="ni-title" style={item.isRisk && riskColor ? { color: riskColor } : null}>{item.title}</div>
+                    )}
+                    {item.summary && <div className="ni-summary">{item.summary}</div>}
+                    <div className="ni-foot">
+                      <span className="ni-sector">{item.sector}</span>
+                      {!item.isRisk && (
+                        <button className="ni-discuss" onClick={() => onDiscuss(item)}>
+                          Abrir hilo →
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  {item.url ? (
-                    <a className="ni-title ni-title-link" href={item.url} target="_blank" rel="noopener noreferrer">{item.title}</a>
-                  ) : (
-                    <div className="ni-title">{item.title}</div>
-                  )}
-                  {item.summary && <div className="ni-summary">{item.summary}</div>}
-                  <div className="ni-foot">
-                    <span className="ni-sector">{item.sector}</span>
-                    <button className="ni-discuss" onClick={() => onDiscuss(item)}>
-                      Abrir hilo →
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           );
         })}
