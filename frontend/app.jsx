@@ -3539,6 +3539,25 @@ const TOUR_STEPS = [
     title: "📰  Noticias del país",
     desc: "Panel de noticias del país seleccionado, clasificadas en Corrupción, Política y Gobierno. Puedes abrir un hilo de debate en el foro desde cualquier noticia.",
   },
+  // ── Riesgo ──
+  {
+    type: "modal", section: "Riesgo",
+    icon: "▲", iconStyle: { fontSize: "32px", color: "#f97316", fontStyle: "normal" },
+    title: "Señales de riesgo en el mapa",
+    desc: "Algunos países tienen un triángulo ▲ animado encima. Son señales de riesgo activas detectadas en tiempo real por el pipeline analítico de Aletheia desde fuentes públicas.",
+  },
+  {
+    type: "modal", section: "Riesgo",
+    icon: "🚦", iconStyle: { fontSize: "28px" },
+    title: "Color según intensidad",
+    desc: "🟡 Amarillo (50–70%) = riesgo medio · 🟠 Naranjo (70–90%) = riesgo alto · 🔴 Rojo (90%+) = riesgo crítico. Las ondas radar alrededor del triángulo resaltan los casos más fuertes. Las señales también aparecen como primer item en la columna «Corrupción» de las noticias del país.",
+  },
+  {
+    type: "modal", section: "Riesgo",
+    icon: "🔍", iconStyle: { fontSize: "28px" },
+    title: "Toca un triángulo",
+    desc: "Al hacer clic sobre cualquier triángulo del mapa se abre un modal centrado con las 3 categorías de noticias del país (Corrupción · Política · Gobierno). Si una categoría no tiene noticias, te lo indica explícitamente. El badge superior muestra el nivel y el porcentaje exacto de la señal.",
+  },
   // ── Opciones ──
   {
     type: "modal", section: "Opciones",
