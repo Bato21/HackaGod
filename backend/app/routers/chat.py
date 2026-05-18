@@ -22,7 +22,7 @@ from app.database import get_db
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 _OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-_DEFAULT_MODEL = "meta-llama/llama-3.3-70b-instruct"
+_DEFAULT_MODEL = "anthropic/claude-haiku-4-5"
 _TIMEOUT = 45.0
 
 _SYSTEM = """Eres el asistente de datos de **Aletheia**.

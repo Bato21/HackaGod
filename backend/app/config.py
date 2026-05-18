@@ -58,7 +58,7 @@ class Settings(BaseSettings):
         description="OpenRouter API key dedicated to the /chat endpoint.",
     )
     OPENROUTER_MODEL_CHATBOT: str = Field(
-        default="meta-llama/llama-3.3-70b-instruct",
+        default="anthropic/claude-haiku-4-5",
         description="OpenRouter model slug for the chatbot.",
     )
 
