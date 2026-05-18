@@ -42,10 +42,19 @@ ESCALAS — no confundir jamás:
 SCOPE: CPI/corrupción, presidentes, gasto público, gobernanza LATAM.
 Fuera de scope → "Eso está fuera de mis datos Aletheia."
 
+AÑO DE REFERENCIA:
+El usuario está viendo el dashboard en un AÑO ESPECÍFICO (te lo paso en
+el bloque AÑO DE LA CONSULTA si está disponible). Tus respuestas DEBEN
+priorizar ese año cuando hablen de scores, ranking o presidente.
+SIEMPRE menciona explícitamente el año en la respuesta (ej: "En 2024
+Chile tiene…" / "Para el año 2022 el dato es…").
+Si el usuario pregunta explícitamente por otro año (ej: "y en 2018?"),
+respeta esa pregunta; si no, usa el año de referencia.
+
 FORMATO:
 • Max 4 oraciones simples, 8 para análisis o comparaciones
-• Cita: "Aletheia score X/100 (AÑO)"
-• Termina con: [Fuente: CPI TI vía Aletheia DB]"""
+• SIEMPRE cita el año en la frase: "Aletheia score X/100 en YYYY"
+• Termina con: [Fuente: CPI TI vía Aletheia DB · Año YYYY]"""
 
 
 # ── Detección de países mencionados ──────────────────────────────────
@@ -264,6 +273,7 @@ async def _build_context(
 class ChatRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=2000)
     country_iso3: str | None = Field(default=None, min_length=3, max_length=3)
+    year: int | None = Field(default=None, ge=2010, le=2030)
     history: list[dict[str, str]] = Field(default_factory=list, max_length=20)
 
 
@@ -298,6 +308,12 @@ async def chat(payload: ChatRequest, db: AsyncSession = Depends(get_db)) -> Chat
     )
 
     system_prompt = _SYSTEM
+    if payload.year:
+        system_prompt += (
+            f"\n\n## AÑO DE LA CONSULTA\n"
+            f"El usuario está viendo el dashboard en el año **{payload.year}**. "
+            f"Prioriza ese año en tus respuestas y menciónalo explícitamente."
+        )
     if context_str:
         system_prompt += f"\n\n## DATOS DISPONIBLES (fuente Aletheia DB)\n{context_str}"
 

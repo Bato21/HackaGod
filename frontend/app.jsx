@@ -3397,9 +3397,12 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
       {/* Chatbot flotante — aislado en error boundary para no afectar el mapa */}
       {window.AletheiaChat && (
         <ChatErrorBoundary>
-          <window.AletheiaChat selectedCountry={
-            countryFocus ? (window.COUNTRIES || []).find(c => c.id === countryFocus || c.id === String(countryFocus)) || null : null
-          } />
+          <window.AletheiaChat
+            selectedCountry={
+              countryFocus ? (window.COUNTRIES || []).find(c => c.id === countryFocus || c.id === String(countryFocus)) || null : null
+            }
+            selectedYear={year}
+          />
         </ChatErrorBoundary>
       )}
     </>

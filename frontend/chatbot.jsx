@@ -164,7 +164,7 @@ function ChatMessage({ msg }) {
   );
 }
 
-function AletheiaChat({ selectedCountry }) {
+function AletheiaChat({ selectedCountry, selectedYear }) {
   const { useState, useRef, useEffect } = React;
 
   const [open, setOpen]         = useState(false);
@@ -396,8 +396,9 @@ function AletheiaChat({ selectedCountry }) {
       }));
 
       const iso3 = selectedCountry?.iso3 || null;
+      const year = selectedYear || null;
 
-      const res = await fetchWithRetry({ message: msg, country_iso3: iso3, history });
+      const res = await fetchWithRetry({ message: msg, country_iso3: iso3, year, history });
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
