@@ -42,6 +42,16 @@ class Settings(BaseSettings):
         description="Groq API key (Llama 3.3 70B) for the chatbot endpoint.",
     )
 
+    # ── OpenRouter (country analysis) ───────────────────────────────
+    OPENROUTER_API_KEY: str = Field(
+        default="",
+        description="OpenRouter API key used by /country/analyze.",
+    )
+    OPENROUTER_MODEL: str = Field(
+        default="anthropic/claude-sonnet-4",
+        description="OpenRouter model slug for the country analysis agent.",
+    )
+
     # ── Direct Postgres (transaction pooler) ────────────────────────
     # Use the Supabase connection pooler host (port 6543) with the
     # asyncpg driver: postgresql+asyncpg://user:pass@host:6543/postgres
