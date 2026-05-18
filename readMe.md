@@ -1,341 +1,368 @@
-# AletheiaPath V2
+# Aletheia · Aquello que no está oculto
 
-Investigative intelligence platform for institutional corruption in Latin America. Tracks public expenditure anomalies, political alignment patterns, and real-time corruption signals across 20+ LATAM countries. Combines structured fiscal data with Mistral AI narrative analysis to produce journalist-quality country dossiers and community-driven investigation threads.
+> Plataforma de inteligencia cívica para América Latina. Convierte datos
+> fiscales, índices de transparencia y noticias en un mapa interactivo,
+> rankings comparables, fichas de país con análisis IA, foros de
+> ciudadanos y señales de riesgo en tiempo real.
+
+🌐 **Producción:**
+- Frontend: [aletheia-xi.vercel.app](https://aletheia-xi.vercel.app) (también `aletheia-dusky-nine.vercel.app`)
+- Backend API: [aletheia-qk3s.onrender.com](https://aletheia-qk3s.onrender.com)
+- Base de datos: Supabase (`yiqxyfesywdswtcjaqeq`)
 
 ---
 
-## What this project does
+## 1. Contexto
 
-AletheiaPath ingests government expenditure data (2017–2025, ~640k rows across 20+ LATAM countries), computes an **Institutional Effectiveness Assessment (IEA)** score per country per year from four pillars — fiscal discipline, social investment, data transparency, and sector stability — and exposes everything through a Next.js frontend backed by Supabase.
+América Latina convive con una paradoja: hay datos públicos, hay
+noticias, hay rankings — pero están dispersos, sin contexto histórico
+y sin herramientas que los ciudadanos puedan leer rápido. El **CPI de
+Transparency International** mide percepción de corrupción y el dato
+está, pero entender *por qué* un país está donde está requiere cruzar
+gasto público, presidencias, gabinetes, escándalos y señales emergentes.
 
-Three Mistral AI agents run on schedule via Vercel Cron + Make.com webhooks:
+**Aletheia** ("aquello que no está oculto", griego) responde a:
 
-| Agent | Schedule | What it does |
+- ¿Cómo está mi país en transparencia comparado con el resto de LATAM?
+- ¿Quién gobernaba cuando el índice subió o cayó?
+- ¿Qué señales de riesgo recientes detectó la base de datos?
+- ¿Por qué exactamente está mi país en ese nivel?
+- ¿Qué piensan otros ciudadanos sobre los hechos?
+
+La aplicación no pretende atribuir responsabilidad personal — agrega
+fuentes públicas y deja que el lector saque conclusiones con evidencia
+a mano.
+
+---
+
+## 2. Qué hace
+
+### Mapa interactivo + globo 3D
+- Mapa Leaflet 2D coloreado por **Aletheia Score** (escala invertida:
+  100 = muy corrupto, 0 = transparente — derivada del CPI de TI).
+- Vista alterna **globo ortográfico D3** arrastrable y rotable.
+- Selector de año (2017 → 2025) que actualiza colores, ranking y
+  análisis IA en vivo.
+- Triángulos de alerta (▲) sobre países con señales activas, animados
+  con ondas radar, color por intensidad (amarillo → naranjo → rojo).
+
+### Ficha de país
+- Población por año (2017-2025) + tendencia.
+- Descripción geográfica y socioeconómica (traducida a español).
+- Score Aletheia con histórico y comparación con líderes regionales.
+- Presidencia con aprobación y partido.
+- Gabinete con carteras y posición ideológica (cuando hay datos).
+- **🤖 Análisis Aletheia · IA** — un análisis estructurado generado por
+  Claude Sonnet 4 (vía OpenRouter) que explica *por qué* el país está
+  en su estado actual: **✅ Lo bueno · ⚠️ Lo problemático · 📊 Lectura general**,
+  citando cifras concretas y posición en el ranking regional.
+
+### Noticias del país
+- Rail con 3 categorías: **Corrupción · Política · Gobierno**.
+- Datos reales de `news_events` (Supabase) clasificados por país y
+  categoría con un clasificador determinista (gazetteer + alias).
+- Señales de riesgo activas aparecen como primer item en Corrupción,
+  resaltadas con color y nivel (`▲ RIESGO CRÍTICO (92%) — Captura institucional`).
+- Click en triángulo del mapa abre un modal centrado con las 3
+  categorías y un badge del nivel de riesgo.
+
+### Foro
+- Hilos públicos por país o globales.
+- Filtros por región/país/año + creación de nuevo hilo.
+- Tour onboarding interactivo guía paso a paso todas las funciones.
+
+### Chatbot IA "alethIA"
+- Búho flotante (drag, resize, dock).
+- Modelo **Claude Haiku 4.5** vía OpenRouter (configurable).
+- Tiene acceso a CPI histórico, presidentes, gasto público, ranking
+  regional — *no* a datos de usuarios.
+- Las respuestas siguen el **año seleccionado** por el usuario en el
+  dashboard y citan el año explícitamente en cada respuesta.
+
+### Onboarding
+- WelcomeModal al primer login (registrado o invitado).
+- Tour guiado de **35 pasos en 9 secciones** — Bienvenida, Mapa,
+  Panel, País, Opciones, Foro, Filtros, Crear hilo, Chat — con
+  spotlights interactivos y modal final.
+- Botón de Ayuda en el topbar reabre el tour en cualquier momento.
+
+---
+
+## 3. Cómo se hizo
+
+### Stack real (no es Next.js — es Vanilla React + Babel standalone)
+
+| Capa | Tecnología | Por qué |
 |---|---|---|
-| **Fact-Checker** | On every article | Validates claims in GDELT news against known institutional/legislative facts |
-| **Periodic Investigator** | Light: 6h / Deep: 72h / Structural: weekly | Pulls fresh GDELT articles, classifies them, updates country risk profiles |
-| **Insight Engine** | On Make.com trigger | Takes structured signal data → produces journalist-ready narrative + auto-creates forum thread |
+| Frontend | React 18 + Babel standalone (CDN), Leaflet 1.9, D3 v7, GSAP | Cero build step; cualquier hosting estático sirve la app. `app.jsx` se sirve directo, Babel compila en el navegador. |
+| Backend | FastAPI + uvicorn + httpx + SQLAlchemy asyncpg | Async-first, autodoc OpenAPI gratis, healthcheck y CORS regex para deploys preview. |
+| DB | Supabase Postgres 16 + RLS + RPC `SECURITY DEFINER` | Datos públicos vía funciones RPC con `GRANT EXECUTE TO anon`, sin tocar GRANTs de tabla. |
+| Modelos IA | OpenRouter (gateway) | Un solo proveedor para todas las llamadas. Cambias modelo con env var, sin redeploy de código. |
+| · Chatbot | `anthropic/claude-haiku-4-5` | Conversacional, barato, multilingüe. |
+| · Análisis país | `anthropic/claude-sonnet-4` | Razonamiento más fuerte para síntesis estructurada. |
+| Hosting frontend | Vercel | Push a `main` = deploy automático. |
+| Hosting backend | Render | Cold start ~30-50s en plan free; fetchWithRetry en frontend soporta esto. |
+| Mapa base | OpenStreetMap (Leaflet) + topología `geo-low.json` (D3) | Sin API keys. |
+| Auth | Supabase Auth + modo invitado local | Invitados ven todo en modo lectura. |
+| Sync de datos | `cloud-sync.js` + `*-override.js` síncronos + `useXVersion()` hooks | Patrón: caché localStorage hidratado en boot → fetch async → bump versión → React re-renderiza. |
 
----
+### Pipeline de datos
 
-## Tech stack
+```
+Excel/CSV oficiales                    Pipeline externo (Make.com + Mistral)
+       │                                            │
+       ▼                                            ▼
+backend/etl_*.py  ──────────► Supabase ◄────── news_events / risk_signals
+       │                          │
+       │                          ▼
+       │                  RPC SECURITY DEFINER (get_cpi_scores, get_news, get_risk_signals, …)
+       │                          │
+       │                          ▼
+       │                  cloud-sync.js (fetch al boot)
+       │                          │
+       │                          ▼
+       └─► frontend/*-override.js (caché + window.ALETHEIA_*)
+                                  │
+                                  ▼
+                          React (useXVersion bump)
+                                  │
+                                  ▼
+                       Mapa / Ficha / Chat / Foro
+```
 
-| Layer | Technology |
+### ETL scripts (`backend/`)
+
+| Script | Qué hace |
 |---|---|
-| Frontend | Next.js 14 (App Router), TypeScript |
-| Backend DB | Supabase (PostgreSQL 15) |
-| AI | Mistral via OpenRouter (`mistral-small`, `mistral-nemo`, `mistral-large`) |
-| News source | GDELT 2.0 (free, no API key) |
-| Automation | Make.com webhooks |
-| Cron | Vercel Cron Jobs |
-| ETL | Python 3.12 (pandas, pycountry, supabase-py) |
-| Data source | Excel workbook (~640k rows public expenditure) |
+| `etl_load_excel.py` | Carga el dataset base (`BASE_COMPLETA_CORREGIDA_CON_TODOS_LOS_DATOS.xlsx`) en `countries`, `presidents`, `public_expenditures`. |
+| `etl_cpi.py` | Importa CPI de Transparency International (2017-2025) → `cpi_scores`. Calcula Aletheia Score = 100 - CPI. |
+| `etl_full_2026.py` | Refresh anual con datos 2026 (cuando estén disponibles). |
+| `etl_presidents.py` | Presidentes 2017-presente con partido, ideología y sistema político. |
+| `etl_cabinet.py` | Gabinetes ministeriales con carteras coloreadas por ideología. |
+| `etl_population.py` | Lee `PAISES_BASE_POBLACION_DESCRIPCION.xlsx`, mapea nombres EN→iso3, traduce subregión/capital al español, genera `frontend/population-data.js` estático. |
+| `etl_milestones.py` | Hitos históricos por país y año. |
+| `etl_news_classify.py` | **Clasificador determinista** que reasigna `country_id` de `news_events` cuando el pipeline externo los marca mal (gazetteer desde `countries` + alias de orgs criminales/ciudades, scoring URL > alias > entities > topics > headline). |
+
+### Endpoints del backend (`/api/v1/`)
+
+| Endpoint | Modelo | Propósito |
+|---|---|---|
+| `POST /chat` | `claude-haiku-4-5` | Chatbot conversacional con contexto DB + año seleccionado. |
+| `POST /country/analyze` | `claude-sonnet-4` | Análisis estructurado "Lo bueno / Lo problemático / Lectura general" de un país, cacheado 6h por `(iso3, year)`. |
+| `POST /briefings/generate` | mock | Placeholder del pipeline multi-agente (Scout → Analyst → Pattern → Researcher → Validator → Writer). |
+| `GET /countries`, `GET /countries/compare` | — | Datos de país y comparación 2 a 2. |
+| `GET /health` | — | Liveness probe. |
+
+### Capa frontend (archivos clave)
+
+```
+frontend/
+├── index.html              # Punto de entrada — carga React/Babel/Leaflet/D3 + scripts
+├── app.jsx                 # Componente principal (mapa, ficha, foro, dashboard) — v=62
+├── chatbot.jsx             # Búho flotante alethIA — v=15
+├── forum.jsx               # Foro con filtros + crear hilo
+├── data.js                 # Datasets estáticos (países base, regiones, etc.)
+├── cloud-sync.js           # Hidratación async desde Supabase (RPC calls)
+├── population-data.js      # Generado por etl_population.py (estático)
+├── news-override.js        # Construye window.ALETHEIA_NEWS + COUNTRY_NEWS
+├── risk-override.js        # Construye window.ALETHEIA_RISK + helpers de color
+├── cpi-override.js         # Inyecta CPI real en window.ALETHEIA_CPI
+├── milestones-override.js  # Hitos históricos
+└── events.js               # Bus de eventos custom para componentes desacoplados
+```
+
+### Patrón de integración Supabase → React
+
+1. **RPC `SECURITY DEFINER`** en Postgres bypasea RLS sin tocar GRANTs:
+   ```sql
+   CREATE OR REPLACE FUNCTION get_risk_signals()
+   RETURNS TABLE (...) SECURITY DEFINER AS $$ ... $$;
+   GRANT EXECUTE ON FUNCTION get_risk_signals() TO anon, authenticated;
+   ```
+2. **`*-override.js`** síncrono en `index.html` *después* de `data.js`,
+   *antes* de `app.jsx`. Lee `localStorage` del load previo → puebla
+   `window.ALETHEIA_X`. Expone `window.applyXCache(rows)`.
+3. **`cloud-sync.js`** hace `sb.rpc("get_x")` async, llama
+   `window.applyXCache(rows)`, guarda en localStorage, dispara evento
+   `aletheia:x:loaded`.
+4. **`useXVersion()`** hook (`useState` + listener) fuerza re-render
+   cuando llega data nueva. Patrón replicable para cualquier tabla.
+
+### Seguridad y CORS
+
+- API keys (OpenRouter, Supabase service role, DB password) **nunca**
+  van al frontend — todas las llamadas a modelos pasan por backend.
+- Supabase publishable key es safe-by-design (anon, restringida por RLS).
+- CORS permite explícitamente `localhost:3000`, `localhost:5500` y
+  cualquier `https://*.vercel.app` (regex) para soportar preview deploys.
 
 ---
 
-## Repository layout
+## 4. Variables de entorno
+
+### Backend (`backend/.env`)
+```bash
+# Supabase
+SUPABASE_URL=https://<project>.supabase.co
+SUPABASE_KEY=sb_publishable_...
+DATABASE_URL=postgresql+asyncpg://postgres.<ref>:<password>@aws-...pooler.supabase.com:5432/postgres
+
+# OpenRouter — un par de credenciales por endpoint (rotación + billing separados)
+OPENROUTER_API_KEY=sk-or-v1-...                       # /country/analyze
+OPENROUTER_MODEL=anthropic/claude-sonnet-4
+OPENROUTER_API_KEY_CHATBOT=sk-or-v1-...               # /chat
+OPENROUTER_MODEL_CHATBOT=anthropic/claude-haiku-4-5
+
+# CORS
+CORS_ORIGINS=http://localhost:3000,http://localhost:5500
+# CORS_ORIGIN_REGEX se aplica además de la lista; default cubre *.vercel.app
+```
+
+### Frontend
+La URL del backend se inyecta en `index.html`:
+```html
+<script>window.ALETHEIA_BACKEND_URL = "https://aletheia-qk3s.onrender.com";</script>
+```
+
+---
+
+## 5. Cómo correr local
+
+### Backend (FastAPI)
+```bash
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env  # llena con tus credenciales
+uvicorn app.main:app --reload --port 8000
+# http://localhost:8000/docs → Swagger UI
+```
+
+### Frontend (cualquier static server)
+```bash
+cd frontend
+# Edita index.html: window.ALETHEIA_BACKEND_URL = "http://localhost:8000"
+python3 -m http.server 5500
+# http://localhost:5500
+```
+
+### Aplicar migraciones Supabase
+```
+supabase/migrations/
+├── 001_schema_fixes.sql
+├── 002_aletheia_core.sql
+├── 003_mistral_dynamic.sql
+└── 004_functions_triggers.sql
+```
+Correr en orden vía Supabase SQL Editor. Después poblar tablas:
+```bash
+cd backend && source .venv/bin/activate && set -a && source .env && set +a
+python3 etl_load_excel.py
+python3 etl_cpi.py
+python3 etl_presidents.py
+python3 etl_cabinet.py
+python3 etl_population.py     # regenera frontend/population-data.js
+python3 etl_news_classify.py  # idempotente, reasigna country_id mal etiquetados
+```
+
+---
+
+## 6. Deploy
+
+| Servicio | Repo / Branch | Build | Trigger |
+|---|---|---|---|
+| Vercel (frontend) | `main` (carpeta `frontend/`) | Estático, sin build | Push a `main` |
+| Render (backend) | `main` (carpeta `backend/`) | `pip install -r requirements.txt` + `uvicorn` | Push a `main` |
+| Supabase | — | Migraciones SQL manuales | SQL Editor |
+
+**Hobby tier de Vercel** limita a 100 deploys / 24h — batchear cambios
+relacionados en un solo commit para no quemar el cap.
+
+**Render free** duerme tras 15 min de inactividad → primer request
+toma 30-50s. El frontend tiene `fetchWithRetry` con backoff de 4s y
+mensajes "Despertando servidor…" para suavizar la UX.
+
+---
+
+## 7. Layout del repo
 
 ```
 HackaGod/
 ├── backend/
-│   ├── etl_load_excel.py                    # Main ETL: Excel → Supabase (run this to load data)
-│   ├── 00_limpieza_datos.ipynb              # Legacy notebook — outdated, do not use
-│   └── BASE_COMPLETA_CORREGIDA_CON_TODOS_LOS_DATOS.xlsx   # Source data
+│   ├── app/
+│   │   ├── main.py                       # FastAPI factory + CORS + lifespan
+│   │   ├── config.py                     # Settings (Pydantic)
+│   │   ├── database.py                   # Async engine + dispose
+│   │   ├── routers/
+│   │   │   ├── chat.py                   # POST /chat
+│   │   │   ├── country_analysis.py       # POST /country/analyze
+│   │   │   ├── countries.py              # GET /countries, /compare
+│   │   │   └── briefings.py              # POST /briefings/generate (mock)
+│   │   └── models.py                     # Pydantic schemas
+│   ├── etl_*.py                          # ETL scripts (ver tabla)
+│   ├── requirements.txt
+│   ├── Dockerfile + docker-compose.yml
+│   └── .env.example
 │
-├── supabase/
-│   └── migrations/
-│       ├── 001_schema_fixes.sql             # Fix + enrich countries, presidents, public_expenditures
-│       ├── 002_aletheia_core.sql            # Core tables: iea_scores, news_events, risk_signals, forum
-│       ├── 003_mistral_dynamic.sql          # Agent tables: country_profiles, fact_checks, signal_health, etc.
-│       └── 004_functions_triggers.sql       # IEA computation, anomaly detection, auto-triggers
+├── frontend/
+│   ├── index.html
+│   ├── app.jsx, chatbot.jsx, forum.jsx
+│   ├── *-override.js, cloud-sync.js
+│   ├── data.js, population-data.js
+│   ├── events.js
+│   └── (sin build step — todo se sirve directo)
 │
-├── requirements.txt                         # Python deps (pycountry required, not optional)
-├── package.json                             # Node deps: openai, node-cron
-├── .mcp.json                                # Supabase MCP config (project: yiqxyfesywdswtcjaqeq)
-└── bugs.md                                  # Bug tracker and known limitations
-```
-
-**Frontend and agent code** (Next.js + lib/agents/) live in a separate repo not yet published. When the frontend repo is added, the agent files belong at:
-```
-lib/
-├── openrouter.ts                  # Shared Mistral client + mistralCall() wrapper
-├── gdelt.ts                       # GDELT 2.0 fetch + dedup helpers
-└── agents/
-    ├── mistral-factchecker.ts     # Fact-Checker agent
-    ├── mistral-investigator.ts    # Periodic Investigator (light/deep/structural)
-    └── mistral-insight.ts         # Insight Engine (Make.com → narrative + forum thread)
+├── supabase/migrations/                  # SQL versionado
+│
+├── nextjs/                               # Plan original Next.js (abandonado)
+├── AletheiaPath Plan integral.txt        # Plan estratégico inicial
+├── bugs.md                               # Tracker de issues conocidos
+└── readMe.md                             # (este archivo)
 ```
 
 ---
 
-## Database schema
+## 8. Issues abiertos y limitaciones
 
-### Core tables (always present)
+Ver `bugs.md` para tracker completo. Algunos importantes:
 
-| Table | Rows | Description |
-|---|---|---|
-| `countries` | ~22 | LATAM countries with ISO codes, coordinates, flags, phase |
-| `presidents` | 377 | Political leaders 2017–present with party/stance/system |
-| `public_expenditures` | ~640k | Fiscal data (wide→long pivot, 2017–2025) |
-
-### Platform tables (created by migrations 002–003)
-
-| Table | Owner | Description |
-|---|---|---|
-| `iea_scores` | SQL fn + Mistral | IEA + BIC score per country per year |
-| `news_events` | Mistral investigator | GDELT articles classified by corruption type |
-| `risk_signals` | Mistral investigator | Active corruption patterns with evidence count |
-| `forum_threads` | Mistral insight engine | Auto-created discussion threads per signal |
-| `forum_replies` | Users + Mistral | Community responses + analyst replies |
-| `country_profiles` | Mistral deep investigation | Narrative dossier per country (72h cadence) |
-| `fact_checks` | Mistral fact-checker | Per-article confidence + verdict |
-| `investigation_runs` | Mistral investigator | Audit log with token cost per run |
-| `source_reputation` | Mistral fact-checker | Domain trust scores, rolling weighted average |
-| `signal_health` | Auto-trigger + investigator | Severity decay tracking (auto-init on signal insert) |
-| `pattern_links` | Mistral structural | Cross-country corruption DNA links |
-
-### Analytical views
-
-| View | Purpose |
-|---|---|
-| `v_sector_totals` | SUM(amount) per country/year/sector/scale |
-| `v_sector_yoy` | Year-over-year % change per sector (LAG-based) |
-| `v_president_expenditure` | Expenditure during each president's tenure |
-| `v_country_risk_dashboard` | Single-row-per-country dashboard (frontend card data) |
-
-### Key SQL functions
-
-| Function | Usage |
-|---|---|
-| `fn_compute_iea(country_id, year)` | Returns jsonb with 4-pillar IEA score from expenditure data |
-| `fn_batch_compute_iea(year)` | All active countries ranked by IEA — use for debugging |
-| `sp_populate_iea_scores(year)` | Seeds iea_scores table for a given fiscal year |
-| `fn_detect_expenditure_anomalies(threshold, year)` | Sectors with YoY change above threshold |
+- **Pipeline externo (Make.com + Mistral)** etiqueta `news_events` y
+  `risk_signals` con `country_id` incorrecto (todo → Chile). Hay un
+  clasificador determinista (`etl_news_classify.py`) que reasigna
+  news_events post-hoc; falta el equivalente para `risk_signals`.
+- `risk_signals.claude_summary` viene en dos formatos sucios (JSON
+  con justificación + markdown). `risk-override.js` los limpia en
+  cliente.
+- Plan free Render = cold start 30-50s. Para producción real → mover a
+  plan pago o Vercel Functions con Fluid Compute.
+- Frontend usa Babel standalone (cómodo para hackathon, lento en
+  primer load). Producción real → precompilar con Vite/esbuild.
 
 ---
 
-## IEA Score methodology
+## 9. Créditos y filosofía
 
-Each pillar is 0–100 (higher = healthier institution). Composite is weighted average.
+**Aletheia** (ἀλήθεια) = *aquello que no está oculto*. La app no
+acusa, no condena, no atribuye responsabilidad individual. Solo
+muestra los datos públicos en un formato legible, deja que el lector
+los compare, y le da herramientas para discutir con otros ciudadanos.
 
-| Pillar | Weight | How computed |
-|---|---|---|
-| Fiscal discipline | 30% | Penalize admin overhead > 15% and security > 25% of total spend |
-| Social investment | 35% | Reward health + education combined ≥ 22% of total spend |
-| Data transparency | 20% | Proxy: indicator count per country/year vs. baseline of 40 |
-| Sector stability | 15% | Lower average YoY variance across sectors = higher stability |
-
-**Data preference order:** `pct_gdp` → fallback to `millions`. Never mix scales in a single computation.
-
-**BIC (Baseline Integrity Confidence):** Band around IEA score (`bic_low`, `bic_high`) computed by the Mistral Periodic Investigator based on news signal count and active risk signal severity. Width: low=±3, medium=±6, high=±12.
+Cada cifra cita su fuente. Cada análisis IA dice qué año cubre. Cada
+señal de riesgo es visible junto a las noticias relacionadas. La
+transparencia se mide por la facilidad con que alguien sin tiempo
+puede entender un país en 30 segundos.
 
 ---
 
-## First-time setup
-
-### 1. Python environment
-
-```bash
-cd HackaGod
-pip install -r requirements.txt
-```
-
-Create `.env.local` in the project root:
-```
-NEXT_PUBLIC_SUPABASE_URL=https://yiqxyfesywdswtcjaqeq.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=<your_service_role_key>
-```
-
-### 2. Apply migrations
-
-Open Supabase SQL Editor (`https://supabase.com/dashboard/project/yiqxyfesywdswtcjaqeq/sql`) and run each file **in order**:
+## 10. Stack resumido (TL;DR)
 
 ```
-001_schema_fixes.sql
-002_aletheia_core.sql
-003_mistral_dynamic.sql
-004_functions_triggers.sql
+React 18 + Babel standalone + Leaflet + D3
+    ↓ HTTPS
+FastAPI (uvicorn + httpx + asyncpg)
+    ↓ Postgres pooler
+Supabase (RLS + RPC SECURITY DEFINER)
+    ↓ OpenRouter gateway
+Anthropic Claude Haiku 4.5 (chat) + Sonnet 4 (analysis)
 ```
-
-**Important:** Migration 004 auto-seeds IEA scores. If `public_expenditures` is empty when 004 runs, the seed is skipped (it warns you). Run the ETL first if that happens.
-
-### 3. Run ETL
-
-```bash
-cd backend
-python etl_load_excel.py
-```
-
-Expected output:
-```
-✅ Conectado a Supabase: https://...
-  [countries] Lote 1/1 — 22 filas ✓
-  [presidents] Lote 1/1 — 377 filas ✓
-  [public_expenditures] Lote 1/1282 — 500 filas ✓
-  ...
-✅ ETL V2 COMPLETO
-```
-
-### 4. Seed IEA scores (if 004 ran before ETL)
-
-In the Supabase SQL Editor:
-```sql
-DO $$
-DECLARE yr int;
-BEGIN
-  FOR yr IN 2017..2024 LOOP
-    CALL sp_populate_iea_scores(yr);
-  END LOOP;
-END;
-$$;
-```
-
-### 5. Verify
-
-```sql
--- Dashboard check (should show IEA scores for all countries)
-SELECT iso_alpha3, name_es, iea_score, active_signals, current_president
-FROM v_country_risk_dashboard
-ORDER BY iea_score ASC;
-
--- Top anomalies detected in expenditure data
-SELECT * FROM fn_detect_expenditure_anomalies(50.0, 2023) LIMIT 10;
-```
-
----
-
-## Environment variables
-
-### Required for ETL (`.env.local`)
-```
-NEXT_PUBLIC_SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
-```
-
-### Required for frontend + agents (`.env.local`, when frontend is added)
-```
-# OpenRouter (Mistral via OpenRouter)
-OPENROUTER_API_KEY=
-OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-OPENROUTER_SITE_URL=https://aletheia-path.com
-OPENROUTER_SITE_NAME=AletheiaPath
-
-# Mistral model aliases (change here to upgrade globally)
-MISTRAL_FAST=mistralai/mistral-small
-MISTRAL_BALANCED=mistralai/mistral-nemo
-MISTRAL_POWERFUL=mistralai/mistral-large
-
-# Investigation schedule
-INVESTIGATION_INTERVAL_LIGHT=6      # hours
-INVESTIGATION_INTERVAL_DEEP=72
-INVESTIGATION_INTERVAL_STRUCTURAL=168
-
-# Fact-check thresholds
-FACTCHECK_MIN_CONFIDENCE=0.65
-FACTCHECK_CORROBORATION_HOURS=48
-SOURCE_TRUST_CACHE_DAYS=7
-
-# Cron auth
-CRON_SECRET=
-```
-
----
-
-## Data sources
-
-| Source | Data | Access |
-|---|---|---|
-| Excel workbook | ~640k public expenditure rows, 2017–2025, 20+ LATAM countries | Manual, local file |
-| GDELT 2.0 | Real-time global news articles filtered by country + corruption keywords | Free API, no key |
-| Make.com | Webhook triggers for signal events and insight generation | Paid, configured separately |
-| Supabase | All computed analytics, agent outputs, user forum content | `yiqxyfesywdswtcjaqeq` |
-
-**GDELT query strategy:** `(corruption OR corrupción OR soborno OR fraude OR nepotismo OR ...) sourcecountry:<ISO2>` filtered to the last N hours. Country ISO2 stored in `countries.gdelt_iso2`.
-
----
-
-## Agent system overview
-
-### Fact-Checker
-- Triggered on every article ingestion
-- Uses `mistral-small` (cheap, fast)
-- Checks institutional validity, legislative validity, statistical plausibility
-- Builds corroboration score from matching articles in last 48h
-- Updates `fact_checks` table and `source_reputation` rolling average
-- If verdict = `rejected`: sets `news_events.verified = false` (soft delete)
-
-### Periodic Investigator
-Three modes, all write to `investigation_runs` for audit:
-
-**Light (every 6h):** GDELT → classify → fact-check → recalculate BIC. Uses `mistral-small`.
-
-**Deep (every 72h):** 7-day GDELT window → synthesize all verified events → generate narrative → write `country_profiles`. Uses `mistral-large`.
-
-**Structural (weekly):** All active signals across all countries → find cross-country patterns → write `pattern_links`. Uses `mistral-large`.
-
-### Insight Engine
-- Triggered by Make.com after a signal is created or BIC changes
-- Uses `mistral-nemo` (multilingual, Spanish output)
-- Enriches Make payload with live DB context (IEA, active signals, trajectory)
-- Returns: headline, context, significance, 3 things to watch, forum thread title, alert level
-- Auto-creates a `forum_threads` entry with the generated title
-
----
-
-## Signal lifecycle
-
-```
-GDELT article
-    → Mistral classify (light investigator)
-        → fact_checks (fact-checker, async)
-            → source_reputation update
-        → news_events row (verified=true if confidence ≥ 0.65)
-            → risk_signals created when pattern detected
-                → signal_health auto-init (trigger)
-                → forum_thread auto-created (insight engine)
-                    → pattern_links updated (structural investigator, weekly)
-                        → signal severity decays 0.1/day without reinforcement
-                            → signal resolved if severity ≤ 1 and age > 30 days
-```
-
----
-
-## Supabase MCP
-
-Project is configured for Claude Code MCP access:
-```json
-{ "mcpServers": { "supabase": { "type": "http", "url": "https://mcp.supabase.com/mcp?project_ref=yiqxyfesywdswtcjaqeq" } } }
-```
-
-To authenticate in a new session: run `claude /mcp` in a terminal → select `supabase` → Authenticate.
-
----
-
-## Known issues
-
-See `bugs.md` for the full tracker. Key open items:
-
-- `v_president_expenditure` hardcodes `year_end = 2025` — breaks when 2026 data loads
-- `fn_compute_iea` may exclude sectors if a country's data mixes `pct_gdp` and `millions` scales
-- `political_stance` has no check constraint — unlisted values pass through
-- `updated_at` trigger fires on every row during ETL bulk upserts (acceptable for current data size)
-
----
-
-## Git branches
-
-| Branch | Purpose |
-|---|---|
-| `main` | Stable, frontend-ready |
-| `backend` | Current: schema + ETL development |
-
-Migrations and ETL work happens on `backend`. Merge to `main` only after verification queries pass.
-
----
-
-## Supabase project
-
-- **Project ref:** `yiqxyfesywdswtcjaqeq`
-- **Dashboard:** `https://supabase.com/dashboard/project/yiqxyfesywdswtcjaqeq`
-- **SQL Editor:** `https://supabase.com/dashboard/project/yiqxyfesywdswtcjaqeq/sql`
-- **Table Editor:** `https://supabase.com/dashboard/project/yiqxyfesywdswtcjaqeq/editor`

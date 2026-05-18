@@ -1637,7 +1637,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
 
   // ── Estado
   const [topology, setTopology] = useState(null);
-  const [year, setYear] = useState(2024);
+  const [year, setYear] = useState(window.YEARS.includes(2025) ? 2025 : YEAR_LATEST);
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState("desc"); // desc | asc | name
   const [filterRange, setFilterRange] = useState([0, 100]);
