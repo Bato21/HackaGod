@@ -584,6 +584,7 @@ function GlobeView({
   selectedId, comparedId, hoveredId,
   onHover, onLeave, onSelect, filterRange, apiRef, onZoomChange
 }) {
+  useRiskVersion();
   const svgRef = useRef(null);
   const gRef = useRef(null);
   const zoomBehaviorRef = useRef(null);
@@ -924,6 +925,47 @@ function GlobeView({
             })}
           </g>
         )}
+
+        {/* Triángulos de señales de riesgo (mismo dataset que el mapa 2D) */}
+        <g className="globe-risk-layer" style={{ pointerEvents: 'all' }}>
+          {Object.values(window.ALETHEIA_RISK || {}).map(sig => {
+            if (!sig || sig.strength < 0.5) return null;
+            const country = (window.COUNTRIES || []).find(c => c.iso3 === sig.iso3);
+            if (!country) return null;
+            const rot = projectionFn.rotate();
+            // ocultar si está en cara trasera del globo
+            if (d3.geoDistance([country.lng, country.lat], [-rot[0], -rot[1]]) > Math.PI / 2) return null;
+            const pt = projectionFn([country.lng, country.lat]);
+            if (!pt) return null;
+            const color = window.riskColor ? window.riskColor(sig.strength) : '#eab308';
+            if (!color) return null;
+            const label = window.riskLabel ? window.riskLabel(sig.strength) : 'RIESGO';
+            const size = 9 + Math.round((sig.strength - 0.5) / 0.5 * 6); // 9→15 (más pequeño que map 2D)
+            const half = size / 2;
+            // triángulo equilátero apuntando arriba
+            const poly = `${pt[0]},${pt[1] - half} ${pt[0] - half},${pt[1] + half} ${pt[0] + half},${pt[1] + half}`;
+            const cls = sig.strength >= 0.9 ? 'lvl-crit' : sig.strength >= 0.7 ? 'lvl-high' : 'lvl-med';
+            return (
+              <g key={`risk-${sig.iso3}`} className={`globe-risk-poi ${cls}`}
+                 onClick={(e) => {
+                   e.stopPropagation();
+                   window.dispatchEvent(new CustomEvent('aletheia:risk:open', { detail: { iso3: sig.iso3 } }));
+                 }}
+                 style={{ cursor: 'pointer' }}>
+                {/* 3 ondas radar */}
+                <circle cx={pt[0]} cy={pt[1]} r={size * 0.9} fill="none" stroke={color} strokeWidth={1.4}
+                        className="globe-risk-wave w1" opacity={0.55} />
+                <circle cx={pt[0]} cy={pt[1]} r={size * 0.9} fill="none" stroke={color} strokeWidth={1.2}
+                        className="globe-risk-wave w2" opacity={0.4} />
+                <circle cx={pt[0]} cy={pt[1]} r={size * 0.9} fill="none" stroke={color} strokeWidth={1.0}
+                        className="globe-risk-wave w3" opacity={0.28} />
+                {/* triángulo */}
+                <polygon points={poly} fill={color} stroke="#fff" strokeWidth={1.2} strokeLinejoin="round" />
+                <title>{`▲ ${label} · ${Math.round(sig.strength * 100)}% — ${sig.pattern || ''}`}</title>
+              </g>
+            );
+          })}
+        </g>
       </g>
     </svg>
     </React.Fragment>
