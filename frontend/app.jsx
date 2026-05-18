@@ -527,7 +527,7 @@ function MapView({
       if (!country) return;
       const color = window.riskColor(sig.strength) || '#eab308';
       const label = window.riskLabel(sig.strength);
-      const size = 20 + Math.round((sig.strength - 0.5) / 0.5 * 12); // 20→32
+      const size = 13 + Math.round((sig.strength - 0.5) / 0.5 * 8); // 13→21
       const box  = Math.ceil(size * 3); // espacio para las ondas
 
       // Triángulo de alerta + 3 ondas de color expandiéndose (tipo radar)
@@ -1015,6 +1015,222 @@ function RiskPanel({ open, onClose, onPick }) {
   );
 }
 
+const NEWS_CATS = [
+  { key: "corrupcion", label: "Corrupción",  icon: "⚠" },
+  { key: "politica",   label: "Política",    icon: "🏛" },
+  { key: "gobierno",   label: "Gobierno",    icon: "📋" },
+];
+
+// ─── CountryAIAnalysis ──────────────────────────────────────────────
+// Llama al backend /api/v1/country/analyze (OpenRouter + Claude). Cachea
+// en memoria por sesión por (iso3+year) para no rehidratar al cambiar
+// pestañas.
+const _AI_CACHE = {};
+
+function renderAnalysisMarkdown(md) {
+  // Mini render: ## headers + lista + párrafos + cursiva final.
+  const lines = (md || "").split("\n");
+  const out = [];
+  let para = [];
+  let list = null; // array of <li> elements buffered
+  const flushPara = () => {
+    if (!para.length) return;
+    out.push(<p key={`p${out.length}`} className="ai-para">{para.join(" ")}</p>);
+    para = [];
+  };
+  const flushList = () => {
+    if (!list) return;
+    out.push(<ul key={`u${out.length}`} className="ai-list">{list}</ul>);
+    list = null;
+  };
+  lines.forEach((raw, i) => {
+    const ln = raw.trim();
+    if (!ln) { flushPara(); flushList(); return; }
+    if (ln.startsWith("## ")) {
+      flushPara(); flushList();
+      out.push(<h4 key={`h${i}`} className="ai-h">{ln.slice(3)}</h4>);
+    } else if (/^[-*•]\s+/.test(ln)) {
+      flushPara();
+      if (!list) list = [];
+      list.push(<li key={list.length}>{ln.replace(/^[-*•]\s+/, "")}</li>);
+    } else if (/^_.*_$/.test(ln)) {
+      flushPara(); flushList();
+      out.push(<div key={`f${i}`} className="ai-foot">{ln.replace(/^_|_$/g, "")}</div>);
+    } else {
+      flushList();
+      para.push(ln);
+    }
+  });
+  flushPara(); flushList();
+  return out;
+}
+
+function CountryAIAnalysis({ iso3, year }) {
+  const [state, setState] = useState({ loading: true, error: "", data: null, status: "" });
+  const cacheKey = `${iso3}_${year || "any"}`;
+
+  useEffect(() => {
+    let abort = false;
+    if (_AI_CACHE[cacheKey]) {
+      setState({ loading: false, error: "", data: _AI_CACHE[cacheKey], status: "" });
+      return;
+    }
+    setState({ loading: true, error: "", data: null, status: "Generando análisis con IA…" });
+
+    const BACKEND = (window.ALETHEIA_BACKEND_URL || "http://localhost:8000") + "/api/v1/country/analyze";
+    const MAX_RETRIES = 6;
+    const RETRY_DELAY = 4000;
+    const TIMEOUT_PER_TRY = 60000;
+    const TRANSIENT = new Set([502, 503, 504]);
+
+    (async () => {
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        if (abort) return;
+        if (attempt === 1) setState(s => ({ ...s, status: "Despertando servidor… (~30s)" }));
+        if (attempt >= 3) setState(s => ({ ...s, status: "Aún despertando, paciencia…" }));
+
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), TIMEOUT_PER_TRY);
+        try {
+          const res = await fetch(BACKEND, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ iso3, year: year || null }),
+            signal: ctrl.signal,
+          });
+          clearTimeout(timer);
+          if (TRANSIENT.has(res.status) && attempt < MAX_RETRIES - 1) {
+            await new Promise(r => setTimeout(r, RETRY_DELAY));
+            continue;
+          }
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.detail || `Error ${res.status}`);
+          }
+          const data = await res.json();
+          if (abort) return;
+          _AI_CACHE[cacheKey] = data;
+          setState({ loading: false, error: "", data, status: "" });
+          return;
+        } catch (e) {
+          clearTimeout(timer);
+          if (attempt < MAX_RETRIES - 1) {
+            await new Promise(r => setTimeout(r, RETRY_DELAY));
+            continue;
+          }
+          if (!abort) setState({ loading: false, error: e.message || "Error de red", data: null, status: "" });
+          return;
+        }
+      }
+    })();
+
+    return () => { abort = true; };
+  }, [cacheKey]);
+
+  return (
+    <div className="cd-card ai-card">
+      <div className="cd-card-h">
+        <span>🤖 Análisis Aletheia · IA</span>
+        <span className="mono" style={{ color: "var(--text-3)" }}>
+          {state.data?.cached ? "caché" : (state.data?.model || "claude-sonnet-4")}
+        </span>
+      </div>
+      {state.loading && (
+        <div className="ai-loading">
+          <div className="ai-spinner"></div>
+          <div className="ai-status">{state.status || "Cargando…"}</div>
+        </div>
+      )}
+      {state.error && !state.loading && (
+        <div className="ai-error">
+          <div className="ai-error-title">No se pudo generar el análisis</div>
+          <div className="ai-error-msg">{state.error}</div>
+        </div>
+      )}
+      {state.data && !state.loading && (
+        <div className="ai-body">
+          {renderAnalysisMarkdown(state.data.analysis)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CountryRiskModal({ iso3, onClose }) {
+  useNewsVersion();
+  useRiskVersion();
+
+  const risk = (window.ALETHEIA_RISK || {})[iso3];
+  const countryObj = window.COUNTRIES.find(c => c.iso3 === iso3) || {};
+  const news = window.COUNTRY_NEWS ? window.COUNTRY_NEWS(countryObj, null) : { corrupcion: [], politica: [], gobierno: [] };
+  const color = risk ? (window.riskColor ? window.riskColor(risk.strength) : "#eab308") : "#eab308";
+  const label = risk ? (window.riskLabel ? window.riskLabel(risk.strength) : "RIESGO") : "RIESGO";
+
+  useEffect(() => {
+    const onKey = e => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  if (!iso3) return null;
+
+  return (
+    <div className="crm-backdrop" onClick={onClose}>
+      <div className="crm-card" onClick={e => e.stopPropagation()}>
+        <div className="crm-head">
+          <div className="crm-head-left">
+            <div className="crm-kicker">Señal de riesgo activa</div>
+            <div className="crm-title">{countryObj.name || iso3}</div>
+            {risk && (
+              <div className="crm-badge" style={{ color, borderColor: color }}>
+                ▲ {label} · {(risk.strength * 100).toFixed(0)}%
+                {risk.pattern && <span className="crm-pattern"> — {risk.pattern}</span>}
+              </div>
+            )}
+          </div>
+          <button className="crm-close" onClick={onClose}>✕</button>
+        </div>
+
+        {risk?.summary && (
+          <div className="crm-summary">{risk.summary}</div>
+        )}
+
+        <div className="crm-cats">
+          {NEWS_CATS.map(({ key, label: catLabel, icon }) => {
+            const items = (news[key] || []).slice(0, 3);
+            return (
+              <div key={key} className="crm-cat">
+                <div className="crm-cat-h">
+                  <span className="crm-cat-icon">{icon}</span>
+                  <span className="crm-cat-label">{catLabel}</span>
+                  {items.length > 0 && <span className="crm-cat-count">{items.length}</span>}
+                </div>
+                {items.length === 0 ? (
+                  <div className="crm-empty">No hay noticias en esta categoría.</div>
+                ) : (
+                  items.map((it, i) => (
+                    <div key={it.id || i} className="crm-item">
+                      <div className="crm-item-title">
+                        {it.url
+                          ? <a href={it.url} target="_blank" rel="noopener noreferrer" className="crm-item-link">{it.title}</a>
+                          : it.title}
+                      </div>
+                      {it.source && <div className="crm-item-src">{it.source}</div>}
+                      {it.summary && <div className="crm-item-sum">{it.summary}</div>}
+                    </div>
+                  ))
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="crm-foot">Fuente: risk_signals + news_events · Supabase</div>
+      </div>
+    </div>
+  );
+}
+
 function NewsRail({ country, year, onBack, onDiscuss }) {
   useNewsVersion();
   const news = window.COUNTRY_NEWS(country, year);
@@ -1392,10 +1608,10 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
   const [compareMode, setCompareMode] = useState(false);
   const [forumOpen, setForumOpen] = useState(null); // null | { iso3?, threadId?, _global? }
   const [profileOpen, setProfileOpen] = useState(false);
-  const [riskPanelOpen, setRiskPanelOpen] = useState(false);
+  const [riskModalIso3, setRiskModalIso3] = useState(null);
 
   useEffect(() => {
-    const openRisk = () => setRiskPanelOpen(true);
+    const openRisk = (e) => setRiskModalIso3(e.detail?.iso3 || null);
     window.addEventListener("aletheia:risk:open", openRisk);
     return () => window.removeEventListener("aletheia:risk:open", openRisk);
   }, []);
@@ -1475,7 +1691,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
   useEffect(() => {
     const onKey = (e) => {
       if (e.key === "Escape") {
-        if (riskPanelOpen) { setRiskPanelOpen(false); return; }
+        if (riskModalIso3) { setRiskModalIso3(null); return; }
         if (compareMode) { setCompareMode(false); return; }
         if (countryDashboard) { setCountryDashboard(null); setDashMode(null); return; }
         if (countryFocus) { closeCountryFocus(); return; }
@@ -1491,7 +1707,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [mapFullscreen, mapSettingsOpen, countryFocus, countryDashboard, compareMode, riskPanelOpen]);
+  }, [mapFullscreen, mapSettingsOpen, countryFocus, countryDashboard, compareMode, riskModalIso3]);
 
   // Lista filtrada y ordenada
   const sortedList = useMemo(() => {
@@ -2616,12 +2832,13 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
         </div>
       )}
 
-      {/* Risk Panel — se abre al clickear una pelotita de riesgo */}
-      <RiskPanel
-        open={riskPanelOpen}
-        onClose={() => setRiskPanelOpen(false)}
-        onPick={handleSelect}
-      />
+      {/* Risk Modal — se abre al clickear un triángulo de riesgo */}
+      {riskModalIso3 && (
+        <CountryRiskModal
+          iso3={riskModalIso3}
+          onClose={() => setRiskModalIso3(null)}
+        />
+      )}
 
       {/* News Focus Panel — slide-in desde la izquierda */}
       <div className={`news-focus${selected && mapFullscreen ? " open" : ""}`} data-tour="news">
@@ -2936,6 +3153,7 @@ function App({ user: authUser, onLogout, onOpenHelp }) {
 
               <div className="cd-body">
                 <CountryContext country={c} year={year} variant="card" />
+                <CountryAIAnalysis iso3={c.iso3} year={year} />
                 {/* Presidente — solo si hay dato real */}
                 {detail.realPresident && (
                   <div className="cd-card">
