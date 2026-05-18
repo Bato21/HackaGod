@@ -77,6 +77,10 @@ class Settings(BaseSettings):
     # Comma-separated list of allowed CORS origins.
     CORS_ORIGINS: str = "http://localhost:3000,http://localhost:5500"
 
+    # Regex que matchea cualquier subdominio de Vercel (production + preview
+    # deploys del mismo proyecto y forks). Se aplica además de CORS_ORIGINS.
+    CORS_ORIGIN_REGEX: str = r"https://.*\.vercel\.app"
+
     # SQLAlchemy pool tuning (kept small — the pooler does the heavy lifting).
     DB_POOL_SIZE: int = 5
     DB_MAX_OVERFLOW: int = 5
