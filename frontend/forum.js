@@ -21,7 +21,7 @@
   const STORAGE_THREAD = (id) => `aletheia.forum.thread.${id}`;
   const STORAGE_USER_THREADS = "aletheia.forum.user_threads";
   const CHANNEL = "aletheia.forum.v2";
-  const SEED_VERSION = "3-nested"; // bump to force re-seed with nested replies
+  const SEED_VERSION = "4-curated"; // bump to force re-seed with curated threads
   const SEED_VER_KEY = "aletheia.forum.seedv";
 
   // Force re-seed if seed version changed
@@ -237,7 +237,10 @@
     if (!country) return [];
     const score = thread.year != null ? country.scores[thread.year] : country.scores[window.YEARS[window.YEARS.length - 1]];
     const r = mulberry32(hash(thread.id + ":count"));
-    const count = 4 + Math.floor(r() * 7); // 4–10 posts raíz
+    // Hilos curados con openingPosts → menos posts genéricos
+    const opening = Array.isArray(thread.openingPosts) ? thread.openingPosts : [];
+    const baseRoot = opening.length > 0 ? 3 + Math.floor(r() * 4) : 4 + Math.floor(r() * 7);
+    const count = baseRoot + opening.length; // posts raíz totales
     const baseSeed = hash(thread.id + ":seed");
     const now = Date.now();
     const offsets = [];
@@ -246,9 +249,20 @@
       offsets.push(acc);
       acc += (1.5 + r() * 4) * 60 * 60 * 1000;
     }
-    // Posts raíz
+    // Posts raíz: primero los curados (más antiguos), luego los generados
     const posts = [];
-    for (let i = 0; i < count; i++) {
+    opening.forEach((op, i) => {
+      const ts = now - offsets[count - 1 - i];
+      posts.push({
+        id: `op-${baseSeed}-${i}`,
+        user: op.user, handle: op.handle, accent: op.accent,
+        kind: "user",
+        text: op.text,
+        ts,
+        likes: 8 + Math.floor(r() * 25),
+      });
+    });
+    for (let i = opening.length; i < count; i++) {
       const ts = now - offsets[count - 1 - i];
       posts.push(generatePost(baseSeed + i * 257, thread, score, ts));
     }
@@ -324,8 +338,304 @@
   // ── Construcción del índice de hilos ────────────────────────────────
   let _indexCache = null;
 
+  // ── Hilos curados de demo (gobiernos + países LATAM) ────────────────
+  // Cada hilo enriquece su country/region desde window.COUNTRIES.
+  // openingPosts[]: primeros posts deliberados (en lugar del generador
+  // generatePost). El resto se rellena con seedPosts (4-10 posts + replies).
+  const CURATED_THREADS = [
+    // ── Argentina ──
+    {
+      iso3: "ARG", scope: "gobierno", year: 2024, period: [2023, 2027],
+      presName: "Javier Milei", presParty: "LLA",
+      title: "Gobierno de Milei: motosierra y dolarización · ¿es sostenible?",
+      subtitle: "2023–2027 · La Libertad Avanza (extrema derecha)",
+      openingPosts: [
+        { user: "Diego Mora", handle: "@dmora", accent: "#fbbf24",
+          text: "El ajuste fiscal bajó la inflación mensual, sí, pero el costo en pobreza es brutal. ¿Vale la pena el shock si la recuperación no llega antes del 2025?" },
+        { user: "Lucía Aravena", handle: "@luciaa", accent: "#84cc16",
+          text: "Lo que más me preocupa no es el ajuste, es el desmantelamiento de organismos de control. INDEC, AFIP, Oficina Anticorrupción: todos intervenidos. La transparencia se mide a largo plazo." },
+      ],
+    },
+    {
+      iso3: "ARG", scope: "tema", year: 2018,
+      title: "Cuadernos de las Coimas: ¿qué pasó realmente con la causa?",
+      subtitle: "2018 · Investigación judicial · Argentina",
+      openingPosts: [
+        { user: "Ana Veedor", handle: "@ana_veedor", accent: "#f59e0b",
+          text: "Más de 30 empresarios confesaron pagos al kirchnerismo. Seis años después la causa avanza a paso de tortuga. ¿Justicia selectiva o complejidad real?" },
+      ],
+    },
+
+    // ── Chile ──
+    {
+      iso3: "CHL", scope: "gobierno", year: 2022, period: [2022, 2026],
+      presName: "Gabriel Boric", presParty: "FA",
+      title: "Boric y el Frente Amplio: ¿gobierno reformista o continuidad?",
+      subtitle: "2022–2026 · Convergencia Social / FA",
+      openingPosts: [
+        { user: "Camila Bermúdez", handle: "@kmilab", accent: "#f9a8d4",
+          text: "Llegó con un programa de cambio profundo y terminó negociando con la centro-izquierda tradicional. La reforma tributaria fracasó dos veces. ¿Realismo o capitulación?" },
+        { user: "Tomás Pizarro", handle: "@tomaspz", accent: "#fb7185",
+          text: "Lo del rechazo a la nueva constitución (en 2022 y 2023) marcó el techo de su capital político. Igual mantiene aprobación decente comparado con vecinos." },
+      ],
+    },
+    {
+      iso3: "CHL", scope: "tema", year: 2019,
+      title: "Estallido social 2019: ¿qué cambió en transparencia institucional?",
+      subtitle: "2019 · Crisis social · Chile",
+      openingPosts: [
+        { user: "Sofía Granda", handle: "@sg.granda", accent: "#22d3ee",
+          text: "5 años después del estallido — ¿la pregunta es si hubo reformas concretas o solo cambios cosméticos? El proceso constitucional dio dos derrotas. ¿Y ahora qué?" },
+      ],
+    },
+
+    // ── Venezuela ──
+    {
+      iso3: "VEN", scope: "gobierno", year: 2024, period: [2013, 2025],
+      presName: "Nicolás Maduro", presParty: "PSUV",
+      title: "Elecciones 2024: el régimen no presenta actas, ¿y qué hacemos los ciudadanos?",
+      subtitle: "Julio 2024 · Crisis institucional · Venezuela",
+      openingPosts: [
+        { user: "Nayara Mendes", handle: "@nayara.m", accent: "#f472b6",
+          text: "El CNE proclamó ganador sin mostrar actas mesa por mesa. La oposición publicó 80%+ de las actas que muestra triunfo de González. Es matemáticamente la elección más documentada de la historia… y la peor reportada oficialmente." },
+        { user: "Esteban Quintana", handle: "@e_quintana", accent: "#7dd3fc",
+          text: "Más de 25 países exigen verificación. Lo que viene es presión internacional + diáspora movilizada. La situación es insostenible pero el régimen tiene tiempo para resistir." },
+      ],
+    },
+    {
+      iso3: "VEN", scope: "país",
+      title: "¿Por qué Venezuela sigue cayendo en el ranking de transparencia?",
+      subtitle: "Análisis multi-año · Venezuela",
+      openingPosts: [
+        { user: "Carlos Kohler", handle: "@ck", accent: "#10b981",
+          text: "PDVSA en quiebra técnica con producción de 1990. Casi todo el aparato del estado opera sin auditoría externa. Es difícil saber qué es corrupción y qué es simplemente colapso institucional." },
+      ],
+    },
+
+    // ── Brasil ──
+    {
+      iso3: "BRA", scope: "gobierno", year: 2023, period: [2023, 2026],
+      presName: "Luiz Inácio Lula da Silva", presParty: "PT",
+      title: "Lula 3.0: regreso del PT y el legado de Lava Jato",
+      subtitle: "2023–2026 · Partido dos Trabalhadores",
+      openingPosts: [
+        { user: "Pancho Rojas", handle: "@pancho.r", accent: "#38bdf8",
+          text: "Lula volvió tras condena anulada por el STF. La pregunta no es si fue procesado injustamente — es si las reformas institucionales que prometió en 2022 están avanzando. Spoiler: poco." },
+        { user: "Isabel Mansilla", handle: "@isamn", accent: "#fcd34d",
+          text: "Lo más rescatable: PIB creciendo, hambre bajando del mapa de la FAO otra vez. Lo más preocupante: gasto público en máximo histórico sin reforma fiscal." },
+      ],
+    },
+    {
+      iso3: "BRA", scope: "tema", year: 2014,
+      title: "Lava Jato: balance 10 años después · ¿logro o sobreactuación?",
+      subtitle: "2014–2024 · Operação Lava Jato · Brasil",
+    },
+
+    // ── México ──
+    {
+      iso3: "MEX", scope: "gobierno", year: 2024, period: [2024, 2030],
+      presName: "Claudia Sheinbaum", presParty: "Morena",
+      title: "Sheinbaum: continuidad de la 4T o etapa propia",
+      subtitle: "2024–2030 · Morena · primera presidenta mujer",
+      openingPosts: [
+        { user: "Renata Vidal", handle: "@rvidal", accent: "#e879f9",
+          text: "Hereda el bloque más fuerte del Congreso desde el PRI hegemónico + reforma judicial recién aprobada. Tiene poder casi absoluto. La pregunta es qué hace con eso." },
+      ],
+    },
+    {
+      iso3: "MEX", scope: "tema", year: 2024,
+      title: "Reforma judicial: ¿democratización o concentración?",
+      subtitle: "Septiembre 2024 · Reforma constitucional · México",
+      openingPosts: [
+        { user: "Mateo Linares", handle: "@mateoln", accent: "#06b6d4",
+          text: "Elegir jueces por voto popular suena democrático pero hay 0 países donde haya funcionado. Bolivia lo intentó en 2011 y fue un desastre. ¿Por qué replicar eso?" },
+        { user: "Julieta Salinas", handle: "@julieta_s", accent: "#a78bfa",
+          text: "El contraargumento real: el sistema actual era opaco y captura-político igual. Pero saltar de un extremo al otro sin transición… veremos." },
+      ],
+    },
+
+    // ── Colombia ──
+    {
+      iso3: "COL", scope: "gobierno", year: 2022, period: [2022, 2026],
+      presName: "Gustavo Petro", presParty: "PH",
+      title: "Petro: primera izquierda en el Palacio · 2 años después",
+      subtitle: "2022–2026 · Pacto Histórico · Colombia",
+      openingPosts: [
+        { user: "Sebastián Henríquez", handle: "@sebahz", accent: "#a3e635",
+          text: "Llegó con una agenda de paz total, reforma agraria, transición energética. Resultado mixto: ELN sigue activo, las reformas no pasan en el Congreso, su hijo está procesado por financiación irregular." },
+      ],
+    },
+    {
+      iso3: "COL", scope: "tema", year: 2016,
+      title: "Acuerdo de paz con FARC · ¿qué quedó 8 años después?",
+      subtitle: "2016 · Acuerdo histórico · Colombia",
+    },
+
+    // ── Perú ──
+    {
+      iso3: "PER", scope: "país",
+      title: "Perú · 6 presidentes en 8 años · ¿república sin presidencia?",
+      subtitle: "2016–2024 · Crisis institucional crónica · Perú",
+      openingPosts: [
+        { user: "Elena Pacheco", handle: "@elena.p", accent: "#fdba74",
+          text: "PPK, Vizcarra, Merino, Sagasti, Castillo, Boluarte. Y los expresidentes vivos: 4 procesados, 1 en cárcel, 1 prófugo, 1 que se suicidó. El sistema institucional no resiste un sexenio." },
+        { user: "Tomás Pizarro", handle: "@tomaspz", accent: "#fb7185",
+          text: "Lo del 'cierre del Congreso vs vacancia' se convirtió en mecanismo normal. El Tribunal Constitucional debería ser el árbitro y también está politizado. ¿Cómo se sale de esto?" },
+      ],
+    },
+
+    // ── El Salvador ──
+    {
+      iso3: "SLV", scope: "gobierno", year: 2024, period: [2019, 2029],
+      presName: "Nayib Bukele", presParty: "Nuevas Ideas",
+      title: "Bukele · seguridad récord y democracia en duda",
+      subtitle: "2019–2029 · Nuevas Ideas · El Salvador",
+      openingPosts: [
+        { user: "Diego Mora", handle: "@dmora", accent: "#fbbf24",
+          text: "Las cifras de seguridad son reales. Pero también es real que hay 80.000 detenidos sin juicio, régimen de excepción renovado cada mes, y la reelección consecutiva está prohibida en la Constitución que él mismo respeta… selectivamente." },
+        { user: "Lucía Aravena", handle: "@luciaa", accent: "#84cc16",
+          text: "El dilema clásico: ¿es legítimo sacrificar libertades civiles para reducir homicidios? El 85% de salvadoreños dice que sí. La pregunta es qué pasa cuando el modelo se quiere exportar." },
+      ],
+    },
+
+    // ── Bolivia ──
+    {
+      iso3: "BOL", scope: "gobierno", year: 2020, period: [2020, 2025],
+      presName: "Luis Arce", presParty: "MAS",
+      title: "Bolivia: la división del MAS y la guerra Evo vs Arce",
+      subtitle: "2020–2025 · Movimiento al Socialismo (interno fracturado)",
+      openingPosts: [
+        { user: "Pancho Rojas", handle: "@pancho.r", accent: "#38bdf8",
+          text: "El MAS gobernó con disciplina férrea durante 14 años con Evo. Ahora el partido está partido en dos facciones que se demandan en tribunales. Las primarias de 2025 van a ser bizarras." },
+      ],
+    },
+
+    // ── Ecuador ──
+    {
+      iso3: "ECU", scope: "tema", year: 2023,
+      title: "Asesinato de Fernando Villavicencio · ¿qué cambió?",
+      subtitle: "Agosto 2023 · Crimen organizado · Ecuador",
+      openingPosts: [
+        { user: "Nayara Mendes", handle: "@nayara.m", accent: "#f472b6",
+          text: "Candidato presidencial asesinado a 10 días de la primera vuelta. 7 sicarios colombianos capturados, todos murieron en prisión en los meses siguientes. El caso quedó cerrado oficialmente pero las preguntas siguen." },
+      ],
+    },
+
+    // ── Uruguay ──
+    {
+      iso3: "URY", scope: "país",
+      title: "Uruguay · ¿por qué somos el menos corrupto de LATAM?",
+      subtitle: "Análisis estructural · Uruguay",
+      openingPosts: [
+        { user: "Julieta Salinas", handle: "@julieta_s", accent: "#a78bfa",
+          text: "No es magia: servicio civil profesional desde 1934, alternancia pacífica desde 1985, Banco Central independiente real, prensa libre fuerte. Receta lenta pero funcional. Lástima que no se exporta fácil." },
+        { user: "Carlos Kohler", handle: "@ck", accent: "#10b981",
+          text: "También hay que reconocer la escala: 3.5 millones de habitantes y cultura cívica de pueblo chico. ¿Funciona el modelo en países de 50M+?" },
+      ],
+    },
+
+    // ── Cuba ──
+    {
+      iso3: "CUB", scope: "país",
+      title: "Cuba · 65 años · ¿qué sigue después de Díaz-Canel?",
+      subtitle: "Sucesión histórica · Cuba",
+    },
+
+    // ── Nicaragua ──
+    {
+      iso3: "NIC", scope: "gobierno", year: 2024, period: [2007, 2026],
+      presName: "Daniel Ortega", presParty: "FSLN",
+      title: "Ortega-Murillo: copresidencia oficializada · ¿modelo único?",
+      subtitle: "2007–presente · FSLN · Nicaragua",
+      openingPosts: [
+        { user: "Mateo Linares", handle: "@mateoln", accent: "#06b6d4",
+          text: "Reforma constitucional de 2024 oficializa a Rosario Murillo como copresidenta. 200+ opositores expulsados con quita de nacionalidad. Es un experimento autoritario sin paralelo reciente en la región." },
+      ],
+    },
+
+    // ── Guatemala ──
+    {
+      iso3: "GTM", scope: "gobierno", year: 2024, period: [2024, 2028],
+      presName: "Bernardo Arévalo", presParty: "Movimiento Semilla",
+      title: "Arévalo en Guatemala: ¿puede gobernar sin Congreso ni Fiscalía?",
+      subtitle: "2024–2028 · Movimiento Semilla",
+      openingPosts: [
+        { user: "Sofía Granda", handle: "@sg.granda", accent: "#22d3ee",
+          text: "Asumió en enero 2024 tras 8 meses de intentos por anular la elección. La Fiscalía sigue acusándolo, el Congreso lo bloquea, su partido fue cancelado legalmente. Y aún así gobierna. Es un caso de estudio." },
+      ],
+    },
+
+    // ── Paraguay ──
+    {
+      iso3: "PRY", scope: "país",
+      title: "Paraguay · 70+ años de ANR · ¿cómo se rompe ese monopolio?",
+      subtitle: "Hegemonía partidaria histórica · Paraguay",
+    },
+
+    // ── Honduras ──
+    {
+      iso3: "HND", scope: "tema", year: 2024,
+      title: "Extradición de JOH: ¿precedente o caso aislado?",
+      subtitle: "2024 · Justicia transnacional · Honduras",
+      openingPosts: [
+        { user: "Ana Veedor", handle: "@ana_veedor", accent: "#f59e0b",
+          text: "Expresidente condenado en EE.UU. por narcotráfico. La justicia local no podía/quería tocarlo. ¿Esto se convierte en mecanismo o queda como anomalía?" },
+      ],
+    },
+
+    // ── Globales / temas multi-país ──
+    {
+      iso3: "URY", scope: "tema", year: 2024,
+      title: "¿Por qué LATAM no logra bajar del 60 en Aletheia Score?",
+      subtitle: "Análisis regional · ¿límite estructural o falta de voluntad?",
+      openingPosts: [
+        { user: "Renata Vidal", handle: "@rvidal", accent: "#e879f9",
+          text: "Uruguay (mejor) tiene Aletheia score ~27. Venezuela (peor) ~89. Pero la mediana regional está cerca de 65. Es un techo de cristal. ¿Falta voluntad política o hay algo estructural en cómo nos organizamos como repúblicas?" },
+        { user: "Esteban Quintana", handle: "@e_quintana", accent: "#7dd3fc",
+          text: "Mi hipótesis: las élites económicas y políticas son las mismas familias hace 100 años. No es corrupción individual, es captura de Estado normalizada. Cambiar eso requiere 2-3 generaciones." },
+      ],
+    },
+    {
+      iso3: "BRA", scope: "tema", year: 2025,
+      title: "Crimen organizado transnacional: ¿qué tan unidos están los mercados ilegales?",
+      subtitle: "Análisis regional · LATAM",
+      openingPosts: [
+        { user: "Sebastián Henríquez", handle: "@sebahz", accent: "#a3e635",
+          text: "El PCC brasileño, el Tren de Aragua venezolano, los carteles mexicanos, el Clan del Golfo colombiano. Cada vez hay más evidencia de operaciones conjuntas. La cooperación entre estados va MUY por detrás." },
+      ],
+    },
+  ];
+
   function buildIndex() {
-    return []; // scaffold eliminado — solo hilos reales de usuarios
+    if (!window.COUNTRIES) return [];
+    const list = [];
+    const byIso = {};
+    window.COUNTRIES.forEach(c => { byIso[c.iso3] = c; });
+
+    CURATED_THREADS.forEach((t, idx) => {
+      const c = byIso[t.iso3];
+      if (!c) return;
+      const id = `curated-${t.iso3}-${idx}-${(t.title || "x").slice(0, 30).replace(/[^a-z0-9]/gi, "-").toLowerCase()}`;
+      list.push({
+        id,
+        iso3: c.iso3,
+        country: c.name,
+        region: c.region,
+        scope: t.scope,
+        title: t.title,
+        subtitle: t.subtitle,
+        year: t.year || null,
+        period: t.period || null,
+        presName: t.presName || null,
+        presParty: t.presParty || null,
+        openingPosts: t.openingPosts || null,
+      });
+    });
+    return list;
+  }
+
+  // Marker for legacy fallback path below — never executed.
+  function _legacyBuildIndex() {
     const list = [];
     if (!window.COUNTRIES) return list;
     const PERIODS = [
