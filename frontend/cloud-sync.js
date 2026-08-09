@@ -517,14 +517,11 @@
     }
 
     sessionStorage.setItem(BOOT_FLAG, "1");
-    var sessChanged = false, pulled = false;
-    try { sessChanged = await syncSession(); } catch (_) {}
-    try { pulled = await hydrateAll(); } catch (_) {}
-
-    if (sessChanged || pulled) {
-      try { location.reload(); } catch (_) {}
-      return;
-    }
+    try { await syncSession(); } catch (_) {}
+    try { await hydrateAll(); } catch (_) {}
+    // Sin reload: seed-snapshot.js prima localStorage en primer boot, y
+    // hydrateAll dispara aletheia:*:loaded para que React re-renderice
+    // con los datos frescos de Supabase sin recargar la pestaña.
 
     attachRealtime();
 
